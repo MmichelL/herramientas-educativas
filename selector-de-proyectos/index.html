@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Selector de Proyectos — Herramientas Educativas</title>
+<style>
+  :root {
+    --navy: #1A2456;
+    --blue: #2D5BE3;
+    --mint: #00D4A0;
+    --amber: #F59E0B;
+    --coral: #FF5C6A;
+    --gray: #F3F4F8;
+    --dgray: #6B7280;
+    --black: #1F2937;
+    --white: #FFFFFF;
+    --green: #10B981;
+    --red: #EF4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #0F1A3C 0%, #1A2456 50%, #0F1A3C 100%);
+    min-height: 100vh;
+    color: var(--black);
+  }
+
+  /* ── CONFIG SELECTOR SCREEN ── */
+  .config-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .config-card {
+    background: white;
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+  .config-card-logo {
+    width: 72px; height: 72px;
+    background: var(--blue);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 20px;
+  }
+  .config-card h1 {
+    font-size: 22px;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .config-card .subtitle {
+    font-size: 14px;
+    color: var(--dgray);
+    margin-bottom: 28px;
+  }
+  .config-select-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--dgray);
+    text-align: left;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .config-select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--black);
+    background: white;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+  }
+  .config-select:focus { border-color: var(--blue); }
+  .config-info {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--gray);
+    border-radius: 12px;
+    text-align: left;
+    font-size: 13px;
+    color: var(--navy);
+    line-height: 1.6;
+  }
+  .config-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+  }
+  .config-info-row span:first-child {
+    color: var(--dgray);
+    font-weight: 600;
+  }
+  .config-start-btn {
+    margin-top: 24px;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--blue), #4A7BF5);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .config-start-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(45,91,227,0.4);
+  }
+
+  /* ── APP SCREEN (hidden by default) ── */
+  .app-screen { display: none; }
+  .app-screen.active { display: block; }
+  .config-screen.hidden { display: none; }
+
+  /* ── HEADER ── */
+  .header {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header-logo {
+    width: 44px; height: 44px;
+    background: var(--blue);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .header-title { color: white; }
+  .header-title h1 { font-size: 18px; font-weight: 700; }
+  .header-title p { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-badge {
+    background: rgba(0,212,160,0.15);
+    border: 1px solid rgba(0,212,160,0.4);
+    color: var(--mint);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .header-back-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .header-back-btn:hover {
+    background: rgba(255,255,255,0.15);
+    color: white;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; padding: 28px; max-width: 1300px; margin: 0 auto; }
+
+  /* ── LEFT PANEL ── */
+  .panel {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .panel-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title span { font-size: 18px; }
+
+  /* ── SLOTS GRID ── */
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .slot {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .slot.available {
+    background: var(--gray);
+    border-color: #E5E7EB;
+  }
+  .slot.available:hover {
+    background: #EEF2FF;
+    border-color: var(--blue);
+    transform: scale(1.05);
+  }
+  .slot.taken {
+    background: #F9FAFB;
+    border-color: #E5E7EB;
+    opacity: 0.5;
+  }
+  .slot.just-assigned {
+    background: linear-gradient(135deg, var(--blue), #5B8EF4);
+    border-color: var(--blue);
+    color: white;
+    animation: pulse-slot 0.6s ease;
+  }
+  @keyframes pulse-slot {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(45,91,227,0.6); }
+    100% { transform: scale(1); }
+  }
+  .slot-num {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .slot.available .slot-num { color: var(--navy); }
+  .slot.taken .slot-num { color: var(--dgray); }
+  .slot.just-assigned .slot-num { color: white; }
+  .slot-label {
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .slot.available .slot-label { color: var(--dgray); }
+  .slot.taken .slot-label { color: #D1D5DB; }
+  .slot.just-assigned .slot-label { color: rgba(255,255,255,0.8); }
+  .slot-check {
+    position: absolute;
+    top: 4px; right: 4px;
+    font-size: 10px;
+  }
+
+  .slots-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--dgray);
+    margin-top: 8px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-right: 5px;
+  }
+
+  /* ── SORTEO PANEL ── */
+  .sorteo-panel { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── ROULETTE ── */
+  .roulette-container {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .roulette-container::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(45,91,227,0.15) 0%, transparent 70%);
+    animation: rotate-bg 8s linear infinite;
+  }
+  @keyframes rotate-bg {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .roulette-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .roulette-display {
+    position: relative;
+    height: 100px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .roulette-number {
+    position: absolute;
+    width: 100%;
+    font-size: 72px;
+    font-weight: 900;
+    color: white;
+    text-align: center;
+    line-height: 100px;
+    transition: none;
+    text-shadow: 0 0 30px rgba(45,91,227,0.8);
+  }
+  .roulette-number.spinning {
+    animation: spin-number 0.08s linear infinite;
+  }
+  @keyframes spin-number {
+    0% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(-20px); opacity: 0.3; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .roulette-item-title {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    min-height: 36px;
+    line-height: 1.4;
+    position: relative;
+    padding: 0 8px;
+  }
+  .roulette-item-title.revealed {
+    color: var(--mint);
+    font-weight: 600;
+    animation: reveal 0.5s ease;
+  }
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .roulette-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+    position: relative;
+  }
+  .roulette-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: background 0.3s;
+  }
+  .roulette-dot.active { background: var(--mint); }
+
+  /* ── INPUT FORM ── */
+  .form-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .form-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 15px;
+    color: var(--black);
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  .form-input:focus { border-color: var(--blue); }
+  .form-input::placeholder { color: #9CA3AF; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+
+  .btn {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), #4A7BF5);
+    color: white;
+    grid-column: 1 / -1;
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(45,91,227,0.4);
+  }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: var(--gray);
+    color: var(--navy);
+    font-size: 13px;
+  }
+  .btn-secondary:hover { background: #E5E7EB; }
+  .btn-danger {
+    background: #FEF2F2;
+    color: var(--red);
+    font-size: 13px;
+    border: 1px solid #FECACA;
+  }
+  .btn-danger:hover { background: #FEE2E2; }
+
+  .spin-btn {
+    position: relative;
+    overflow: hidden;
+  }
+  .spin-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -60%;
+    width: 40%; height: 200%;
+    background: rgba(255,255,255,0.2);
+    transform: skewX(-20deg);
+    transition: left 0.4s;
+  }
+  .spin-btn:hover::after { left: 120%; }
+
+  /* ── COUNTER ── */
+  .counter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .counter-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .counter-num {
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .counter-num.available-c { color: var(--blue); }
+  .counter-num.taken-c { color: var(--dgray); }
+  .counter-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--dgray);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* ── HISTORY TABLE ── */
+  .history-wrap { overflow-x: auto; }
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .history-table th {
+    background: var(--navy);
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  .history-table th:first-child { border-radius: 8px 0 0 0; }
+  .history-table th:last-child { border-radius: 0 8px 0 0; }
+  .history-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #F3F4F6;
+    color: var(--black);
+    vertical-align: middle;
+  }
+  .history-table tr:nth-child(even) td { background: #FAFAFA; }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr.new-row td { animation: row-in 0.4s ease; }
+  @keyframes row-in {
+    from { background: #EEF2FF; }
+    to { background: transparent; }
+  }
+  .num-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 14px;
+    background: var(--blue);
+    color: white;
+  }
+  .empty-history {
+    text-align: center;
+    padding: 32px;
+    color: var(--dgray);
+    font-size: 13px;
+  }
+
+  /* ── RESULT OVERLAY ── */
+  .result-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,26,60,0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .result-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .result-card {
+    background: white;
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    transform: scale(0.8);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .result-overlay.active .result-card { transform: scale(1); }
+  .result-card-emoji { font-size: 56px; margin-bottom: 16px; }
+  .result-card-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--dgray);
+    margin-bottom: 8px;
+  }
+  .result-card-student {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 20px;
+  }
+  .result-card-divider {
+    width: 60px; height: 3px;
+    background: var(--blue);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .result-card-number-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--dgray);
+    margin-bottom: 4px;
+  }
+  .result-card-number {
+    font-size: 80px;
+    font-weight: 900;
+    color: var(--blue);
+    line-height: 1;
+    margin-bottom: 12px;
+    text-shadow: 0 4px 20px rgba(45,91,227,0.3);
+  }
+  .result-card-item {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .result-card-desc {
+    font-size: 13px;
+    color: var(--dgray);
+    margin-bottom: 28px;
+  }
+  .result-close-btn {
+    background: var(--blue);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .result-close-btn:hover {
+    background: #2050D0;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(45,91,227,0.4);
+  }
+
+  /* ── ALERT ── */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 10px;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert-warn { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+  .alert-error { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+  .alert-success { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+
+  /* ── CONFETTI ── */
+  .confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+  }
+
+  /* ── EXPORT BTN ── */
+  .export-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .slots-grid { grid-template-columns: repeat(5, 1fr); }
+    .header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    .config-card { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PANTALLA 1: Selector de configuración
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="config-screen" id="configScreen">
+  <div class="config-card">
+    <div class="config-card-logo">🎓</div>
+    <h1>Selector de Proyectos</h1>
+    <p class="subtitle">Herramientas Educativas — UNAD</p>
+
+    <label class="config-select-label" for="configSelect">Seleccionar sesión</label>
+    <select class="config-select" id="configSelect" onchange="updateConfigInfo()">
+    </select>
+
+    <div class="config-info" id="configInfo"></div>
+
+    <button class="config-start-btn" onclick="startSession()">
+      Iniciar sesión de sorteo
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PANTALLA 2: Aplicación principal
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="app-screen" id="appScreen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">🎓</div>
+      <div class="header-title">
+        <h1 id="appHeaderTitle">Sorteo de Proyectos Finales</h1>
+        <p id="appHeaderSubtitle"></p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-badge" id="headerBadge"></div>
+      <button class="header-back-btn" onclick="backToConfig()">Cambiar sesión</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- LEFT: Grid + History -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Slots Grid -->
+      <div class="panel">
+        <div class="panel-title"><span>🎯</span> Tarjetas disponibles</div>
+        <div class="slots-grid" id="slotsGrid"></div>
+        <div class="slots-legend">
+          <span><span class="legend-dot" style="background:#E5E7EB"></span>Disponible</span>
+          <span><span class="legend-dot" style="background:#2D5BE3"></span>Asignada</span>
+          <span><span class="legend-dot" style="background:#D1D5DB;opacity:0.5"></span>Tomada</span>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="panel-title" style="margin:0"><span>📋</span> Historial de asignaciones</div>
+          <button class="btn btn-secondary" onclick="exportList()" id="exportBtn" style="padding:8px 14px;font-size:12px;">⬇ Exportar lista</button>
+        </div>
+        <div class="history-wrap">
+          <table class="history-table" id="historyTable">
+            <thead>
+              <tr>
+                <th style="width:40px">#</th>
+                <th>Estudiante</th>
+                <th style="width:60px">Tarjeta</th>
+                <th>Proyecto asignado</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr><td colspan="4" class="empty-history">🎲 Aún no hay asignaciones. ¡Comienza el sorteo!</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="export-row">
+          <button class="btn btn-secondary" onclick="undoLast()" id="undoBtn" style="font-size:12px;padding:8px;">↩ Deshacer último</button>
+          <button class="btn btn-danger" onclick="resetAll()" style="font-size:12px;padding:8px;">🗑 Reiniciar todo</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Sorteo -->
+    <div class="sorteo-panel">
+
+      <!-- Counters -->
+      <div class="counter-row">
+        <div class="counter-card">
+          <div class="counter-num available-c" id="countAvail">0</div>
+          <div class="counter-label">Disponibles</div>
+        </div>
+        <div class="counter-card">
+          <div class="counter-num taken-c" id="countTaken">0</div>
+          <div class="counter-label">Asignadas</div>
+        </div>
+      </div>
+
+      <!-- Roulette -->
+      <div class="roulette-container">
+        <div class="roulette-label">Número asignado</div>
+        <div class="roulette-display">
+          <div class="roulette-number" id="rouletteNum">?</div>
+        </div>
+        <div class="roulette-item-title" id="rouletteTitle">Ingresa una matrícula y gira la ruleta</div>
+        <div class="roulette-dots" id="rouletteDots">
+          <div class="roulette-dot"></div>
+          <div class="roulette-dot"></div>
+          <div class="roulette-dot"></div>
+          <div class="roulette-dot"></div>
+          <div class="roulette-dot"></div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="form-card">
+        <label class="form-label" for="matriculaInput">Matrícula del estudiante</label>
+        <input class="form-input" id="matriculaInput" type="text" placeholder="Ej. 2026-0001"
+               maxlength="20" onkeydown="if(event.key==='Enter') spinRoulette()"/>
+        <div id="studentName" style="font-size:13px;color:var(--green);font-weight:600;margin-top:6px;min-height:20px;"></div>
+        <div class="alert" id="alertBox"></div>
+        <div class="form-row" style="margin-top:12px;">
+          <button class="btn btn-primary spin-btn" id="spinBtn" onclick="spinRoulette()">
+            🎲 Girar ruleta
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Result Overlay -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <div class="result-card-emoji">🎉</div>
+    <div class="result-card-label">Proyecto asignado a</div>
+    <div class="result-card-student" id="resultStudent">—</div>
+    <div class="result-card-divider"></div>
+    <div class="result-card-number-label">Tarjeta número</div>
+    <div class="result-card-number" id="resultNumber">—</div>
+    <div class="result-card-item" id="resultItem">—</div>
+    <div class="result-card-desc" id="resultDesc">—</div>
+    <button class="result-close-btn" onclick="closeResult()">¡Entendido! 🚀</button>
+  </div>
+</div>
+
+<!-- Confetti container -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIGURACIONES — Editar aquí para agregar o modificar contextos
+// Cada entrada es una asignatura + período independiente.
+// ══════════════════════════════════════════════════════════════════
+const CONFIGURACIONES = [
+
+  {
+    // ── Identificador único de esta configuración ──
+    id: "prog2111-ene-abr-2026",
+
+    // ── Lo que aparece en el selector de la pantalla de inicio ──
+    etiqueta: "Fundamentos de Programación — ENE-ABR 2026",
+
+    // ── Datos de la asignatura (aparecen en encabezado y exportación) ──
+    asignatura: {
+      codigo:  "PROG-2111",
+      nombre:  "Fundamentos de Programación",
+      seccion: "SE-LN-PROG2111-1",
+      periodo: "Enero – Abril 2026",
+    },
+
+    // ── Participantes autorizados ──
+    // Solo estas matrículas pueden girar la ruleta.
+    participantes: [
+      { matricula: "2017-0076", nombre: "Arnardo Andrés Montas López" },
+      { matricula: "2020-0299", nombre: "Jarvy De La Rosa Cabral" },
+      { matricula: "2022-0393", nombre: "Natanael Oguis Pineda" },
+      { matricula: "2025-0228", nombre: "Henry Gregory Sánchez Minyety" },
+      { matricula: "2025-0242", nombre: "Welvis Polanco Santiago" },
+      { matricula: "2025-0365", nombre: "Wilton Miguel Mercedes Martes" },
+      { matricula: "2025-0440", nombre: "Melky Daniel Díaz Lajara" },
+      { matricula: "2025-0445", nombre: "Ronnie Rosario Morfa" },
+      { matricula: "2026-0001", nombre: "Javier Beltre Martínez" },
+      { matricula: "2026-0008", nombre: "Luis Adiel Casado Valera" },
+      { matricula: "2026-0012", nombre: "Gregory Enmanuel Reyes Espinal" },
+      { matricula: "2026-0015", nombre: "Cristian Manuel Hernández Burgos" },
+      { matricula: "2026-0022", nombre: "Sindy Contreras Ulloa" },
+      { matricula: "2026-0027", nombre: "Bania Ramos De La Cruz" },
+      { matricula: "2026-0028", nombre: "Jazmín De La Cruz De La Cruz" },
+      { matricula: "2026-0038", nombre: "Hassiel Andeliz Colón" },
+      { matricula: "2026-0049", nombre: "Johann Domínguez Pérez" },
+      { matricula: "2026-0050", nombre: "Rossy Angélica Sánchez Reyes" },
+      { matricula: "2026-0053", nombre: "Wilnesis Espinal Peña" },
+      { matricula: "2026-0055", nombre: "Carlos Miguel Abreu Gutiérrez" },
+      { matricula: "2026-0057", nombre: "Anthony Eliézer Peña Payano" },
+      { matricula: "2026-0062", nombre: "Pablo Steven Feliz Herrera" },
+      { matricula: "2026-0068", nombre: "Yirbel Daniel Dionicio Zapata" },
+      { matricula: "2026-0071", nombre: "Winder Iván Javier Peña" },
+      { matricula: "2026-0088", nombre: "Diego Ogando De Los Santos" },
+    ],
+
+    // ── Ítems a asignar ──
+    items: [
+      { nombre: "Sistema de Notas — Escuela Primaria",              descripcion: "Registrar calificaciones por grado y asignatura." },
+      { nombre: "Inventario — Farmacia Comunitaria",                descripcion: "Controlar medicamentos, precios y disponibilidad." },
+      { nombre: "Agenda de Citas — Salón de Belleza",              descripcion: "Gestionar citas por estilista y calcular ingresos." },
+      { nombre: "Evaluaciones — Academia de Inglés",               descripcion: "Registrar notas por módulo y emitir certificados." },
+      { nombre: "Control de Gastos — Hogar Familiar",              descripcion: "Categorizar gastos y controlar pagos pendientes." },
+      { nombre: "Inventario — Ferretería y Materiales",            descripcion: "Gestionar productos por categoría y disponibilidad." },
+      { nombre: "Registro de Voluntarios — ONG",                   descripcion: "Administrar voluntarios por habilidad y zona." },
+      { nombre: "Control de Reservas — Hotel Pequeño",             descripcion: "Gestionar habitaciones y calcular ingresos." },
+      { nombre: "Registro de Ingresos — Trabajador Independiente", descripcion: "Controlar proyectos y cobros por tipo de trabajo." },
+      { nombre: "Agenda de Citas — Veterinaria",                   descripcion: "Registrar citas por especie y tipo de servicio." },
+      { nombre: "Catálogo — Tienda de Ropa",                       descripcion: "Gestionar prendas por talla y temporada." },
+      { nombre: "Directorio de Proveedores — Empresa",             descripcion: "Evaluar proveedores activos por categoría." },
+      { nombre: "Catálogo Personal — Películas y Series",          descripcion: "Organizar contenido por plataforma y género." },
+      { nombre: "Sistema de Turnos — Centro Médico",               descripcion: "Gestionar turnos urgentes por especialidad." },
+      { nombre: "Plataforma de Cursos en Línea",                   descripcion: "Registrar cursos por área e instructor." },
+      { nombre: "Control de Ventas — Tienda en Línea",             descripcion: "Gestionar pedidos y métodos de pago." },
+      { nombre: "Registro de Socios — Gimnasio",                   descripcion: "Controlar membresías activas y calcular nómina." },
+      { nombre: "Biblioteca Personal de Libros",                   descripcion: "Organizar libros por estado de lectura." },
+      { nombre: "Catálogo — Librería y Papelería",                 descripcion: "Gestionar artículos por categoría y editorial." },
+      { nombre: "Registro de Pacientes — Consultorio Dental",      descripcion: "Controlar tratamientos y calcular ingresos." },
+      { nombre: "Registro de Donaciones — Fundación",              descripcion: "Gestionar donaciones por campaña y tipo." },
+      { nombre: "Catálogo de Videojuegos",                         descripcion: "Organizar juegos por plataforma y calificación." },
+      { nombre: "Sistema de Pedidos — Restaurante",                descripcion: "Gestionar pedidos por método de entrega." },
+      { nombre: "Registro de Empleados — Pequeña Empresa",         descripcion: "Controlar nómina por departamento." },
+      { nombre: "Catálogo de Recetas de Cocina",                   descripcion: "Organizar recetas por tipo de cocina y dificultad." },
+    ],
+  },
+
+  // ── Plantilla para agregar una nueva configuración ──────────────
+  // Copiar este bloque, cambiar los valores y descomentar.
+  //
+  // {
+  //   id: "codigo-asignatura-mes-anio",
+  //   etiqueta: "Nombre Asignatura — Período",
+  //   asignatura: {
+  //     codigo:  "XXX-0000",
+  //     nombre:  "Nombre Completo de la Asignatura",
+  //     seccion: "SECCION-ID",
+  //     periodo: "Mes – Mes Año",
+  //   },
+  //   participantes: [
+  //     { matricula: "XXXX-XXXX", nombre: "Nombre Completo" },
+  //   ],
+  //   items: [
+  //     { nombre: "Nombre del ítem", descripcion: "Descripción opcional" },
+  //   ],
+  // },
+
+];
+
+// ── Matrícula del profesor ───────────────────────────────────────
+// Compartida entre todas las configuraciones.
+// Permite girar en modo prueba sin guardar resultados.
+const PROFESOR_MATRICULA = "2008464";
+
+// ── Participaciones por persona (normalmente 1) ──────────────────
+const MAX_PARTICIPACIONES = 1;
+
+
+// ══════════════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════════════════════════════
+let activeConfig = null;
+let state = { assignments: [], takenNums: new Set() };
+let isSpinning = false;
+
+// ── Clave de localStorage dinámica ──
+function storageKey() {
+  return 'selector_' + activeConfig.id + '_state';
+}
+
+// ── CONFIGURACIÓN SELECTOR ──────────────────────────────────────
+function populateConfigSelect() {
+  const sel = document.getElementById('configSelect');
+  sel.innerHTML = '';
+  CONFIGURACIONES.forEach((c, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = c.etiqueta;
+    sel.appendChild(opt);
+  });
+  updateConfigInfo();
+}
+
+function updateConfigInfo() {
+  const idx = document.getElementById('configSelect').value;
+  const c = CONFIGURACIONES[idx];
+  const info = document.getElementById('configInfo');
+  if (!c) { info.innerHTML = ''; return; }
+  info.innerHTML = `
+    <div class="config-info-row"><span>Código:</span> <span>${c.asignatura.codigo}</span></div>
+    <div class="config-info-row"><span>Asignatura:</span> <span>${c.asignatura.nombre}</span></div>
+    <div class="config-info-row"><span>Período:</span> <span>${c.asignatura.periodo}</span></div>
+    <div class="config-info-row"><span>Participantes:</span> <span>${c.participantes.length} estudiantes</span></div>
+    <div class="config-info-row"><span>Ítems:</span> <span>${c.items.length} proyectos</span></div>
+  `;
+}
+
+function startSession() {
+  const idx = document.getElementById('configSelect').value;
+  activeConfig = CONFIGURACIONES[idx];
+  if (!activeConfig) return;
+
+  // Update header
+  document.getElementById('appHeaderTitle').textContent =
+    'Sorteo — ' + activeConfig.asignatura.nombre;
+  document.getElementById('appHeaderSubtitle').textContent =
+    activeConfig.asignatura.codigo + ' · ' + activeConfig.asignatura.periodo + ' · Prof. Misael Michel';
+
+  // Switch screens
+  document.getElementById('configScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.add('active');
+
+  // Load state for this config
+  loadState();
+  renderAll();
+  document.getElementById('matriculaInput').focus();
+}
+
+function backToConfig() {
+  document.getElementById('configScreen').classList.remove('hidden');
+  document.getElementById('appScreen').classList.remove('active');
+  activeConfig = null;
+}
+
+// ── LOAD / SAVE STATE ───────────────────────────────────────────
+function loadState() {
+  state = { assignments: [], takenNums: new Set() };
+  try {
+    const saved = localStorage.getItem(storageKey());
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.assignments = parsed.assignments || [];
+      state.takenNums = new Set(parsed.takenNums || []);
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem(storageKey(), JSON.stringify({
+    assignments: state.assignments,
+    takenNums: [...state.takenNums]
+  }));
+}
+
+// ── BUILD UI ────────────────────────────────────────────────────
+function buildGrid() {
+  const grid = document.getElementById('slotsGrid');
+  grid.innerHTML = '';
+  const total = activeConfig.items.length;
+  const cols = total <= 9 ? 3 : total <= 16 ? 4 : 5;
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+  activeConfig.items.forEach((item, i) => {
+    const num = i + 1;
+    const taken = state.takenNums.has(num);
+    const div = document.createElement('div');
+    div.className = 'slot ' + (taken ? 'taken' : 'available');
+    div.id = 'slot-' + num;
+    div.title = item.nombre;
+    const shortName = item.nombre.length > 18
+      ? item.nombre.substring(0, 16) + '…'
+      : item.nombre;
+    div.innerHTML = `
+      <div class="slot-num">${String(num).padStart(2,'0')}</div>
+      <div class="slot-label">${shortName}</div>
+      ${taken ? '<div class="slot-check">✓</div>' : ''}
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function buildHistory() {
+  const tbody = document.getElementById('historyBody');
+  if (state.assignments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-history">🎲 Aún no hay asignaciones. ¡Comienza el sorteo!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  state.assignments.forEach((a, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#9CA3AF;font-size:12px">${i + 1}</td>
+      <td style="font-weight:600">${a.nombre}<br><span style="font-size:11px;color:var(--dgray);font-weight:400">${a.matricula}</span></td>
+      <td><span class="num-badge">${String(a.num).padStart(2,'0')}</span></td>
+      <td style="font-size:12px">${a.item}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateCounters() {
+  const total = activeConfig.items.length;
+  const avail = total - state.takenNums.size;
+  document.getElementById('countAvail').textContent = avail;
+  document.getElementById('countTaken').textContent = state.takenNums.size;
+  document.getElementById('headerBadge').textContent =
+    avail === 0 ? '✅ Todas asignadas' : avail + ' disponibles';
+  document.getElementById('spinBtn').disabled = avail === 0;
+}
+
+function renderAll() {
+  buildGrid();
+  buildHistory();
+  updateCounters();
+}
+
+// ── MATRÍCULA LOOKUP ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('matriculaInput');
+  input.addEventListener('input', function() {
+    const val = this.value.trim();
+    const nameEl = document.getElementById('studentName');
+    if (!activeConfig || !val) { nameEl.textContent = ''; return; }
+
+    if (val === PROFESOR_MATRICULA) {
+      nameEl.textContent = '🧪 Modo prueba (profesor)';
+      nameEl.style.color = 'var(--amber)';
+      return;
+    }
+
+    const found = activeConfig.participantes.find(
+      p => p.matricula === val
+    );
+    if (found) {
+      nameEl.textContent = '✓ ' + found.nombre;
+      nameEl.style.color = 'var(--green)';
+    } else {
+      nameEl.textContent = '';
+    }
+  });
+});
+
+// ── SPIN LOGIC ──────────────────────────────────────────────────
+function spinRoulette() {
+  if (isSpinning || !activeConfig) return;
+  const input = document.getElementById('matriculaInput');
+  const matricula = input.value.trim();
+  const alertBox = document.getElementById('alertBox');
+  const nameEl = document.getElementById('studentName');
+
+  alertBox.className = 'alert';
+  alertBox.textContent = '';
+
+  if (!matricula) {
+    alertBox.className = 'alert alert-warn show';
+    alertBox.textContent = '⚠ Ingresa la matrícula del estudiante antes de girar.';
+    input.focus();
+    return;
+  }
+
+  // Modo prueba del profesor
+  const isPrueba = matricula === PROFESOR_MATRICULA;
+
+  // Validar que la matrícula existe en la lista de participantes
+  if (!isPrueba) {
+    const participant = activeConfig.participantes.find(
+      p => p.matricula === matricula
+    );
+    if (!participant) {
+      alertBox.className = 'alert alert-error show';
+      alertBox.textContent = '⚠ Matrícula no encontrada en la lista de esta sesión.';
+      return;
+    }
+  }
+
+  // Verificar si ya tiene asignación
+  if (!isPrueba) {
+    const dup = state.assignments.find(a => a.matricula === matricula);
+    if (dup) {
+      alertBox.className = 'alert alert-error show';
+      alertBox.textContent = `⚠ Ya tiene la tarjeta #${String(dup.num).padStart(2,'0')} asignada: "${dup.item}"`;
+      return;
+    }
+  }
+
+  // Obtener ítems disponibles
+  const total = activeConfig.items.length;
+  const available = [];
+  for (let i = 0; i < total; i++) {
+    if (!state.takenNums.has(i + 1)) {
+      available.push({ num: i + 1, ...activeConfig.items[i] });
+    }
+  }
+
+  if (available.length === 0) {
+    alertBox.className = 'alert alert-error show';
+    alertBox.textContent = '⚠ No quedan ítems disponibles.';
+    return;
+  }
+
+  // Elegir al azar
+  const chosen = available[Math.floor(Math.random() * available.length)];
+
+  // Encontrar nombre del participante
+  const participantName = isPrueba
+    ? 'Profesor (Prueba)'
+    : activeConfig.participantes.find(p => p.matricula === matricula).nombre;
+
+  isSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('rouletteTitle').className = 'roulette-item-title';
+  document.getElementById('rouletteTitle').textContent = 'Girando...';
+
+  // Animate dots
+  const dots = document.querySelectorAll('.roulette-dot');
+  let dotIdx = 0;
+  const dotTimer = setInterval(() => {
+    dots.forEach(d => d.classList.remove('active'));
+    dots[dotIdx % dots.length].classList.add('active');
+    dotIdx++;
+  }, 150);
+
+  // Spin animation
+  const numEl = document.getElementById('rouletteNum');
+  numEl.className = 'roulette-number spinning';
+
+  let spinCount = 0;
+  const totalSpins = 30 + Math.floor(Math.random() * 15);
+  const allNums = [];
+  for (let i = 1; i <= total; i++) allNums.push(i);
+
+  const spinInterval = setInterval(() => {
+    const randN = allNums[Math.floor(Math.random() * allNums.length)];
+    numEl.textContent = String(randN).padStart(2, '0');
+    spinCount++;
+
+    if (spinCount >= totalSpins - 8) {
+      clearInterval(spinInterval);
+      slowSpin(chosen, numEl, dotTimer, dots, matricula, participantName, isPrueba);
+    }
+  }, 80);
+}
+
+function slowSpin(chosen, numEl, dotTimer, dots, matricula, participantName, isPrueba) {
+  let slowCount = 0;
+  const slowSteps = 8;
+  const nearNums = [];
+  const total = activeConfig.items.length;
+  for (let i = 1; i <= total; i++) {
+    if (!state.takenNums.has(i)) nearNums.push(i);
+  }
+
+  const slowInterval = setInterval(() => {
+    const randN = nearNums[Math.floor(Math.random() * nearNums.length)];
+    numEl.textContent = String(randN).padStart(2, '0');
+    slowCount++;
+    if (slowCount >= slowSteps) {
+      clearInterval(slowInterval);
+      setTimeout(() => {
+        clearInterval(dotTimer);
+        dots.forEach(d => d.classList.remove('active'));
+        numEl.className = 'roulette-number';
+        numEl.textContent = String(chosen.num).padStart(2, '0');
+        document.getElementById('rouletteTitle').textContent = chosen.nombre;
+        document.getElementById('rouletteTitle').className = 'roulette-item-title revealed';
+
+        if (!isPrueba) {
+          // Guardar estado real
+          state.takenNums.add(chosen.num);
+          state.assignments.push({
+            matricula,
+            nombre: participantName,
+            num: chosen.num,
+            item: chosen.nombre,
+            descripcion: chosen.descripcion || '',
+            timestamp: new Date().toISOString()
+          });
+          saveState();
+        }
+
+        renderAll();
+
+        // Mark slot as just-assigned briefly
+        const slotEl = document.getElementById('slot-' + chosen.num);
+        if (slotEl) {
+          slotEl.classList.remove('available');
+          slotEl.classList.add('just-assigned');
+          setTimeout(() => slotEl.classList.replace('just-assigned', 'taken'), 1200);
+        }
+
+        // Show result overlay
+        setTimeout(() => showResult(participantName, chosen, isPrueba), 400);
+
+        isSpinning = false;
+        const avail = activeConfig.items.length - state.takenNums.size;
+        document.getElementById('spinBtn').disabled = avail === 0;
+        document.getElementById('matriculaInput').value = '';
+        document.getElementById('studentName').textContent = '';
+        document.getElementById('matriculaInput').focus();
+
+        if (isPrueba) {
+          const alertBox = document.getElementById('alertBox');
+          alertBox.className = 'alert alert-success show';
+          alertBox.textContent = '🧪 Modo prueba — este resultado NO se guardó.';
+        }
+      }, 300);
+    }
+  }, 150 + slowCount * 30);
+}
+
+// ── RESULT OVERLAY ──────────────────────────────────────────────
+function showResult(studentName, item, isPrueba) {
+  document.getElementById('resultStudent').textContent = studentName;
+  document.getElementById('resultNumber').textContent = String(item.num).padStart(2, '0');
+  document.getElementById('resultItem').textContent = item.nombre;
+  document.getElementById('resultDesc').textContent =
+    (isPrueba ? '🧪 PRUEBA — No guardado · ' : '') + (item.descripcion || '');
+  document.getElementById('resultOverlay').classList.add('active');
+  fireConfetti();
+}
+
+function closeResult() {
+  document.getElementById('resultOverlay').classList.remove('active');
+  document.getElementById('confettiContainer').innerHTML = '';
+}
+
+// ── CONFETTI ────────────────────────────────────────────────────
+function fireConfetti() {
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  const colors = ['#2D5BE3','#00D4A0','#F59E0B','#FF5C6A','#5B21B6','#10B981','#FBBF24'];
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = 6 + Math.random() * 8;
+    const isCircle = Math.random() > 0.5;
+    el.style.cssText = `
+      left: ${Math.random()*100}%;
+      top: -20px;
+      width: ${size}px;
+      height: ${size}px;
+      background: ${color};
+      border-radius: ${isCircle ? '50%' : '2px'};
+      animation: fall ${1.5 + Math.random()*2}s ease-in ${Math.random()*0.8}s forwards;
+    `;
+    container.appendChild(el);
+  }
+
+  if (!document.getElementById('confetti-style')) {
+    const style = document.createElement('style');
+    style.id = 'confetti-style';
+    style.textContent = `
+      @keyframes fall {
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+// ── UNDO & RESET ────────────────────────────────────────────────
+function undoLast() {
+  if (state.assignments.length === 0) return;
+  if (!confirm('¿Deshacer la última asignación?')) return;
+  const last = state.assignments.pop();
+  state.takenNums.delete(last.num);
+  saveState();
+  renderAll();
+  document.getElementById('rouletteNum').textContent = '?';
+  document.getElementById('rouletteTitle').textContent = 'Ingresa una matrícula y gira la ruleta';
+  document.getElementById('rouletteTitle').className = 'roulette-item-title';
+}
+
+function resetAll() {
+  if (state.assignments.length === 0) return;
+  if (!confirm('⚠ ¿Reiniciar TODAS las asignaciones de esta sesión? Esta acción no se puede deshacer.')) return;
+  state.assignments = [];
+  state.takenNums = new Set();
+  saveState();
+  renderAll();
+  document.getElementById('rouletteNum').textContent = '?';
+  document.getElementById('rouletteTitle').textContent = 'Ingresa una matrícula y gira la ruleta';
+  document.getElementById('rouletteTitle').className = 'roulette-item-title';
+}
+
+// ── EXPORT ──────────────────────────────────────────────────────
+function exportList() {
+  if (state.assignments.length === 0) {
+    alert('No hay asignaciones para exportar.');
+    return;
+  }
+  const a = activeConfig.asignatura;
+  let text = `${a.codigo} — ${a.nombre}\n`;
+  text += `Lista oficial de asignaciones\n`;
+  text += `Prof. Misael Michel  ·  Período ${a.periodo}\n`;
+  text += '='.repeat(90) + '\n\n';
+  text += `${'#'.padEnd(4)} ${'Matrícula'.padEnd(12)} ${'Nombre'.padEnd(38)} ${'#'.padEnd(4)} Proyecto\n`;
+  text += '-'.repeat(90) + '\n';
+  state.assignments.forEach((r, i) => {
+    const num = String(r.num).padStart(2, '0');
+    text += `${String(i+1).padEnd(4)} ${r.matricula.padEnd(12)} ${r.nombre.padEnd(38)} #${num.padEnd(3)} ${r.item}\n`;
+  });
+  text += '\n' + '='.repeat(90) + '\n';
+  text += `Total asignadas: ${state.assignments.length} / ${activeConfig.items.length}\n`;
+  text += `Disponibles: ${activeConfig.items.length - state.assignments.length}\n`;
+  text += `Exportado: ${new Date().toLocaleString('es-DO')}\n`;
+
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  const date = new Date().toISOString().slice(0,10);
+  link.download = `${a.codigo}_Asignaciones_${date}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── KEYBOARD SHORTCUTS ──────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeResult();
+});
+document.getElementById('resultOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeResult();
+});
+
+// ── INIT ────────────────────────────────────────────────────────
+populateConfigSelect();
+</script>
+</body>
+</html>
