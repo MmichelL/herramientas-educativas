@@ -674,6 +674,142 @@
     margin-top: 12px;
   }
 
+  /* ── AUTH MODAL ── */
+  .auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,26,60,0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .auth-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .auth-card {
+    background: white;
+    border-radius: 20px;
+    padding: 36px 32px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    transform: scale(0.8);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .auth-overlay.active .auth-card { transform: scale(1); }
+  .auth-card-icon { font-size: 40px; margin-bottom: 12px; }
+  .auth-card-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .auth-card-desc {
+    font-size: 13px;
+    color: var(--dgray);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .auth-card-desc strong {
+    color: var(--navy);
+  }
+  .auth-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 16px;
+    color: var(--black);
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    text-align: center;
+    letter-spacing: 3px;
+    font-weight: 700;
+  }
+  .auth-input:focus { border-color: var(--blue); }
+  .auth-input.error {
+    border-color: var(--red);
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  .auth-error-msg {
+    font-size: 12px;
+    color: var(--red);
+    margin-top: 8px;
+    min-height: 18px;
+    font-weight: 600;
+  }
+  .auth-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .auth-btn-cancel {
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid #E5E7EB;
+    background: white;
+    color: var(--dgray);
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .auth-btn-cancel:hover { background: var(--gray); }
+  .auth-btn-confirm {
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: var(--red);
+    color: white;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .auth-btn-confirm:hover {
+    background: #DC2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+  }
+
+  /* ── DELETE BTN IN HISTORY ── */
+  .delete-row-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #FECACA;
+    background: #FEF2F2;
+    color: var(--red);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0.6;
+  }
+  .delete-row-btn:hover {
+    opacity: 1;
+    background: #FEE2E2;
+    transform: scale(1.1);
+  }
+
   /* ── SCROLLBAR ── */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -760,10 +896,11 @@
                 <th>Estudiante</th>
                 <th style="width:60px">Tarjeta</th>
                 <th>Proyecto asignado</th>
+                <th style="width:40px"></th>
               </tr>
             </thead>
             <tbody id="historyBody">
-              <tr><td colspan="4" class="empty-history">🎲 Aún no hay asignaciones. ¡Comienza el sorteo!</td></tr>
+              <tr><td colspan="5" class="empty-history">🎲 Aún no hay asignaciones. ¡Comienza el sorteo!</td></tr>
             </tbody>
           </table>
         </div>
@@ -836,6 +973,22 @@
     <div class="result-card-item" id="resultItem">—</div>
     <div class="result-card-desc" id="resultDesc">—</div>
     <button class="result-close-btn" onclick="closeResult()">¡Entendido! 🚀</button>
+  </div>
+</div>
+
+<!-- Auth Modal -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-card-icon" id="authIcon">🔐</div>
+    <div class="auth-card-title" id="authTitle">Acción protegida</div>
+    <div class="auth-card-desc" id="authDesc">Ingresa el código de profesor para continuar.</div>
+    <input class="auth-input" id="authInput" type="password" placeholder="••••••"
+           maxlength="20" onkeydown="if(event.key==='Enter') confirmAuth()"/>
+    <div class="auth-error-msg" id="authError"></div>
+    <div class="auth-buttons">
+      <button class="auth-btn-cancel" onclick="cancelAuth()">Cancelar</button>
+      <button class="auth-btn-confirm" onclick="confirmAuth()">Confirmar</button>
+    </div>
   </div>
 </div>
 
@@ -1071,7 +1224,7 @@ function buildGrid() {
 function buildHistory() {
   const tbody = document.getElementById('historyBody');
   if (state.assignments.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-history">🎲 Aún no hay asignaciones. ¡Comienza el sorteo!</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-history">🎲 Aún no hay asignaciones. ¡Comienza el sorteo!</td></tr>';
     return;
   }
   tbody.innerHTML = '';
@@ -1082,6 +1235,7 @@ function buildHistory() {
       <td style="font-weight:600">${a.nombre}<br><span style="font-size:11px;color:var(--dgray);font-weight:400">${a.matricula}</span></td>
       <td><span class="num-badge">${String(a.num).padStart(2,'0')}</span></td>
       <td style="font-size:12px">${a.item}</td>
+      <td><button class="delete-row-btn" onclick="requestDeleteOne(${i})" title="Eliminar esta asignación">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -1349,29 +1503,129 @@ function fireConfetti() {
   }
 }
 
-// ── UNDO & RESET ────────────────────────────────────────────────
-function undoLast() {
-  if (state.assignments.length === 0) return;
-  if (!confirm('¿Deshacer la última asignación?')) return;
+// ══════════════════════════════════════════════════════════════════
+// SISTEMA DE AUTENTICACIÓN PARA ELIMINACIONES
+// ══════════════════════════════════════════════════════════════════
+
+// Contraseña del profesor (cambiar aquí si es necesario)
+const CLAVE_PROFESOR = "2008464";
+
+let pendingAuthAction = null; // { type: 'deleteOne'|'deleteAll'|'undoLast', index?: number }
+
+function showAuthModal(action) {
+  pendingAuthAction = action;
+  const overlay = document.getElementById('authOverlay');
+  const input = document.getElementById('authInput');
+  const errorEl = document.getElementById('authError');
+  const titleEl = document.getElementById('authTitle');
+  const descEl = document.getElementById('authDesc');
+  const iconEl = document.getElementById('authIcon');
+
+  input.value = '';
+  input.classList.remove('error');
+  errorEl.textContent = '';
+
+  if (action.type === 'deleteAll') {
+    iconEl.textContent = '⚠️';
+    titleEl.textContent = 'Reiniciar todas las asignaciones';
+    descEl.innerHTML = 'Esta acción eliminará <strong>todas las asignaciones</strong> de esta sesión. Ingresa el código de profesor para confirmar.';
+  } else if (action.type === 'deleteOne') {
+    const a = state.assignments[action.index];
+    iconEl.textContent = '🗑️';
+    titleEl.textContent = 'Eliminar asignación';
+    descEl.innerHTML = `Se eliminará la asignación de <strong>${a.nombre}</strong> (Tarjeta #${String(a.num).padStart(2,'0')}). Ingresa el código de profesor.`;
+  } else if (action.type === 'undoLast') {
+    const a = state.assignments[state.assignments.length - 1];
+    iconEl.textContent = '↩️';
+    titleEl.textContent = 'Deshacer última asignación';
+    descEl.innerHTML = `Se revertirá la asignación de <strong>${a.nombre}</strong> (Tarjeta #${String(a.num).padStart(2,'0')}). Ingresa el código de profesor.`;
+  }
+
+  overlay.classList.add('active');
+  setTimeout(() => input.focus(), 300);
+}
+
+function cancelAuth() {
+  document.getElementById('authOverlay').classList.remove('active');
+  pendingAuthAction = null;
+}
+
+function confirmAuth() {
+  const input = document.getElementById('authInput');
+  const errorEl = document.getElementById('authError');
+  const val = input.value.trim();
+
+  if (val !== CLAVE_PROFESOR) {
+    input.classList.add('error');
+    errorEl.textContent = 'Código incorrecto. Intenta de nuevo.';
+    input.value = '';
+    setTimeout(() => {
+      input.classList.remove('error');
+      input.focus();
+    }, 400);
+    return;
+  }
+
+  // Código correcto — ejecutar la acción
+  const action = pendingAuthAction;
+  cancelAuth();
+
+  if (action.type === 'deleteAll') {
+    executeResetAll();
+  } else if (action.type === 'deleteOne') {
+    executeDeleteOne(action.index);
+  } else if (action.type === 'undoLast') {
+    executeUndoLast();
+  }
+}
+
+// ── Acciones protegidas (solo se ejecutan tras autenticación) ──
+
+function executeDeleteOne(index) {
+  const removed = state.assignments.splice(index, 1)[0];
+  state.takenNums.delete(removed.num);
+  saveState();
+  renderAll();
+  resetRouletteDisplay();
+}
+
+function executeUndoLast() {
   const last = state.assignments.pop();
   state.takenNums.delete(last.num);
   saveState();
   renderAll();
+  resetRouletteDisplay();
+}
+
+function executeResetAll() {
+  state.assignments = [];
+  state.takenNums = new Set();
+  saveState();
+  renderAll();
+  resetRouletteDisplay();
+}
+
+function resetRouletteDisplay() {
   document.getElementById('rouletteNum').textContent = '?';
   document.getElementById('rouletteTitle').textContent = 'Ingresa una matrícula y gira la ruleta';
   document.getElementById('rouletteTitle').className = 'roulette-item-title';
 }
 
+// ── Funciones públicas invocadas por los botones de la UI ──
+
+function requestDeleteOne(index) {
+  if (index < 0 || index >= state.assignments.length) return;
+  showAuthModal({ type: 'deleteOne', index });
+}
+
+function undoLast() {
+  if (state.assignments.length === 0) return;
+  showAuthModal({ type: 'undoLast' });
+}
+
 function resetAll() {
   if (state.assignments.length === 0) return;
-  if (!confirm('⚠ ¿Reiniciar TODAS las asignaciones de esta sesión? Esta acción no se puede deshacer.')) return;
-  state.assignments = [];
-  state.takenNums = new Set();
-  saveState();
-  renderAll();
-  document.getElementById('rouletteNum').textContent = '?';
-  document.getElementById('rouletteTitle').textContent = 'Ingresa una matrícula y gira la ruleta';
-  document.getElementById('rouletteTitle').className = 'roulette-item-title';
+  showAuthModal({ type: 'deleteAll' });
 }
 
 // ── EXPORT ──────────────────────────────────────────────────────
@@ -1408,10 +1662,16 @@ function exportList() {
 
 // ── KEYBOARD SHORTCUTS ──────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeResult();
+  if (e.key === 'Escape') {
+    closeResult();
+    cancelAuth();
+  }
 });
 document.getElementById('resultOverlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeResult();
+});
+document.getElementById('authOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) cancelAuth();
 });
 
 // ── INIT ────────────────────────────────────────────────────────
