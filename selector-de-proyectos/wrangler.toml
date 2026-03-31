@@ -1,0 +1,7 @@
+name = "selector-de-proyectos"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "SELECTOR_STATE"
+id = "1408d3f078714373a3c184ce65c65f50"

@@ -183,6 +183,26 @@
     background: rgba(255,255,255,0.15);
     color: white;
   }
+  .sync-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+  }
+  .sync-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--mint);
+    animation: pulse-sync 2s ease infinite;
+  }
+  @keyframes pulse-sync {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
 
   /* ── MAIN LAYOUT ── */
   .main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; padding: 28px; max-width: 1300px; margin: 0 auto; }
@@ -861,6 +881,7 @@
       </div>
     </div>
     <div class="header-right">
+      <div class="sync-badge"><div class="sync-dot"></div> Sincronizado</div>
       <div class="header-badge" id="headerBadge"></div>
       <button class="header-back-btn" onclick="backToConfig()">Cambiar sesión</button>
     </div>
@@ -1115,10 +1136,11 @@ let activeConfig = null;
 let state = { assignments: [], takenNums: new Set() };
 let isSpinning = false;
 
-// ── Clave de localStorage dinámica ──
-function storageKey() {
-  return 'selector_' + activeConfig.id + '_state';
-}
+// ── API endpoint para estado compartido ──
+const API_BASE = '/api/state';
+let syncTimer = null;
+let isSaving = false;
+let lastSyncHash = '';
 
 // ── CONFIGURACIÓN SELECTOR ──────────────────────────────────────
 function populateConfigSelect() {
@@ -1147,7 +1169,7 @@ function updateConfigInfo() {
   `;
 }
 
-function startSession() {
+async function startSession() {
   const idx = document.getElementById('configSelect').value;
   activeConfig = CONFIGURACIONES[idx];
   if (!activeConfig) return;
@@ -1162,36 +1184,104 @@ function startSession() {
   document.getElementById('configScreen').classList.add('hidden');
   document.getElementById('appScreen').classList.add('active');
 
-  // Load state for this config
-  loadState();
+  // Load state from cloud
+  await loadState();
   renderAll();
+  startSync();
   document.getElementById('matriculaInput').focus();
 }
 
 function backToConfig() {
+  stopSync();
   document.getElementById('configScreen').classList.remove('hidden');
   document.getElementById('appScreen').classList.remove('active');
   activeConfig = null;
 }
 
-// ── LOAD / SAVE STATE ───────────────────────────────────────────
-function loadState() {
+// ── LOAD / SAVE STATE (Cloudflare KV via API) ──────────────────
+
+async function loadState() {
   state = { assignments: [], takenNums: new Set() };
   try {
-    const saved = localStorage.getItem(storageKey());
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      state.assignments = parsed.assignments || [];
-      state.takenNums = new Set(parsed.takenNums || []);
+    const resp = await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      state.assignments = data.assignments || [];
+      state.takenNums = new Set(data.takenNums || []);
+      lastSyncHash = JSON.stringify(data);
     }
-  } catch(e) {}
+  } catch (e) {
+    console.warn('Error cargando estado remoto, intentando localStorage:', e);
+    // Fallback a localStorage si la API falla
+    try {
+      const localKey = 'selector_' + activeConfig.id + '_state';
+      const saved = localStorage.getItem(localKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        state.assignments = parsed.assignments || [];
+        state.takenNums = new Set(parsed.takenNums || []);
+      }
+    } catch (e2) {}
+  }
 }
 
-function saveState() {
-  localStorage.setItem(storageKey(), JSON.stringify({
+async function saveState() {
+  if (isSaving) return;
+  isSaving = true;
+
+  const payload = {
     assignments: state.assignments,
     takenNums: [...state.takenNums]
-  }));
+  };
+
+  // Guardar en localStorage como cache local
+  try {
+    const localKey = 'selector_' + activeConfig.id + '_state';
+    localStorage.setItem(localKey, JSON.stringify(payload));
+  } catch (e) {}
+
+  // Guardar en Cloudflare KV (fuente de verdad)
+  try {
+    await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    lastSyncHash = JSON.stringify(payload);
+  } catch (e) {
+    console.warn('Error guardando estado remoto:', e);
+  }
+
+  isSaving = false;
+}
+
+// ── SINCRONIZACIÓN AUTOMÁTICA ──────────────────────────────────
+// Cada 5 segundos, consultar la API para detectar cambios de otros clientes.
+function startSync() {
+  stopSync();
+  syncTimer = setInterval(async () => {
+    if (!activeConfig || isSpinning || isSaving) return;
+    try {
+      const resp = await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const newHash = JSON.stringify(data);
+      if (newHash !== lastSyncHash) {
+        // Estado cambió remotamente — actualizar UI
+        state.assignments = data.assignments || [];
+        state.takenNums = new Set(data.takenNums || []);
+        lastSyncHash = newHash;
+        renderAll();
+      }
+    } catch (e) {}
+  }, 5000);
+}
+
+function stopSync() {
+  if (syncTimer) {
+    clearInterval(syncTimer);
+    syncTimer = null;
+  }
 }
 
 // ── BUILD UI ────────────────────────────────────────────────────
@@ -1399,7 +1489,7 @@ function slowSpin(chosen, numEl, dotTimer, dots, matricula, participantName, isP
     slowCount++;
     if (slowCount >= slowSteps) {
       clearInterval(slowInterval);
-      setTimeout(() => {
+      setTimeout(async () => {
         clearInterval(dotTimer);
         dots.forEach(d => d.classList.remove('active'));
         numEl.className = 'roulette-number';
@@ -1418,7 +1508,7 @@ function slowSpin(chosen, numEl, dotTimer, dots, matricula, participantName, isP
             descripcion: chosen.descripcion || '',
             timestamp: new Date().toISOString()
           });
-          saveState();
+          await saveState();
         }
 
         renderAll();
@@ -1581,26 +1671,26 @@ function confirmAuth() {
 
 // ── Acciones protegidas (solo se ejecutan tras autenticación) ──
 
-function executeDeleteOne(index) {
+async function executeDeleteOne(index) {
   const removed = state.assignments.splice(index, 1)[0];
   state.takenNums.delete(removed.num);
-  saveState();
+  await saveState();
   renderAll();
   resetRouletteDisplay();
 }
 
-function executeUndoLast() {
+async function executeUndoLast() {
   const last = state.assignments.pop();
   state.takenNums.delete(last.num);
-  saveState();
+  await saveState();
   renderAll();
   resetRouletteDisplay();
 }
 
-function executeResetAll() {
+async function executeResetAll() {
   state.assignments = [];
   state.takenNums = new Set();
-  saveState();
+  await saveState();
   renderAll();
   resetRouletteDisplay();
 }
