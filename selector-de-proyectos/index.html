@@ -1140,7 +1140,7 @@ let isSpinning = false;
 const API_BASE = '/api/state';
 let syncTimer = null;
 let isSaving = false;
-let lastSyncHash = '';
+let stateVersion = 0;
 
 // ── CONFIGURACIÓN SELECTOR ──────────────────────────────────────
 function populateConfigSelect() {
@@ -1198,65 +1198,98 @@ function backToConfig() {
   activeConfig = null;
 }
 
-// ── LOAD / SAVE STATE (Cloudflare KV via API) ──────────────────
+// ── LOAD STATE (desde Cloudflare KV) ────────────────────────────
 
 async function loadState() {
   state = { assignments: [], takenNums: new Set() };
+  stateVersion = 0;
   try {
     const resp = await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`);
     if (resp.ok) {
       const data = await resp.json();
-      state.assignments = data.assignments || [];
-      state.takenNums = new Set(data.takenNums || []);
-      lastSyncHash = JSON.stringify(data);
+      applyServerState(data);
     }
   } catch (e) {
-    console.warn('Error cargando estado remoto, intentando localStorage:', e);
-    // Fallback a localStorage si la API falla
-    try {
-      const localKey = 'selector_' + activeConfig.id + '_state';
-      const saved = localStorage.getItem(localKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        state.assignments = parsed.assignments || [];
-        state.takenNums = new Set(parsed.takenNums || []);
-      }
-    } catch (e2) {}
+    console.warn('Error cargando estado remoto:', e);
   }
 }
 
-async function saveState() {
-  if (isSaving) return;
-  isSaving = true;
+// Aplica un estado recibido del servidor al estado local
+function applyServerState(data) {
+  state.assignments = data.assignments || [];
+  state.takenNums = new Set(data.takenNums || []);
+  stateVersion = data.version || 0;
+}
 
-  const payload = {
-    assignments: state.assignments,
-    takenNums: [...state.takenNums]
-  };
-
-  // Guardar en localStorage como cache local
+// ── GUARDAR ASIGNACIÓN (atómica, con locking optimista) ─────────
+// Envía UNA asignación al servidor. El servidor valida:
+//   - Versión coincide (nadie cambió el estado mientras giraba)
+//   - Número no fue tomado por otro
+//   - Matrícula no tiene ya asignación
+//
+// Retorna: { ok: true } o { conflict: true, reason, state }
+async function saveAssignment(matricula, nombre, num, item, descripcion) {
   try {
-    const localKey = 'selector_' + activeConfig.id + '_state';
-    localStorage.setItem(localKey, JSON.stringify(payload));
-  } catch (e) {}
-
-  // Guardar en Cloudflare KV (fuente de verdad)
-  try {
-    await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`, {
+    const resp = await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        version: stateVersion,
+        matricula, nombre, num, item,
+        descripcion: descripcion || ''
+      })
     });
-    lastSyncHash = JSON.stringify(payload);
-  } catch (e) {
-    console.warn('Error guardando estado remoto:', e);
-  }
 
-  isSaving = false;
+    const data = await resp.json();
+
+    if (resp.ok && data.ok) {
+      // Éxito — actualizar estado local con lo que devolvió el servidor
+      applyServerState(data.state);
+      return { ok: true };
+    }
+
+    if (data.conflict) {
+      // Conflicto — actualizar estado local con la versión actual del servidor
+      applyServerState(data.state);
+      return { ok: false, conflict: true, reason: data.reason, message: data.message };
+    }
+
+    return { ok: false, conflict: false, message: data.error || 'Error desconocido' };
+  } catch (e) {
+    console.warn('Error guardando asignación:', e);
+    return { ok: false, conflict: false, message: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+// ── ELIMINAR ASIGNACIÓN(ES) (atómica) ───────────────────────────
+async function deleteFromServer(action, index) {
+  try {
+    const resp = await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ version: stateVersion, action, index })
+    });
+
+    const data = await resp.json();
+
+    if (resp.ok && data.ok) {
+      applyServerState(data.state);
+      return { ok: true };
+    }
+
+    if (data.conflict) {
+      applyServerState(data.state);
+      return { ok: false, message: data.message };
+    }
+
+    return { ok: false, message: data.error || 'Error desconocido' };
+  } catch (e) {
+    return { ok: false, message: 'Error de conexión.' };
+  }
 }
 
 // ── SINCRONIZACIÓN AUTOMÁTICA ──────────────────────────────────
-// Cada 5 segundos, consultar la API para detectar cambios de otros clientes.
+// Cada 3 segundos, consultar la API para detectar cambios de otros clientes.
 function startSync() {
   stopSync();
   syncTimer = setInterval(async () => {
@@ -1265,16 +1298,14 @@ function startSync() {
       const resp = await fetch(`${API_BASE}?id=${encodeURIComponent(activeConfig.id)}`);
       if (!resp.ok) return;
       const data = await resp.json();
-      const newHash = JSON.stringify(data);
-      if (newHash !== lastSyncHash) {
+      const serverVersion = data.version || 0;
+      if (serverVersion !== stateVersion) {
         // Estado cambió remotamente — actualizar UI
-        state.assignments = data.assignments || [];
-        state.takenNums = new Set(data.takenNums || []);
-        lastSyncHash = newHash;
+        applyServerState(data);
         renderAll();
       }
     } catch (e) {}
-  }, 5000);
+  }, 3000);
 }
 
 function stopSync() {
@@ -1498,19 +1529,54 @@ function slowSpin(chosen, numEl, dotTimer, dots, matricula, participantName, isP
         document.getElementById('rouletteTitle').className = 'roulette-item-title revealed';
 
         if (!isPrueba) {
-          // Guardar estado real
-          state.takenNums.add(chosen.num);
-          state.assignments.push({
-            matricula,
-            nombre: participantName,
-            num: chosen.num,
-            item: chosen.nombre,
-            descripcion: chosen.descripcion || '',
-            timestamp: new Date().toISOString()
-          });
-          await saveState();
+          // ── Guardar en servidor con locking optimista ──
+          const result = await saveAssignment(
+            matricula, participantName, chosen.num,
+            chosen.nombre, chosen.descripcion
+          );
+
+          if (!result.ok) {
+            // ── CONFLICTO — otro cliente tomó este número o cambió el estado ──
+            renderAll(); // Actualizar UI con el estado real del servidor
+
+            if (result.conflict && result.reason === 'NUM_TAKEN') {
+              // El número fue tomado — hacer re-spin automático
+              isSpinning = false;
+              const alertBox = document.getElementById('alertBox');
+              alertBox.className = 'alert alert-warn show';
+              alertBox.textContent = '⚠ ¡Colisión! La tarjeta #' + String(chosen.num).padStart(2,'0') +
+                ' fue tomada por otro estudiante. Girando de nuevo...';
+              document.getElementById('matriculaInput').value = matricula;
+              // Re-spin automático después de un breve momento
+              setTimeout(() => {
+                alertBox.className = 'alert';
+                spinRoulette();
+              }, 2000);
+              return;
+            }
+
+            if (result.conflict && result.reason === 'ALREADY_ASSIGNED') {
+              isSpinning = false;
+              const alertBox = document.getElementById('alertBox');
+              alertBox.className = 'alert alert-error show';
+              alertBox.textContent = '⚠ ' + result.message;
+              document.getElementById('matriculaInput').value = '';
+              document.getElementById('studentName').textContent = '';
+              document.getElementById('spinBtn').disabled = activeConfig.items.length - state.takenNums.size === 0;
+              return;
+            }
+
+            // Otro error
+            isSpinning = false;
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = 'alert alert-error show';
+            alertBox.textContent = '⚠ ' + (result.message || 'Error al guardar. Intenta de nuevo.');
+            document.getElementById('spinBtn').disabled = false;
+            return;
+          }
         }
 
+        // ── Éxito (o modo prueba) — mostrar resultado ──
         renderAll();
 
         // Mark slot as just-assigned briefly
@@ -1672,25 +1738,28 @@ function confirmAuth() {
 // ── Acciones protegidas (solo se ejecutan tras autenticación) ──
 
 async function executeDeleteOne(index) {
-  const removed = state.assignments.splice(index, 1)[0];
-  state.takenNums.delete(removed.num);
-  await saveState();
+  const result = await deleteFromServer('deleteOne', index);
+  if (!result.ok) {
+    alert(result.message || 'Error al eliminar.');
+  }
   renderAll();
   resetRouletteDisplay();
 }
 
 async function executeUndoLast() {
-  const last = state.assignments.pop();
-  state.takenNums.delete(last.num);
-  await saveState();
+  const result = await deleteFromServer('undoLast');
+  if (!result.ok) {
+    alert(result.message || 'Error al deshacer.');
+  }
   renderAll();
   resetRouletteDisplay();
 }
 
 async function executeResetAll() {
-  state.assignments = [];
-  state.takenNums = new Set();
-  await saveState();
+  const result = await deleteFromServer('deleteAll');
+  if (!result.ok) {
+    alert(result.message || 'Error al reiniciar.');
+  }
   renderAll();
   resetRouletteDisplay();
 }
