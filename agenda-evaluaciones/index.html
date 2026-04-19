@@ -117,6 +117,17 @@
 
   .logout-btn { float: right; background: transparent; border: 1px solid rgba(255,255,255,0.3);
                 color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+
+  .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px,1fr));
+               gap: 6px; margin-top: 12px; }
+  .slot {
+    background: var(--mint); color: var(--navy); padding: 10px 0; text-align: center;
+    border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px;
+    border: 2px solid transparent; transition: transform 0.1s;
+  }
+  .slot:hover { transform: translateY(-1px); }
+  .slot-taken { background: #E5E7EB; color: var(--dgray); cursor: not-allowed; }
+  .slot-mine  { background: var(--blue); color: white; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -140,7 +151,9 @@ const CONFIGURACIONES = [
       { matricula: "2024-0002", nombre: "LUIS PRUEBA" },
     ],
     tiposActividad: [{ id: "eval-recuperacion", etiqueta: "Evaluación" }],
-    ventanas: [],
+    ventanas: [
+      { id: "test-win", fecha: "2026-04-19", inicio: "09:00", fin: "10:00", slotMinutos: 5 },
+    ],
     rubrica: { rondasPorEstudiante: 2, puntosPorRonda: 7.5, checksGlobales: [] },
     competencias: [],
     promptTemplate: "",
@@ -600,7 +613,103 @@ App.Student = (function () {
     });
   }
 
-  return { renderHome, renderVentanas };
+  function slotsEntre(inicio, fin, minutos) {
+    const [h1, m1] = inicio.split(":").map(Number);
+    const [h2, m2] = fin.split(":").map(Number);
+    const inicioMin = h1 * 60 + m1;
+    const finMin = h2 * 60 + m2;
+    const out = [];
+    for (let t = inicioMin; t + minutos <= finMin; t += minutos) {
+      const h = String(Math.floor(t / 60)).padStart(2, "0");
+      const m = String(t % 60).padStart(2, "0");
+      out.push(`${h}:${m}`);
+    }
+    return out;
+  }
+
+  async function renderReservar(tipoId, ventanaId) {
+    const cfg = App.Core.config;
+    const ventana = cfg.ventanas.find(v => v.id === ventanaId);
+    const tipo = cfg.tiposActividad.find(t => t.id === tipoId);
+    if (!ventana || !tipo) { App.Core.navigate("#/estudiante/agenda"); return; }
+    const session = App.Auth.loadSession();
+
+    await App.Core.fetchState();  // refresca antes de mostrar grid
+    const ocupados = App.Core.slotsOcupados(ventanaId);
+    const misReservas = App.Core.reservasDeEstudiante(session.matricula);
+    const mios = new Set(misReservas.filter(r => r.ventanaId === ventanaId).map(r => r.slotInicio));
+
+    document.getElementById("app").innerHTML = `
+      <div class="stu-shell">
+        <button class="logout-btn" id="stu-back">← Volver</button>
+        <h1>Escoger slot</h1>
+        <p class="meta">${App.UI.esc(tipo.etiqueta)} · ${App.UI.esc(ventana.fecha)} · ${App.UI.esc(ventana.inicio)}–${App.UI.esc(ventana.fin)}</p>
+
+        <div class="stu-section">
+          <div class="slot-grid" id="slot-grid"></div>
+        </div>
+      </div>
+    `;
+    const grid = document.getElementById("slot-grid");
+    const slots = slotsEntre(ventana.inicio, ventana.fin, ventana.slotMinutos);
+    slots.forEach(s => {
+      const div = document.createElement("div");
+      div.textContent = s;
+      if (mios.has(s)) { div.className = "slot slot-mine"; }
+      else if (ocupados.has(s)) { div.className = "slot slot-taken"; }
+      else {
+        div.className = "slot";
+        div.onclick = () => confirmReserva(tipoId, ventanaId, s);
+      }
+      grid.appendChild(div);
+    });
+
+    document.getElementById("stu-back").onclick = () =>
+      App.Core.navigate(`#/estudiante/agenda`);
+  }
+
+  async function confirmReserva(tipoId, ventanaId, slotInicio) {
+    const cfg = App.Core.config;
+    const tipo = cfg.tiposActividad.find(t => t.id === tipoId);
+    const ventana = cfg.ventanas.find(v => v.id === ventanaId);
+    const ok = await App.UI.confirm(
+      `Reservar ${tipo.etiqueta} el ${ventana.fecha} a las ${slotInicio}?`
+    );
+    if (!ok) return;
+
+    const session = App.Auth.loadSession();
+    const id = `r-${crypto.randomUUID()}`;
+    const nueva = {
+      id,
+      estudianteMatricula: session.matricula,
+      tipoActividadId: tipoId,
+      ventanaId,
+      slotInicio,
+      estado: "reservada",
+      creadaEn: new Date().toISOString(),
+    };
+
+    try {
+      await App.Core.mutate(reservas => {
+        // Revalidar localmente: slot libre + cap tipo
+        const ocupado = Object.values(reservas).some(r =>
+          r.ventanaId === ventanaId && r.slotInicio === slotInicio);
+        if (ocupado) throw new Error("Slot ya tomado");
+        const yaTipo = Object.values(reservas).some(r =>
+          r.estudianteMatricula === session.matricula && r.tipoActividadId === tipoId);
+        if (yaTipo) throw new Error("Ya reservaste este tipo");
+        reservas[id] = nueva;
+        return reservas;
+      });
+      App.UI.toast("✓ Reservado", "success");
+      App.Core.navigate("#/estudiante/agenda");
+    } catch (e) {
+      App.UI.toast(e.conflict ? "Otro usuario actualizó. Recargando." : (e.message || "Error"), "error");
+      renderReservar(tipoId, ventanaId); // refresca grid
+    }
+  }
+
+  return { renderHome, renderVentanas, renderReservar };
 })();
 
 // ══════════════════════════════════════════════════════════════════
@@ -639,8 +748,7 @@ function route(hash) {
   if (session.rol === "estudiante") {
     if (hash === "#/estudiante/agenda") return App.Student.renderHome();
     const vm = hash.match(/^#\/estudiante\/reservar\/([^/]+)\/([^/]+)$/);
-    if (vm) return document.getElementById("app").innerHTML =
-      `<div style="padding:40px;color:white">Reservar slot (Task 6): tipo ${App.UI.esc(vm[1])} en ventana ${App.UI.esc(vm[2])}</div>`;
+    if (vm) return App.Student.renderReservar(vm[1], vm[2]);
     const rm = hash.match(/^#\/estudiante\/resultado\/([^/]+)$/);
     if (rm) return document.getElementById("app").innerHTML =
       `<div style="padding:40px;color:white">Detalle reserva (Task 7): ${App.UI.esc(rm[1])}</div>`;
