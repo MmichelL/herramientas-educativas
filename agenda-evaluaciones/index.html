@@ -128,6 +128,11 @@
   .slot:hover { transform: translateY(-1px); }
   .slot-taken { background: #E5E7EB; color: var(--dgray); cursor: not-allowed; }
   .slot-mine  { background: var(--blue); color: white; cursor: not-allowed; }
+
+  .detail-ronda { border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .detail-ronda h3 { font-size: 14px; color: var(--navy); margin-bottom: 4px; }
+  .detail-nota { font-size: 22px; font-weight: 800; color: var(--blue); float: right; }
+  .detail-global { background: var(--gray); padding: 12px 14px; border-radius: 10px; margin-top: 8px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -715,7 +720,75 @@ App.Student = (function () {
     }
   }
 
-  return { renderHome, renderVentanas, renderReservar };
+  function renderResultado(reservaId) {
+    const cfg = App.Core.config;
+    const reserva = App.Core.state.reservas[reservaId];
+    const session = App.Auth.loadSession();
+    if (!reserva || reserva.estudianteMatricula !== session.matricula) {
+      App.UI.toast("Reserva no encontrada", "error");
+      App.Core.navigate("#/estudiante/agenda");
+      return;
+    }
+    if (reserva.estado !== "publicada") {
+      App.UI.toast("Resultado aún no publicado", "warn");
+      App.Core.navigate("#/estudiante/agenda");
+      return;
+    }
+
+    const tipo = cfg.tiposActividad.find(t => t.id === reserva.tipoActividadId);
+    const ev = reserva.evaluacion || {};
+    const rondas = ev.rondas || [];
+    const checks = ev.checksGlobales || {};
+    const checksDefs = cfg.rubrica.checksGlobales;
+
+    document.getElementById("app").innerHTML = `
+      <div class="stu-shell">
+        <button class="logout-btn" id="stu-back">← Volver</button>
+        <h1>Detalle de evaluación</h1>
+        <p class="meta">${App.UI.esc(tipo.etiqueta)} · Nota total: ${ev.puntosTotales ?? "—"} / ${cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda}</p>
+
+        <div class="stu-section">
+          ${rondas.map((r, i) => renderRondaDetalle(r, i, cfg)).join("")}
+
+          <div class="detail-global">
+            <strong>Cumplimiento:</strong><br>
+            ${checksDefs.map(c => `${checks[c.id] ? "✓" : "✗"} ${App.UI.esc(c.etiqueta)}`).join(" · ")}
+          </div>
+
+          ${ev.observacionGlobal ? `
+            <div class="detail-global">
+              <strong>Observación general:</strong><br>${App.UI.esc(ev.observacionGlobal)}
+            </div>` : ""}
+
+          ${(ev.videosURLs || []).length ? `
+            <div class="detail-global">
+              <strong>Videos:</strong><br>
+              ${ev.videosURLs.map(u => `<a href="${App.UI.esc(u)}" target="_blank" rel="noopener">${App.UI.esc(u)}</a>`).join("<br>")}
+            </div>` : ""}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("stu-back").onclick = () =>
+      App.Core.navigate("#/estudiante/agenda");
+  }
+
+  function renderRondaDetalle(r, i, cfg) {
+    const comp = cfg.competencias.find(c => c.id === r.competenciaId);
+    const preg = comp ? comp.preguntas.find(p => p.id === r.preguntaId) : null;
+    return `
+      <div class="detail-ronda">
+        <span class="detail-nota">${r.puntosFinal ?? r.puntosLive ?? "—"}</span>
+        <h3>Ronda ${i + 1} · ${App.UI.esc(comp ? comp.nombre : r.competenciaId)}</h3>
+        <p style="font-size:13px;color:var(--dgray);margin-bottom:6px">
+          ${App.UI.esc(preg ? preg.escenario : "")}
+        </p>
+        ${r.observacion ? `<div class="detail-global" style="margin-top:6px">${App.UI.esc(r.observacion)}</div>` : ""}
+      </div>
+    `;
+  }
+
+  return { renderHome, renderVentanas, renderReservar, renderResultado };
 })();
 
 // ══════════════════════════════════════════════════════════════════
@@ -756,8 +829,7 @@ function route(hash) {
     const vm = hash.match(/^#\/estudiante\/reservar\/([^/]+)\/([^/]+)$/);
     if (vm) return App.Student.renderReservar(vm[1], vm[2]);
     const rm = hash.match(/^#\/estudiante\/resultado\/([^/]+)$/);
-    if (rm) return document.getElementById("app").innerHTML =
-      `<div style="padding:40px;color:white">Detalle reserva (Task 7): ${App.UI.esc(rm[1])}</div>`;
+    if (rm) return App.Student.renderResultado(rm[1]);
   }
   if (session.rol === "profe") {
     if (hash === "#/profe/agenda") return document.getElementById("app").innerHTML =
