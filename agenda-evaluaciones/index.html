@@ -228,7 +228,7 @@ const CONFIGURACIONES = [
     ],
 
     ventanas: [
-      { id: "dom-19-abr-mañana", fecha: "2026-04-19", inicio: "09:00", fin: "12:00", slotMinutos: 5 },
+      { id: "dom-19-abr-mañana", fecha: "2026-04-19", inicio: "09:00", fin: "12:00", slotMinutos: 10, recesoMinutos: 2 },
     ],
 
     rubrica: {
@@ -819,7 +819,7 @@ App.Student = (function () {
                 <div class="res-row" style="cursor:pointer" data-vid="${v.id}">
                   <div>
                     <div class="res-title">${App.UI.esc(v.fecha)} · ${App.UI.esc(v.inicio)}–${App.UI.esc(v.fin)}</div>
-                    <div class="res-meta">Slots de ${v.slotMinutos} min</div>
+                    <div class="res-meta">Slots de ${v.slotMinutos} min${v.recesoMinutos ? ` (+${v.recesoMinutos} min receso)` : ""}</div>
                   </div>
                   <div style="color:var(--blue);font-weight:700">→</div>
                 </div>
@@ -833,13 +833,14 @@ App.Student = (function () {
     });
   }
 
-  function slotsEntre(inicio, fin, minutos) {
+  function slotsEntre(inicio, fin, minutos, receso = 0) {
     const [h1, m1] = inicio.split(":").map(Number);
     const [h2, m2] = fin.split(":").map(Number);
     const inicioMin = h1 * 60 + m1;
     const finMin = h2 * 60 + m2;
+    const paso = minutos + receso;
     const out = [];
-    for (let t = inicioMin; t + minutos <= finMin; t += minutos) {
+    for (let t = inicioMin; t + minutos <= finMin; t += paso) {
       const h = String(Math.floor(t / 60)).padStart(2, "0");
       const m = String(t % 60).padStart(2, "0");
       out.push(`${h}:${m}`);
@@ -877,13 +878,14 @@ App.Student = (function () {
       </div>
     `;
     const grid = document.getElementById("slot-grid");
-    const slots = slotsEntre(ventana.inicio, ventana.fin, ventana.slotMinutos);
+    const slots = slotsEntre(ventana.inicio, ventana.fin, ventana.slotMinutos, ventana.recesoMinutos || 0);
     slots.forEach(s => {
+      if (ocupados.has(s) && !mios.has(s)) return;
       const div = document.createElement("div");
       div.textContent = s;
-      if (mios.has(s)) { div.className = "slot slot-mine"; }
-      else if (ocupados.has(s)) { div.className = "slot slot-taken"; }
-      else {
+      if (mios.has(s)) {
+        div.className = "slot slot-mine";
+      } else {
         div.className = "slot";
         div.onclick = () => confirmReserva(tipoId, ventanaId, s);
       }
