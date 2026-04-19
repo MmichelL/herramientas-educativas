@@ -774,7 +774,7 @@ App.Student = (function () {
           <div class="res-meta">${App.UI.esc(ventana ? ventana.fecha : "")} · ${App.UI.esc(r.slotInicio)}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <span class="badge badge-${r.estado}">${label}</span>
+          <span class="badge badge-${App.UI.esc(r.estado)}">${App.UI.esc(label)}</span>
           ${puedeVer ? `<button class="btn btn-ghost res-ver" data-id="${r.id}" style="padding:6px 12px;font-size:13px">Ver detalle</button>` : ""}
         </div>
       </div>
@@ -1117,7 +1117,7 @@ App.Teacher = (function () {
         <td>${App.UI.esc(ventana ? ventana.fecha : "")} ${App.UI.esc(r.slotInicio)}</td>
         <td>${App.UI.esc(est ? est.nombre : r.estudianteMatricula)}</td>
         <td>${App.UI.esc(tipo ? tipo.etiqueta : r.tipoActividadId)}</td>
-        <td><span class="badge badge-${r.estado}">${r.estado}</span></td>
+        <td><span class="badge badge-${App.UI.esc(r.estado)}">${App.UI.esc(r.estado)}</span></td>
         <td>${renderActions(r)}</td>
       </tr>
     `;
