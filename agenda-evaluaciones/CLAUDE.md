@@ -161,3 +161,7 @@ Correr antes de cada release:
 - Spec diseño: `docs/superpowers/specs/2026-04-19-agenda-evaluaciones-design.md`.
 - Plan implementación: `docs/superpowers/plans/2026-04-19-agenda-evaluaciones.md`.
 - Tool hermana (patrón base): `../selector-de-proyectos/`.
+
+---
+
+*Status: desplegado en https://agenda-evaluaciones.pages.dev/ · Prof. Misael Michel · UNAD ENE-ABR 2026*
