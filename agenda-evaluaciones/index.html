@@ -1929,16 +1929,16 @@ function route(hash) {
   if (session.rol === "estudiante") {
     if (hash === "#/estudiante/agenda") return App.Student.renderHome();
     const vm = hash.match(/^#\/estudiante\/reservar\/([^/]+)\/([^/]+)$/);
-    if (vm) return App.Student.renderReservar(vm[1], vm[2]);
+    if (vm) return App.Student.renderReservar(decodeURIComponent(vm[1]), decodeURIComponent(vm[2]));
     const rm = hash.match(/^#\/estudiante\/resultado\/([^/]+)$/);
-    if (rm) return App.Student.renderResultado(rm[1]);
+    if (rm) return App.Student.renderResultado(decodeURIComponent(rm[1]));
   }
   if (session.rol === "profe") {
     if (hash === "#/profe/agenda") return App.Teacher.renderAgenda();
     const em = hash.match(/^#\/profe\/eval\/([^/]+)$/);
-    if (em) return App.Eval.renderLive(em[1]);
+    if (em) return App.Eval.renderLive(decodeURIComponent(em[1]));
     const pm = hash.match(/^#\/profe\/proceso\/([^/]+)$/);
-    if (pm) return App.Eval.renderProceso(pm[1]);
+    if (pm) return App.Eval.renderProceso(decodeURIComponent(pm[1]));
     if (hash === "#/profe/reportes") return App.Reports.renderPanel();
   }
   document.getElementById("app").innerHTML =
