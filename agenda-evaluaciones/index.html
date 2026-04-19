@@ -1550,14 +1550,20 @@ App.Eval = (function () {
           res[reserva.id].evaluacion.rondas[idx].puntosFinal = clamped;
           return res;
         });
-        actualizarTotal(reserva.id, cfg);
+        await actualizarTotal(reserva.id, cfg);
       };
     });
 
     host.querySelectorAll(".proc-copy").forEach(b => {
       b.onclick = async () => {
         const idx = Number(b.dataset.idx);
-        const prompt = App.Prompt.build(reserva.evaluacion.rondas[idx], reserva, cfg);
+        const transcripcionEl = host.querySelector(`.proc-transcripcion[data-idx="${idx}"]`);
+        const ronda = reserva.evaluacion.rondas[idx];
+        const rondaLive = {
+          ...ronda,
+          transcripcion: transcripcionEl ? transcripcionEl.value : ronda.transcripcion,
+        };
+        const prompt = App.Prompt.build(rondaLive, reserva, cfg);
         const ok = await App.Prompt.copyToClipboard(prompt);
         App.UI.toast(ok ? "Prompt copiado. Pegar en ChatGPT/Claude" : "No se pudo copiar — selecciona y copia manual", ok ? "success" : "warn");
       };
