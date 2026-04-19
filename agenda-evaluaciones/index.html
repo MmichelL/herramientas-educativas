@@ -108,7 +108,20 @@
 // CONFIGURACIÓN — Editar aquí para agregar/modificar contextos
 // ══════════════════════════════════════════════════════════════════
 const CONFIGURACIONES = [
-  // Primera entrada se agrega en Task 15 (SIST-3311 recuperación)
+  {
+    id: "demo-test",
+    etiqueta: "Demo — test login",
+    asignatura: { codigo: "DEMO", nombre: "Demo", periodo: "Test", tarea: "Prueba" },
+    estudiantes: [
+      { matricula: "2024-0001", nombre: "ANA PRUEBA" },
+      { matricula: "2024-0002", nombre: "LUIS PRUEBA" },
+    ],
+    tiposActividad: [{ id: "eval-recuperacion", etiqueta: "Evaluación" }],
+    ventanas: [],
+    rubrica: { rondasPorEstudiante: 2, puntosPorRonda: 7.5, checksGlobales: [] },
+    competencias: [],
+    promptTemplate: "",
+  },
 ];
 
 const PROFESOR_MATRICULA = "2008464"; // usado como contraseña; UI nunca lo rotula como matrícula
@@ -329,13 +342,149 @@ App.UI = (function () {
 })();
 
 // ══════════════════════════════════════════════════════════════════
-// Boot — placeholder hasta que Task 4 monte App.Auth
+// App.Auth — login + sesión efímera
 // ══════════════════════════════════════════════════════════════════
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("app").innerHTML =
-    "<div style='padding:40px;color:white'>App.Core listo. Modules pendientes.</div>";
-  App.Core.onRoute(() => { /* routes registradas por módulos */ });
+App.Auth = (function () {
+  const SESSION_KEY = "agenda_eval_session";
+
+  function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+  function loadSession() {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; }
+    catch { return null; }
+  }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+  function render() {
+    const host = document.getElementById("app");
+    const configs = CONFIGURACIONES;
+
+    host.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
+        <div class="card" style="max-width:480px;width:100%">
+          <div style="text-align:center;margin-bottom:24px">
+            <div style="width:64px;height:64px;background:var(--blue);border-radius:16px;
+                 display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px">📅</div>
+            <h1 style="color:var(--navy);font-size:22px">Agenda de Evaluaciones</h1>
+            <p style="color:var(--dgray);font-size:14px;margin-top:4px">Herramientas Educativas · UNAD</p>
+          </div>
+
+          <label for="auth-materia">Materia</label>
+          <select id="auth-materia">
+            <option value="">-- seleccionar --</option>
+            ${configs.map(c => `<option value="${c.id}">${App.UI.esc(c.etiqueta)}</option>`).join("")}
+          </select>
+
+          <div id="auth-after-materia" style="display:none;margin-top:16px">
+            <label for="auth-nombre">Nombre</label>
+            <select id="auth-nombre">
+              <option value="">-- seleccionar --</option>
+            </select>
+
+            <div style="margin-top:16px">
+              <label for="auth-matricula">Matrícula</label>
+              <input id="auth-matricula" type="text" placeholder="2024-XXXX" autocomplete="off"/>
+            </div>
+
+            <button id="auth-entrar" class="btn btn-primary" style="width:100%;margin-top:20px">
+              Entrar como estudiante
+            </button>
+
+            <div style="text-align:center;margin-top:16px">
+              <a id="auth-profe" href="#" style="color:var(--dgray);font-size:13px;text-decoration:none">
+                🔒 Soy profesor
+              </a>
+            </div>
+          </div>
+
+          <div id="auth-error" style="color:var(--coral);font-size:13px;margin-top:12px;min-height:16px;text-align:center"></div>
+        </div>
+      </div>
+    `;
+
+    wireEvents();
+  }
+
+  function wireEvents() {
+    const materia = document.getElementById("auth-materia");
+    const after = document.getElementById("auth-after-materia");
+    const nombre = document.getElementById("auth-nombre");
+    const matricula = document.getElementById("auth-matricula");
+    const entrar = document.getElementById("auth-entrar");
+    const profe = document.getElementById("auth-profe");
+    const err = document.getElementById("auth-error");
+
+    materia.onchange = () => {
+      const cfg = CONFIGURACIONES.find(c => c.id === materia.value);
+      if (!cfg) { after.style.display = "none"; return; }
+      after.style.display = "block";
+      nombre.innerHTML = `<option value="">-- seleccionar --</option>` +
+        cfg.estudiantes.map(e => `<option value="${e.matricula}">${App.UI.esc(e.nombre)}</option>`).join("");
+      err.textContent = "";
+    };
+
+    entrar.onclick = async () => {
+      err.textContent = "";
+      const configId = materia.value;
+      const matriculaVal = matricula.value.trim();
+      const nombreVal = nombre.value;
+      if (!configId || !nombreVal || !matriculaVal) {
+        err.textContent = "Completa materia, nombre y matrícula."; return;
+      }
+      if (nombreVal !== matriculaVal) {
+        err.textContent = "La matrícula no corresponde al nombre seleccionado."; return;
+      }
+      // Sesión estudiante
+      App.Core.setConfig(configId);
+      saveSession({ rol: "estudiante", configId, matricula: matriculaVal });
+      try { await App.Core.fetchState(); } catch (e) { err.textContent = "Error cargando datos."; return; }
+      App.Core.navigate("#/estudiante/agenda");
+    };
+
+    profe.onclick = async (e) => {
+      e.preventDefault();
+      err.textContent = "";
+      const configId = materia.value;
+      if (!configId) { err.textContent = "Primero selecciona materia."; return; }
+      const pwd = await App.UI.prompt("Contraseña", "••••••");
+      if (pwd === null) return;
+      if (pwd !== PROFESOR_MATRICULA) {
+        err.textContent = "Contraseña incorrecta."; return;
+      }
+      App.Core.setConfig(configId);
+      saveSession({ rol: "profe", configId });
+      try { await App.Core.fetchState(); } catch (ex) { err.textContent = "Error cargando datos."; return; }
+      App.Core.navigate("#/profe/agenda");
+    };
+  }
+
+  return { render, loadSession, saveSession, clearSession };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// Boot
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", async () => {
+  const session = App.Auth.loadSession();
+  if (session && CONFIGURACIONES.some(c => c.id === session.configId)) {
+    try {
+      App.Core.setConfig(session.configId);
+      await App.Core.fetchState();
+      const hash = window.location.hash || (session.rol === "profe" ? "#/profe/agenda" : "#/estudiante/agenda");
+      if (hash === "#/") App.Core.navigate(session.rol === "profe" ? "#/profe/agenda" : "#/estudiante/agenda");
+    } catch (e) {
+      App.Auth.clearSession();
+      App.Auth.render();
+      return;
+    }
+  }
+  App.Core.onRoute(route);
 });
+
+function route(hash) {
+  if (hash === "#/" || !hash) return App.Auth.render();
+  // Rutas de otros módulos se registran después
+  document.getElementById("app").innerHTML = `<div style="padding:40px;color:white">Ruta pendiente: ${App.UI.esc(hash)}</div>`;
+}
 </script>
 
 </body>
