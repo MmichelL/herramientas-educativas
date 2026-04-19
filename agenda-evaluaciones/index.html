@@ -634,7 +634,13 @@ App.Student = (function () {
     if (!ventana || !tipo) { App.Core.navigate("#/estudiante/agenda"); return; }
     const session = App.Auth.loadSession();
 
-    await App.Core.fetchState();  // refresca antes de mostrar grid
+    try {
+      await App.Core.fetchState();
+    } catch (e) {
+      App.UI.toast("Error cargando disponibilidad.", "error");
+      App.Core.navigate("#/estudiante/agenda");
+      return;
+    }
     const ocupados = App.Core.slotsOcupados(ventanaId);
     const misReservas = App.Core.reservasDeEstudiante(session.matricula);
     const mios = new Set(misReservas.filter(r => r.ventanaId === ventanaId).map(r => r.slotInicio));
