@@ -1206,10 +1206,10 @@ App.Teacher = (function () {
       `<button class="btn ${cls} tch-action-btn" data-action="${action}" data-id="${r.id}">${label}</button>`;
     switch (r.estado) {
       case "reservada":  return btn("Iniciar eval", "start");
-      case "en-sesion":  return btn("Continuar", "start");
-      case "completada": return btn("Procesar", "process");
+      case "en-sesion":  return btn("Continuar", "start") + " " + btn("↩ Revertir", "revert", "btn-danger");
+      case "completada": return btn("Procesar", "process") + " " + btn("↩ Revertir", "revert", "btn-danger");
       case "evaluada":
-        return btn("Procesar", "process", "btn-ghost") + " " + btn("📢 Publicar", "publish", "btn-success");
+        return btn("Procesar", "process", "btn-ghost") + " " + btn("📢 Publicar", "publish", "btn-success") + " " + btn("↩ Revertir", "revert", "btn-danger");
       case "publicada":
         return btn("Ver", "process", "btn-ghost") + " " + btn("🔒 Despublicar", "unpublish", "btn-danger");
       default: return "";
@@ -1227,6 +1227,27 @@ App.Teacher = (function () {
     if (action === "process") { App.Core.navigate(`#/profe/proceso/${id}`); return; }
     if (action === "publish") { await setEstado(id, "publicada", { publicadaEn: new Date().toISOString() }); return; }
     if (action === "unpublish") { await setEstado(id, "evaluada", { publicadaEn: null }); return; }
+    if (action === "revert") { await revertirEval(id); return; }
+  }
+
+  async function revertirEval(id) {
+    const ok = await App.UI.confirm(
+      "¿Revertir evaluación a Pendiente?\n\nSe borrará todo el progreso (rondas, notas, checks). El estudiante quedará con su slot reservado y podrá cancelarlo si lo desea."
+    );
+    if (!ok) return;
+    try {
+      await App.Core.mutate(reservas => {
+        const r = reservas[id];
+        if (!r) return reservas;
+        r.estado = "reservada";
+        r.evaluacion = { rondas: [], checksGlobales: {}, observacionGlobal: "", puntosTotales: null };
+        return reservas;
+      });
+      App.UI.toast("✓ Evaluación revertida a Pendiente", "success");
+      renderAgenda();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
   }
 
   async function setEstado(id, nuevo, extraEval = {}) {
