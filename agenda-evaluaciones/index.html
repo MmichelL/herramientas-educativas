@@ -469,8 +469,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       App.Core.setConfig(session.configId);
       await App.Core.fetchState();
-      const hash = window.location.hash || (session.rol === "profe" ? "#/profe/agenda" : "#/estudiante/agenda");
-      if (hash === "#/") App.Core.navigate(session.rol === "profe" ? "#/profe/agenda" : "#/estudiante/agenda");
+      const defaultHash = session.rol === "profe" ? "#/profe/agenda" : "#/estudiante/agenda";
+      if (!window.location.hash || window.location.hash === "#/") {
+        App.Core.navigate(defaultHash);
+      }
     } catch (e) {
       App.Auth.clearSession();
       App.Auth.render();
@@ -478,6 +480,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
   App.Core.onRoute(route);
+  route(window.location.hash || "#/");
 });
 
 function route(hash) {
