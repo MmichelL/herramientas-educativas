@@ -1,11 +1,342 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agenda de Evaluaciones</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Agenda de Evaluaciones — Herramientas Educativas</title>
+<style>
+  :root {
+    --navy: #1A2456;
+    --blue: #2D5BE3;
+    --mint: #00D4A0;
+    --amber: #F59E0B;
+    --coral: #FF5C6A;
+    --gray: #F3F4F8;
+    --dgray: #6B7280;
+    --black: #1F2937;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #0F1A3C 0%, #1A2456 50%, #0F1A3C 100%);
+    color: var(--black);
+    min-height: 100vh;
+  }
+  #app { min-height: 100vh; }
+
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+  .btn {
+    display: inline-block;
+    padding: 14px 22px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(45,91,227,0.4); }
+  .btn-ghost { background: transparent; color: var(--blue); }
+  .btn-danger { background: var(--coral); color: white; }
+  .btn-success { background: var(--mint); color: var(--navy); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+  label { font-size: 12px; font-weight: 700; color: var(--dgray);
+          text-transform: uppercase; letter-spacing: 1px; display: block;
+          margin-bottom: 6px; }
+
+  /* Toast */
+  .toast-host { position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+                display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--navy); color: white; padding: 14px 20px;
+           border-radius: 10px; font-size: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+           animation: slideIn 0.25s ease-out; max-width: 360px; }
+  .toast.success { background: var(--mint); color: var(--navy); }
+  .toast.error { background: var(--coral); }
+  .toast.warn { background: var(--amber); color: var(--navy); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); }
+                       to { opacity: 1; transform: translateX(0); } }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,26,60,0.75);
+                   display: flex; align-items: center; justify-content: center;
+                   z-index: 999; padding: 20px; }
+  .modal { background: white; border-radius: 18px; padding: 28px; max-width: 480px;
+           width: 100%; }
+  .modal h2 { color: var(--navy); margin-bottom: 12px; font-size: 20px; }
+  .modal p { color: var(--dgray); margin-bottom: 20px; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* Save indicator */
+  .save-indicator { position: fixed; top: 16px; right: 16px; z-index: 500;
+                    background: rgba(255,255,255,0.95); padding: 8px 14px;
+                    border-radius: 20px; font-size: 13px; color: var(--dgray);
+                    display: none; }
+  .save-indicator.saving { display: block; color: var(--amber); }
+  .save-indicator.saved  { display: block; color: var(--mint); }
+  .save-indicator.error  { display: block; color: var(--coral); }
+</style>
 </head>
 <body>
-  <main id="app">Cargando…</main>
+
+<div id="app">Cargando…</div>
+<div id="save-indicator" class="save-indicator"></div>
+<div id="toast-host" class="toast-host"></div>
+<div id="modal-host"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN — Editar aquí para agregar/modificar contextos
+// ══════════════════════════════════════════════════════════════════
+const CONFIGURACIONES = [
+  // Primera entrada se agrega en Task 15 (SIST-3311 recuperación)
+];
+
+const PROFESOR_MATRICULA = "2008464"; // usado como contraseña; UI nunca lo rotula como matrícula
+
+// ══════════════════════════════════════════════════════════════════
+// App.Core — config activa, KV client, router, bus, save-indicator
+// ══════════════════════════════════════════════════════════════════
+const App = {};
+
+App.Core = (function () {
+  let activeConfigId = null;
+  let kvState = { version: 0, reservas: {} };
+  let listeners = {};
+
+  const api = {
+    get config() {
+      return CONFIGURACIONES.find(c => c.id === activeConfigId) || null;
+    },
+    get configId() { return activeConfigId; },
+    setConfig(id) {
+      if (!CONFIGURACIONES.some(c => c.id === id)) {
+        throw new Error(`Config no existe: ${id}`);
+      }
+      activeConfigId = id;
+      emit("config:changed", id);
+    },
+    get state() { return kvState; },
+
+    // ── KV client ─────────────────────────────────────────────
+    async fetchState() {
+      if (!activeConfigId) throw new Error("Config no seleccionada");
+      const res = await fetch(`/api/state?id=${encodeURIComponent(activeConfigId)}`);
+      if (!res.ok) throw new Error(`GET /api/state falló: ${res.status}`);
+      kvState = await res.json();
+      emit("state:changed", kvState);
+      return kvState;
+    },
+
+    // mutator recibe clon de reservas, lo modifica y devuelve el nuevo mapa
+    async mutate(mutator) {
+      if (!activeConfigId) throw new Error("Config no seleccionada");
+      setSaving("saving");
+      try {
+        const nextReservas = mutator(deepClone(kvState.reservas));
+        const res = await fetch(`/api/state?id=${encodeURIComponent(activeConfigId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ version: kvState.version, reservas: nextReservas }),
+        });
+        if (res.status === 409) {
+          const data = await res.json();
+          kvState = data.state;
+          emit("state:changed", kvState);
+          setSaving("error");
+          throw Object.assign(new Error(data.message || "Conflicto de versión"), { conflict: true, state: kvState });
+        }
+        if (!res.ok) {
+          setSaving("error");
+          throw new Error(`PUT /api/state falló: ${res.status}`);
+        }
+        const data = await res.json();
+        kvState = data.state;
+        emit("state:changed", kvState);
+        setSaving("saved");
+        return kvState;
+      } catch (e) {
+        if (!e.conflict) setSaving("error");
+        throw e;
+      }
+    },
+
+    // ── Router hash ───────────────────────────────────────────
+    route() {
+      return window.location.hash || "#/";
+    },
+    navigate(hash) {
+      window.location.hash = hash;
+    },
+    onRoute(handler) {
+      window.addEventListener("hashchange", () => handler(api.route()));
+      window.addEventListener("load", () => handler(api.route()));
+    },
+
+    // ── Bus eventos ───────────────────────────────────────────
+    on(event, handler) {
+      (listeners[event] ||= []).push(handler);
+    },
+
+    // ── Helpers ───────────────────────────────────────────────
+    findEstudiante(matricula) {
+      const cfg = api.config;
+      if (!cfg) return null;
+      return cfg.estudiantes.find(e => e.matricula === matricula) || null;
+    },
+
+    reservasDeEstudiante(matricula) {
+      return Object.values(kvState.reservas)
+        .filter(r => r.estudianteMatricula === matricula);
+    },
+
+    reservasEnVentana(ventanaId) {
+      return Object.values(kvState.reservas)
+        .filter(r => r.ventanaId === ventanaId);
+    },
+
+    slotsOcupados(ventanaId) {
+      return new Set(api.reservasEnVentana(ventanaId).map(r => r.slotInicio));
+    },
+  };
+
+  function emit(event, payload) {
+    (listeners[event] || []).forEach(h => {
+      try { h(payload); } catch (e) { console.error(e); }
+    });
+  }
+
+  function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+  function setSaving(status) {
+    const el = document.getElementById("save-indicator");
+    if (!el) return;
+    el.className = `save-indicator ${status}`;
+    el.textContent = { saving: "● guardando…", saved: "✓ guardado", error: "⚠ error" }[status] || "";
+    if (status === "saved") {
+      clearTimeout(setSaving._t);
+      setSaving._t = setTimeout(() => { el.className = "save-indicator"; el.textContent = ""; }, 1200);
+    }
+  }
+
+  return api;
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.UI — toast, modal, confirm
+// ══════════════════════════════════════════════════════════════════
+App.UI = (function () {
+  function toast(msg, kind = "default", ms = 3000) {
+    const host = document.getElementById("toast-host");
+    const el = document.createElement("div");
+    el.className = `toast ${kind === "default" ? "" : kind}`;
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(() => el.remove(), ms);
+  }
+
+  function modal({ title, body, actions }) {
+    return new Promise((resolve) => {
+      const host = document.getElementById("modal-host");
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay";
+      const m = document.createElement("div");
+      m.className = "modal";
+      m.innerHTML = `<h2>${esc(title)}</h2><div class="modal-body">${body}</div>`;
+      const acts = document.createElement("div");
+      acts.className = "modal-actions";
+      actions.forEach(a => {
+        const b = document.createElement("button");
+        b.className = `btn ${a.class || "btn-primary"}`;
+        b.textContent = a.label;
+        b.onclick = () => {
+          overlay.remove();
+          resolve(a.value);
+        };
+        acts.appendChild(b);
+      });
+      m.appendChild(acts);
+      overlay.appendChild(m);
+      overlay.onclick = (e) => {
+        if (e.target === overlay) { overlay.remove(); resolve(null); }
+      };
+      host.appendChild(overlay);
+    });
+  }
+
+  function confirm(msg) {
+    return modal({
+      title: "Confirmar",
+      body: `<p>${esc(msg)}</p>`,
+      actions: [
+        { label: "Cancelar", class: "btn-ghost", value: false },
+        { label: "Aceptar",  class: "btn-primary", value: true },
+      ],
+    });
+  }
+
+  function prompt(title, placeholder = "") {
+    return new Promise((resolve) => {
+      const id = `input-${Date.now()}`;
+      modal({
+        title,
+        body: `<input id="${id}" type="password" placeholder="${esc(placeholder)}"/>`,
+        actions: [
+          { label: "Cancelar", class: "btn-ghost", value: null },
+          { label: "Aceptar",  class: "btn-primary", value: "__ACCEPT__" },
+        ],
+      }).then(v => {
+        if (v === "__ACCEPT__") {
+          const el = document.getElementById(id);
+          resolve(el ? el.value : null);
+        } else {
+          resolve(null);
+        }
+      });
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.focus();
+      }, 0);
+    });
+  }
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+
+  return { toast, modal, confirm, prompt, esc };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// Boot — placeholder hasta que Task 4 monte App.Auth
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("app").innerHTML =
+    "<div style='padding:40px;color:white'>App.Core listo. Modules pendientes.</div>";
+  App.Core.onRoute(() => { /* routes registradas por módulos */ });
+});
+</script>
+
 </body>
 </html>
