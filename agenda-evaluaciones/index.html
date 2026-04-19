@@ -1021,6 +1021,79 @@ App.Teacher = (function () {
 })();
 
 // ══════════════════════════════════════════════════════════════════
+// App.Roulette — rueda canvas genérica
+// items: [{ id, label, color? }]
+// onWinner(item) se llama al parar
+// ══════════════════════════════════════════════════════════════════
+App.Roulette = (function () {
+  const PALETTE = ["#2D5BE3","#00D4A0","#F59E0B","#FF5C6A","#8B5CF6","#14B8A6","#EC4899","#3B82F6","#10B981","#F97316"];
+
+  function draw(canvas, items, angle) {
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+    const cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 10;
+    ctx.clearRect(0, 0, w, h);
+    if (items.length === 0) return;
+    const slice = (2 * Math.PI) / items.length;
+    items.forEach((it, i) => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, angle + i * slice, angle + (i + 1) * slice);
+      ctx.closePath();
+      ctx.fillStyle = it.color || PALETTE[i % PALETTE.length];
+      ctx.fill();
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // label
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle + i * slice + slice / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "white";
+      ctx.font = "bold 13px system-ui";
+      const label = (it.label || "").slice(0, 22);
+      ctx.fillText(label, r - 14, 4);
+      ctx.restore();
+    });
+    // pointer
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r - 6);
+    ctx.lineTo(cx - 10, cy - r + 10);
+    ctx.lineTo(cx + 10, cy - r + 10);
+    ctx.closePath();
+    ctx.fillStyle = "#1F2937";
+    ctx.fill();
+  }
+
+  function spin({ canvas, items, onWinner }) {
+    if (items.length === 0) { onWinner(null); return; }
+    const slice = (2 * Math.PI) / items.length;
+    const winnerIdx = Math.floor(Math.random() * items.length);
+    // ángulo final: pointer arriba (=-PI/2). queremos que centro de winner quede debajo del pointer
+    const totalSpins = 5 + Math.random() * 2; // 5-7 vueltas
+    const targetAngle = (-Math.PI / 2) - (winnerIdx * slice + slice / 2) - totalSpins * 2 * Math.PI;
+    const durationMs = 3500;
+    const start = performance.now();
+    const startAngle = 0;
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function frame(now) {
+      const t = Math.min(1, (now - start) / durationMs);
+      const angle = startAngle + (targetAngle - startAngle) * easeOut(t);
+      draw(canvas, items, angle);
+      if (t < 1) requestAnimationFrame(frame);
+      else onWinner(items[winnerIdx]);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  return { draw, spin };
+})();
+
+// ══════════════════════════════════════════════════════════════════
 // Boot
 // ══════════════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", async () => {
