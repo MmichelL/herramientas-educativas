@@ -577,7 +577,7 @@ App.Student = (function () {
       <div class="stu-shell">
         <button class="logout-btn" id="stu-back">← Volver</button>
         <h1>Escoger ventana</h1>
-        <p class="meta">Tipo: ${App.UI.esc(cfg.tiposActividad.find(t => t.id === tipoId).etiqueta)}</p>
+        <p class="meta">Tipo: ${App.UI.esc(cfg.tiposActividad.find(t => t.id === tipoId)?.etiqueta ?? tipoId)}</p>
 
         <div class="stu-section">
           ${cfg.ventanas.length === 0
