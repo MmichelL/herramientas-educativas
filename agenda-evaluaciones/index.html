@@ -1131,7 +1131,7 @@ App.Roulette = (function () {
 // App.Eval — evaluación live (en-sesion) + post-sesión (procesar)
 // ══════════════════════════════════════════════════════════════════
 App.Eval = (function () {
-  let debounceSaveTimer = null;
+  const debounceTimers = {};
 
   async function renderLive(reservaId) {
     await App.Core.fetchState();
@@ -1255,6 +1255,7 @@ App.Eval = (function () {
     // Girar competencia
     document.querySelectorAll(".eval-gira-comp").forEach(b => {
       b.onclick = () => {
+        b.disabled = true;
         const idx = Number(b.dataset.idx);
         const yaGiradas = new Set(reserva.evaluacion.rondas.map(r => r.competenciaId).filter(Boolean));
         const disponibles = cfg.competencias.filter(c => !yaGiradas.has(c.id));
@@ -1280,6 +1281,7 @@ App.Eval = (function () {
     // Girar pregunta
     document.querySelectorAll(".eval-gira-preg").forEach(b => {
       b.onclick = () => {
+        b.disabled = true;
         const idx = Number(b.dataset.idx);
         const ronda = reserva.evaluacion.rondas[idx];
         const comp = cfg.competencias.find(c => c.id === ronda.competenciaId);
@@ -1307,7 +1309,8 @@ App.Eval = (function () {
         const idx = Number(sl.dataset.idx);
         const v = Number(sl.value);
         document.getElementById(`eval-nota-display-${idx}`).textContent = `${v.toFixed(1)} / ${cfg.rubrica.puntosPorRonda}`;
-        debounce(async () => {
+        clearTimeout(debounceTimers[idx]);
+        debounceTimers[idx] = setTimeout(async () => {
           await App.Core.mutate(reservas => {
             reservas[reserva.id].evaluacion.rondas[idx].puntosLive = v;
             return reservas;
@@ -1385,11 +1388,6 @@ App.Eval = (function () {
     });
     App.UI.toast("Sesión finalizada", "success");
     App.Core.navigate("#/profe/agenda");
-  }
-
-  function debounce(fn, ms) {
-    clearTimeout(debounceSaveTimer);
-    debounceSaveTimer = setTimeout(fn, ms);
   }
 
   return { renderLive };
