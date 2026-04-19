@@ -1173,6 +1173,145 @@ Devuelve:
 })();
 
 // ══════════════════════════════════════════════════════════════════
+// App.Reports — export .txt individual y global
+// ══════════════════════════════════════════════════════════════════
+App.Reports = (function () {
+  function renderPanel() {
+    const cfg = App.Core.config;
+    document.getElementById("app").innerHTML = `
+      <div class="tch-shell">
+        <button class="logout-btn" id="rep-back">← Volver</button>
+        <h1>Reportes</h1>
+        <div class="tch-section">
+          <h2 style="color:var(--navy);font-size:16px">Exportar individual</h2>
+          <label>Estudiante</label>
+          <select id="rep-estudiante">
+            <option value="">-- seleccionar --</option>
+            ${cfg.estudiantes.map(e => `<option value="${e.matricula}">${App.UI.esc(e.nombre)}</option>`).join("")}
+          </select>
+          <button class="btn btn-primary" id="rep-individual" style="margin-top:10px">⬇ Descargar</button>
+        </div>
+
+        <div class="tch-section">
+          <h2 style="color:var(--navy);font-size:16px">Exportar global de la sección</h2>
+          <button class="btn btn-primary" id="rep-global">⬇ Descargar resumen</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("rep-back").onclick = () => App.Core.navigate("#/profe/agenda");
+    document.getElementById("rep-individual").onclick = () => {
+      const m = document.getElementById("rep-estudiante").value;
+      if (!m) { App.UI.toast("Selecciona estudiante", "warn"); return; }
+      exportIndividual(m);
+    };
+    document.getElementById("rep-global").onclick = () => exportGlobal();
+  }
+
+  function exportIndividual(matricula) {
+    const cfg = App.Core.config;
+    const est = cfg.estudiantes.find(e => e.matricula === matricula);
+    const reservas = App.Core.reservasDeEstudiante(matricula);
+    const lines = [];
+    lines.push(`== ${cfg.asignatura.nombre.toUpperCase()} — ${cfg.asignatura.periodo} ==`);
+    lines.push(`Tarea: ${cfg.asignatura.tarea}`);
+    lines.push(`Estudiante: ${est.nombre} (${est.matricula})`);
+    lines.push(`Fecha reporte: ${new Date().toLocaleString("es-DO")}`);
+    lines.push(``);
+    if (reservas.length === 0) lines.push("(sin reservas)");
+    reservas.forEach(r => appendReservaDetalle(lines, r, cfg));
+    download(`${cfg.asignatura.codigo}_Evaluacion_${matricula}_${stamp()}.txt`, lines.join("\n"));
+  }
+
+  function exportGlobal() {
+    const cfg = App.Core.config;
+    const lines = [];
+    lines.push(`== ${cfg.asignatura.nombre.toUpperCase()} — ${cfg.asignatura.periodo} ==`);
+    lines.push(`Tarea: ${cfg.asignatura.tarea}`);
+    lines.push(`Fecha reporte: ${new Date().toLocaleString("es-DO")}`);
+    lines.push(``);
+    lines.push(`MATRICULA   | ESTUDIANTE                         | TIPO                      | ESTADO      | TOTAL`);
+    lines.push(`------------|------------------------------------|---------------------------|-------------|------`);
+    cfg.estudiantes.forEach(est => {
+      const rs = App.Core.reservasDeEstudiante(est.matricula);
+      if (rs.length === 0) {
+        lines.push(pad(est.matricula, 12) + "| " + pad(est.nombre, 35) + "| " + pad("-", 26) + "| " + pad("sin reserva", 12) + "| -");
+      } else {
+        rs.forEach(r => {
+          const tipo = cfg.tiposActividad.find(t => t.id === r.tipoActividadId);
+          const total = r.evaluacion && typeof r.evaluacion.puntosTotales === "number" ? r.evaluacion.puntosTotales.toFixed(1) : "-";
+          lines.push(
+            pad(est.matricula, 12) + "| " +
+            pad(est.nombre, 35) + "| " +
+            pad(tipo ? tipo.etiqueta : r.tipoActividadId, 26) + "| " +
+            pad(r.estado, 12) + "| " + total
+          );
+        });
+      }
+    });
+    download(`${cfg.asignatura.codigo}_Resumen_${stamp()}.txt`, lines.join("\n"));
+  }
+
+  function appendReservaDetalle(lines, r, cfg) {
+    const ventana = cfg.ventanas.find(v => v.id === r.ventanaId);
+    const tipo = cfg.tiposActividad.find(t => t.id === r.tipoActividadId);
+    lines.push(`--- ${tipo ? tipo.etiqueta : r.tipoActividadId} ---`);
+    lines.push(`Horario: ${ventana ? ventana.fecha : "?"} ${r.slotInicio}`);
+    lines.push(`Estado: ${r.estado}`);
+    const ev = r.evaluacion || {};
+    const rondas = ev.rondas || [];
+    rondas.forEach((ro, i) => {
+      const comp = cfg.competencias.find(c => c.id === ro.competenciaId);
+      const preg = comp ? comp.preguntas.find(p => p.id === ro.preguntaId) : null;
+      lines.push(``);
+      lines.push(`  Ronda ${i + 1}`);
+      lines.push(`    Competencia: ${comp ? comp.nombre : ro.competenciaId}`);
+      lines.push(`    Pregunta:    ${preg ? preg.preguntaGuia : ro.preguntaId}`);
+      lines.push(`    Nota:        ${ro.puntosFinal ?? ro.puntosLive ?? "-"} / ${cfg.rubrica.puntosPorRonda}`);
+      if (ro.observacion) lines.push(`    Observación: ${ro.observacion}`);
+    });
+    if (ev.checksGlobales) {
+      const checks = cfg.rubrica.checksGlobales
+        .map(c => `${ev.checksGlobales[c.id] ? "[x]" : "[ ]"} ${c.etiqueta}`).join("  ");
+      lines.push(``);
+      lines.push(`  Cumplimiento: ${checks}`);
+    }
+    if (ev.observacionGlobal) {
+      lines.push(`  Observación general: ${ev.observacionGlobal}`);
+    }
+    if ((ev.videosURLs || []).length) {
+      lines.push(`  Videos:`);
+      ev.videosURLs.forEach(u => lines.push(`    - ${u}`));
+    }
+    lines.push(``);
+    lines.push(`  TOTAL: ${ev.puntosTotales ?? 0} / ${cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda}`);
+    lines.push(``);
+  }
+
+  function download(filename, content) {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+  }
+
+  function pad(s, n) {
+    s = String(s ?? "");
+    if (s.length >= n) return s.slice(0, n);
+    return s + " ".repeat(n - s.length);
+  }
+
+  function stamp() {
+    const d = new Date();
+    const pad2 = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}`;
+  }
+
+  return { renderPanel };
+})();
+
+// ══════════════════════════════════════════════════════════════════
 // App.Eval — evaluación live (en-sesion) + post-sesión (procesar)
 // ══════════════════════════════════════════════════════════════════
 App.Eval = (function () {
@@ -1640,6 +1779,7 @@ function route(hash) {
     if (em) return App.Eval.renderLive(em[1]);
     const pm = hash.match(/^#\/profe\/proceso\/([^/]+)$/);
     if (pm) return App.Eval.renderProceso(pm[1]);
+    if (hash === "#/profe/reportes") return App.Reports.renderPanel();
   }
   document.getElementById("app").innerHTML =
     `<div style="padding:40px;color:white">Ruta pendiente: ${App.UI.esc(hash)}</div>`;
