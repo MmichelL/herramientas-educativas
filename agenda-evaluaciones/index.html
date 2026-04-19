@@ -1128,6 +1128,51 @@ App.Roulette = (function () {
 })();
 
 // ══════════════════════════════════════════════════════════════════
+// App.Prompt — genera prompt con template filler
+// ══════════════════════════════════════════════════════════════════
+App.Prompt = (function () {
+  function build(ronda, reserva, cfg) {
+    const comp = cfg.competencias.find(c => c.id === ronda.competenciaId);
+    const preg = comp ? comp.preguntas.find(p => p.id === ronda.preguntaId) : null;
+    const tpl = cfg.promptTemplate || defaultTemplate();
+    return fillTemplate(tpl, {
+      competencia: comp ? comp.nombre : "",
+      pregunta: preg ? preg.preguntaGuia : "",
+      escenario: preg ? preg.escenario : "",
+      rubrica: `Máximo ${cfg.rubrica.puntosPorRonda} pts. Criterios: camara encendida, fluidez, comprensión, aplicación al escenario.`,
+      transcripcion: ronda.transcripcion || "[PEGAR TRANSCRIPCIÓN AQUÍ]",
+    });
+  }
+
+  function fillTemplate(tpl, vars) {
+    return tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "");
+  }
+
+  function defaultTemplate() {
+    return `Eres evaluador de la materia. Analiza esta respuesta contra la rúbrica.
+
+Competencia: {{competencia}}
+Pregunta: {{pregunta}}
+Escenario: {{escenario}}
+Rúbrica: {{rubrica}}
+
+Transcripción de la respuesta del estudiante:
+{{transcripcion}}
+
+Devuelve:
+1. Observación crítica (qué estuvo bien / qué faltó) en 3-4 oraciones.
+2. Nota sugerida entre 0 y 7.5.`;
+  }
+
+  async function copyToClipboard(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch { return false; }
+  }
+
+  return { build, copyToClipboard };
+})();
+
+// ══════════════════════════════════════════════════════════════════
 // App.Eval — evaluación live (en-sesion) + post-sesión (procesar)
 // ══════════════════════════════════════════════════════════════════
 App.Eval = (function () {
@@ -1390,7 +1435,157 @@ App.Eval = (function () {
     App.Core.navigate("#/profe/agenda");
   }
 
-  return { renderLive };
+  async function renderProceso(reservaId) {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const reserva = App.Core.state.reservas[reservaId];
+    if (!reserva || !reserva.evaluacion) {
+      App.UI.toast("Reserva sin evaluación previa", "error");
+      App.Core.navigate("#/profe/agenda");
+      return;
+    }
+    const est = cfg.estudiantes.find(e => e.matricula === reserva.estudianteMatricula);
+    const ev = reserva.evaluacion;
+    const totalMax = cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda;
+
+    document.getElementById("app").innerHTML = `
+      <div class="eval-shell">
+        <div class="eval-header">
+          <div>
+            <h1 style="font-size:22px">Procesar evaluación</h1>
+            <p style="color:#CBD5E1;font-size:13px">${App.UI.esc(est ? est.nombre : "")}</p>
+          </div>
+          <button class="btn btn-ghost" id="proc-back">← Volver</button>
+        </div>
+
+        <div id="proc-rondas"></div>
+
+        <div style="background:white;color:var(--black);border-radius:14px;padding:18px;margin-bottom:12px">
+          <label>Videos (URLs, 1 por línea)</label>
+          <textarea id="proc-videos" class="eval-obs" style="min-height:50px">${App.UI.esc((ev.videosURLs || []).join("\n"))}</textarea>
+
+          <label style="margin-top:10px">Observación global</label>
+          <textarea id="proc-obs-global" class="eval-obs">${App.UI.esc(ev.observacionGlobal || "")}</textarea>
+
+          <p style="margin-top:12px"><strong>Nota total:</strong> <span id="proc-total">${(ev.puntosTotales || 0).toFixed(1)}</span> / ${totalMax}</p>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" id="proc-guardar">Guardar (evaluada)</button>
+          <button class="btn btn-success" id="proc-publicar">Guardar y publicar</button>
+        </div>
+      </div>
+    `;
+
+    renderProcesoRondas(reserva, cfg);
+
+    document.getElementById("proc-back").onclick = () => App.Core.navigate("#/profe/agenda");
+    document.getElementById("proc-guardar").onclick = () => guardarProceso(reservaId, "evaluada");
+    document.getElementById("proc-publicar").onclick = () => guardarProceso(reservaId, "publicada");
+
+    document.getElementById("proc-videos").onblur = async () => {
+      const urls = document.getElementById("proc-videos").value
+        .split("\n").map(s => s.trim()).filter(Boolean);
+      await App.Core.mutate(r => { r[reservaId].evaluacion.videosURLs = urls; return r; });
+    };
+    document.getElementById("proc-obs-global").onblur = async () => {
+      const v = document.getElementById("proc-obs-global").value;
+      await App.Core.mutate(r => { r[reservaId].evaluacion.observacionGlobal = v; return r; });
+    };
+  }
+
+  function renderProcesoRondas(reserva, cfg) {
+    const host = document.getElementById("proc-rondas");
+    host.innerHTML = reserva.evaluacion.rondas.map((r, i) => {
+      const comp = cfg.competencias.find(c => c.id === r.competenciaId);
+      const preg = comp ? comp.preguntas.find(p => p.id === r.preguntaId) : null;
+      const max = cfg.rubrica.puntosPorRonda;
+      return `
+        <div class="eval-ronda">
+          <h3>Ronda ${i + 1} · ${App.UI.esc(comp ? comp.nombre : r.competenciaId)}</h3>
+          <p style="font-size:13px;color:var(--dgray);margin-bottom:6px">${App.UI.esc(preg ? preg.preguntaGuia : "")}</p>
+
+          <label>Transcripción (pegar)</label>
+          <textarea class="eval-obs proc-transcripcion" data-idx="${i}" style="min-height:90px">${App.UI.esc(r.transcripcion || "")}</textarea>
+
+          <div style="margin-top:8px"><button class="btn btn-ghost proc-copy" data-idx="${i}" style="padding:8px 14px;font-size:13px">📋 Copiar prompt para IA</button></div>
+
+          <label style="margin-top:12px">Observación final (pegar respuesta IA editada)</label>
+          <textarea class="eval-obs proc-obs" data-idx="${i}" style="min-height:70px">${App.UI.esc(r.observacion || "")}</textarea>
+
+          <label style="margin-top:10px">Nota final</label>
+          <input type="number" min="0" max="${max}" step="0.5" value="${r.puntosFinal ?? r.puntosLive ?? 0}" class="proc-nota" data-idx="${i}"/>
+        </div>
+      `;
+    }).join("");
+
+    host.querySelectorAll(".proc-transcripcion").forEach(ta => {
+      ta.onblur = async () => {
+        const idx = Number(ta.dataset.idx);
+        await App.Core.mutate(res => {
+          res[reserva.id].evaluacion.rondas[idx].transcripcion = ta.value;
+          return res;
+        });
+      };
+    });
+
+    host.querySelectorAll(".proc-obs").forEach(ta => {
+      ta.onblur = async () => {
+        const idx = Number(ta.dataset.idx);
+        await App.Core.mutate(res => {
+          res[reserva.id].evaluacion.rondas[idx].observacion = ta.value;
+          return res;
+        });
+      };
+    });
+
+    host.querySelectorAll(".proc-nota").forEach(inp => {
+      inp.onchange = async () => {
+        const idx = Number(inp.dataset.idx);
+        const v = Number(inp.value);
+        const max = cfg.rubrica.puntosPorRonda;
+        const clamped = Math.max(0, Math.min(max, v));
+        inp.value = clamped;
+        await App.Core.mutate(res => {
+          res[reserva.id].evaluacion.rondas[idx].puntosFinal = clamped;
+          return res;
+        });
+        actualizarTotal(reserva.id, cfg);
+      };
+    });
+
+    host.querySelectorAll(".proc-copy").forEach(b => {
+      b.onclick = async () => {
+        const idx = Number(b.dataset.idx);
+        const prompt = App.Prompt.build(reserva.evaluacion.rondas[idx], reserva, cfg);
+        const ok = await App.Prompt.copyToClipboard(prompt);
+        App.UI.toast(ok ? "Prompt copiado. Pegar en ChatGPT/Claude" : "No se pudo copiar — selecciona y copia manual", ok ? "success" : "warn");
+      };
+    });
+  }
+
+  async function actualizarTotal(id, cfg) {
+    await App.Core.mutate(r => {
+      const rondas = r[id].evaluacion.rondas || [];
+      r[id].evaluacion.puntosTotales = rondas
+        .reduce((acc, ro) => acc + (ro.puntosFinal ?? ro.puntosLive ?? 0), 0);
+      return r;
+    });
+    const disp = document.getElementById("proc-total");
+    if (disp) disp.textContent = (App.Core.state.reservas[id].evaluacion.puntosTotales || 0).toFixed(1);
+  }
+
+  async function guardarProceso(id, destino) {
+    await App.Core.mutate(r => {
+      r[id].estado = destino;
+      if (destino === "publicada") r[id].evaluacion.publicadaEn = new Date().toISOString();
+      return r;
+    });
+    App.UI.toast(destino === "publicada" ? "Publicado" : "Guardado", "success");
+    App.Core.navigate("#/profe/agenda");
+  }
+
+  return { renderLive, renderProceso };
 })();
 
 // ══════════════════════════════════════════════════════════════════
@@ -1437,6 +1632,8 @@ function route(hash) {
     if (hash === "#/profe/agenda") return App.Teacher.renderAgenda();
     const em = hash.match(/^#\/profe\/eval\/([^/]+)$/);
     if (em) return App.Eval.renderLive(em[1]);
+    const pm = hash.match(/^#\/profe\/proceso\/([^/]+)$/);
+    if (pm) return App.Eval.renderProceso(pm[1]);
   }
   document.getElementById("app").innerHTML =
     `<div style="padding:40px;color:white">Ruta pendiente: ${App.UI.esc(hash)}</div>`;
