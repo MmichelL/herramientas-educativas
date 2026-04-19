@@ -185,38 +185,198 @@
 // ══════════════════════════════════════════════════════════════════
 const CONFIGURACIONES = [
   {
-    id: "demo-test",
-    etiqueta: "Demo — test login",
-    asignatura: { codigo: "DEMO", nombre: "Demo", periodo: "Test", tarea: "Prueba" },
+    id: "sist3311-recuperacion-ene-abr-2026",
+    etiqueta: "Análisis de Sistemas — Recuperación ENE-ABR 2026",
+    asignatura: {
+      codigo:  "SIST-3311",
+      nombre:  "Análisis de Sistemas",
+      periodo: "Enero – Abril 2026",
+      tarea:   "Evaluación de recuperación",
+    },
+
     estudiantes: [
-      { matricula: "2024-0001", nombre: "ANA PRUEBA" },
-      { matricula: "2024-0002", nombre: "LUIS PRUEBA" },
+      { matricula: "2016-0810", nombre: "GIOVANNY BAUTISTA CASTILLO" },
+      { matricula: "2022-0603", nombre: "DARLIN ARROYO POLANCO" },
+      { matricula: "2022-0678", nombre: "ULISES JABRIEL REYES CUEVAS" },
+      { matricula: "2023-0178", nombre: "ROMER ENMANUEL ARNO PEREZ" },
+      { matricula: "2023-0221", nombre: "DANIEL VALDEZ CUELLO" },
+      { matricula: "2023-0239", nombre: "LEURI GALVA DE LA ROSA" },
+      { matricula: "2023-0324", nombre: "ANTHONY PICHARDO CASILLA" },
+      { matricula: "2024-0007", nombre: "CINDY PAOLA ALCANTARA GARCIA" },
+      { matricula: "2024-0023", nombre: "JHAEL ADAMES PEREZ" },
+      { matricula: "2024-0026", nombre: "YASMEYRI MARILIN CASTILLO RIVERA" },
+      { matricula: "2024-0039", nombre: "JOSE ELIEZER LOPEZ FELIZ" },
+      { matricula: "2024-0060", nombre: "HAROLD SMITH BAUTISTA CAPELLAN" },
+      { matricula: "2024-0103", nombre: "JUSTIN PAULINO ALBERTO" },
+      { matricula: "2024-0280", nombre: "ENMANUEL GUZMAN OSORIA" },
+      { matricula: "2024-0282", nombre: "JOSTIN RODRIGUEZ MARTINEZ" },
+      { matricula: "2024-0283", nombre: "ISAIAS HERRERA TORIBIO" },
+      { matricula: "2024-0284", nombre: "ADAM FRANCISCO GARCIA HERRERA" },
+      { matricula: "2024-0286", nombre: "JOHAN ALEXANDER ROJAS TAVAREZ" },
+      { matricula: "2024-0305", nombre: "ELIANNI CAROLINA SANTANA BAUTISTA" },
+      { matricula: "2024-0306", nombre: "JAASIEL LORENZO TEJADA" },
+      { matricula: "2024-0321", nombre: "KAROL ELIZABETH MORA QUEZADA" },
+      { matricula: "2024-0325", nombre: "NAYROBIS VALDEZ GARCIA" },
+      { matricula: "2024-0333", nombre: "JAEL ENCARNACION MATEO" },
+      { matricula: "2024-0357", nombre: "ARLETTE PEREZ HICIANO" },
+      { matricula: "2024-0379", nombre: "CAMILO ALBERT LEON PERALTA" },
     ],
-    tiposActividad: [{ id: "eval-recuperacion", etiqueta: "Evaluación" }],
+
+    tiposActividad: [
+      { id: "eval-recuperacion", etiqueta: "Evaluación de recuperación" },
+      { id: "consulta-general",  etiqueta: "Consulta general" },
+    ],
+
     ventanas: [
-      { id: "test-win", fecha: "2026-04-19", inicio: "09:00", fin: "10:00", slotMinutos: 5 },
+      { id: "dom-19-abr-mañana", fecha: "2026-04-19", inicio: "09:00", fin: "12:00", slotMinutos: 5 },
     ],
+
     rubrica: {
       rondasPorEstudiante: 2,
       puntosPorRonda: 7.5,
       checksGlobales: [
-        { id: "camara-on", etiqueta: "Cámara" },
-        { id: "sin-consultas", etiqueta: "Sin consultas" },
+        { id: "camara-on",     etiqueta: "Cámara encendida" },
+        { id: "sin-notas",     etiqueta: "Sin notas / pantalla secundaria" },
+        { id: "sin-consultas", etiqueta: "Sin consultas externas" },
       ],
     },
+
     competencias: [
-      { id: "c1", nombre: "C1 Demo", preguntas: [
-        { id: "c1p1", escenario: "Escenario X", preguntaGuia: "Explica X" },
-        { id: "c1p2", escenario: "Escenario Y", preguntaGuia: "Aplica Y" },
-      ]},
-      { id: "c2", nombre: "C2 Demo", preguntas: [
-        { id: "c2p1", escenario: "Escenario A", preguntaGuia: "Explica A" },
-      ]},
-      { id: "c3", nombre: "C3 Demo", preguntas: [
-        { id: "c3p1", escenario: "Escenario B", preguntaGuia: "Aplica B" },
-      ]},
+      {
+        id: "c1-recopilacion",
+        nombre: "C1 — Recopilación de información",
+        preguntas: [
+          { id: "c1-p1",
+            escenario: "Un hospital pequeño quiere digitalizar su proceso de admisión de pacientes. Actualmente la recepcionista registra datos en un cuaderno.",
+            preguntaGuia: "Explica qué técnicas usarías para levantar información y aplica tu respuesta a este escenario." },
+          { id: "c1-p2",
+            escenario: "Una escuela de 300 estudiantes quiere entender por qué los reportes de calificaciones salen siempre tarde.",
+            preguntaGuia: "Explica las 4 técnicas de recopilación y cómo las combinarías aquí." },
+        ],
+      },
+      {
+        id: "c2-validacion",
+        nombre: "C2 — Validación de hallazgos (triangulación)",
+        preguntas: [
+          { id: "c2-p1",
+            escenario: "En una entrevista con el gerente de ventas, él dice que el sistema actual 'pierde pedidos'. La observación directa no confirmó eso.",
+            preguntaGuia: "Explica triangulación y qué harías antes de documentarlo como requerimiento." },
+          { id: "c2-p2",
+            escenario: "Tres fuentes distintas (entrevista, cuestionario, documento) apuntan a un mismo problema de inventario.",
+            preguntaGuia: "Explica cómo codificarías los hallazgos y qué valor agrega la triangulación." },
+        ],
+      },
+      {
+        id: "c3-requerimientos",
+        nombre: "C3 — Definición de requerimientos",
+        preguntas: [
+          { id: "c3-p1",
+            escenario: "El usuario dice: 'quiero que el sistema sea rápido'.",
+            preguntaGuia: "Convierte esto en un RF y un RNF bien formados con criterios verificables." },
+          { id: "c3-p2",
+            escenario: "Una farmacia necesita descontar stock al vender un producto.",
+            preguntaGuia: "Escribe el RF con Dado/Cuando/Entonces y un RNF con métrica." },
+        ],
+      },
+      {
+        id: "c4-prototipado",
+        nombre: "C4 — Prototipado y validación con usuario",
+        preguntas: [
+          { id: "c4-p1",
+            escenario: "Tienes requerimientos para un módulo de agendamiento, pero aún no programas.",
+            preguntaGuia: "Explica qué prototipo harías y cómo lo validarías con usuarios reales." },
+          { id: "c4-p2",
+            escenario: "El prototipo salió 'bonito' pero el usuario dice 'esto no funciona así'.",
+            preguntaGuia: "Explica el valor real del prototipo y cómo documentas el feedback." },
+        ],
+      },
+      {
+        id: "c5-dfd",
+        nombre: "C5 — Modelado con DFD",
+        preguntas: [
+          { id: "c5-p1",
+            escenario: "Sistema de préstamos de biblioteca: estudiantes, bibliotecario, catálogo, registro de préstamos.",
+            preguntaGuia: "Explica los 4 símbolos del DFD y dibuja mentalmente el diagrama de contexto." },
+          { id: "c5-p2",
+            escenario: "Un analista te muestra un DFD donde dos entidades externas se comunican directamente con flecha.",
+            preguntaGuia: "Explica qué está mal y cómo corregirlo según las reglas del DFD." },
+        ],
+      },
+      {
+        id: "c6-diccionario",
+        nombre: "C6 — Diccionario de datos y consistencia",
+        preguntas: [
+          { id: "c6-p1",
+            escenario: "En el DFD aparece un flujo 'SolicitudPrestamo'. En la especificación dice 'PedidoLibro'.",
+            preguntaGuia: "Explica por qué es un error y cómo se usa el diccionario para evitarlo." },
+          { id: "c6-p2",
+            escenario: "Un almacén 'Ejemplares' tiene un atributo de estado.",
+            preguntaGuia: "Escribe su definición en notación de diccionario (=, +, [|])." },
+        ],
+      },
+      {
+        id: "c7-balanceo",
+        nombre: "C7 — Refinamiento y balanceo de DFD",
+        preguntas: [
+          { id: "c7-p1",
+            escenario: "Descompones 'Registrar Préstamo' (nivel 0) en 3 subprocesos nivel 1. En el nivel 1 aparece una nueva entidad externa 'Auditor'.",
+            preguntaGuia: "Explica si esto rompe el balanceo y qué haces para corregirlo." },
+          { id: "c7-p2",
+            escenario: "El proceso padre recibe 2 flujos externos; el hijo tiene 3 subprocesos con flujos internos entre ellos.",
+            preguntaGuia: "Explica qué validarías para que el balanceo sea correcto." },
+        ],
+      },
+      {
+        id: "c8-especificaciones",
+        nombre: "C8 — Especificaciones de proceso",
+        preguntas: [
+          { id: "c8-p1",
+            escenario: "Proceso 'Calcular multa' depende de 3 condiciones (días de retraso, tipo de usuario, valor del libro) con múltiples combinaciones simultáneas.",
+            preguntaGuia: "Explica cuál técnica (Structured English / Tabla / Árbol) usarías y por qué." },
+          { id: "c8-p2",
+            escenario: "Un proceso tiene una lógica secuencial simple: verificar saldo, si suficiente cobrar, si no rechazar.",
+            preguntaGuia: "Escribe la especificación en Structured English." },
+        ],
+      },
+      {
+        id: "c9-trazabilidad",
+        nombre: "C9 — Trazabilidad",
+        preguntas: [
+          { id: "c9-p1",
+            escenario: "En tu matriz de trazabilidad hay un proceso del DFD que no corresponde a ningún RF.",
+            preguntaGuia: "Explica qué significa eso y qué acción tomas." },
+          { id: "c9-p2",
+            escenario: "Un RF aparece en la matriz sin columna de especificación marcada.",
+            preguntaGuia: "Explica el riesgo y cómo cierras ese hueco." },
+        ],
+      },
+      {
+        id: "c10-propuesta",
+        nombre: "C10 — Propuesta del sistema",
+        preguntas: [
+          { id: "c10-p1",
+            escenario: "Debes recomendar entre desarrollo a medida vs software existente para un consultorio dental pequeño.",
+            preguntaGuia: "Explica cómo estructuras las alternativas (costos, beneficios, riesgos) y cómo recomiendas." },
+          { id: "c10-p2",
+            escenario: "Tu recomendación depende más del presupuesto del cliente que del análisis técnico.",
+            preguntaGuia: "Explica cómo reflejas la restricción de presupuesto en la propuesta final." },
+        ],
+      },
     ],
-    promptTemplate: "",
+
+    promptTemplate: `Eres evaluador de la materia Análisis de Sistemas. Analiza esta respuesta contra la rúbrica y devuelve observación + nota sugerida.
+
+Competencia: {{competencia}}
+Pregunta: {{pregunta}}
+Escenario: {{escenario}}
+Rúbrica: {{rubrica}}
+
+Transcripción de la respuesta del estudiante:
+{{transcripcion}}
+
+Responde en español, devuelve:
+1. Observación crítica en 3-4 oraciones (qué demostró y qué faltó).
+2. Nota sugerida entre 0 y 7.5 (sin superar 7.5).`,
   },
 ];
 
