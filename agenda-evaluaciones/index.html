@@ -234,9 +234,12 @@ const CONFIGURACIONES = [
       rondasPorEstudiante: 2,
       puntosPorRonda: 7.5,
       checksGlobales: [
-        { id: "camara-on",     etiqueta: "Cámara encendida" },
-        { id: "sin-notas",     etiqueta: "Sin notas / pantalla secundaria" },
-        { id: "sin-consultas", etiqueta: "Sin consultas externas" },
+        { id: "camara-encendida",  etiqueta: "Cámara encendida toda la llamada" },
+        { id: "mirada-estable",    etiqueta: "Mirada estable (no mira fuera de cámara constantemente)" },
+        { id: "sin-clics",         etiqueta: "No se escuchan clics de teclado ni mouse" },
+        { id: "sin-pausas",        etiqueta: "Sin pausas largas sospechosas" },
+        { id: "lenguaje-natural",  etiqueta: "Lenguaje natural, no suena a lectura" },
+        { id: "fluidez",           etiqueta: "Responde con fluidez o con duda genuina" },
       ],
     },
 
@@ -246,11 +249,13 @@ const CONFIGURACIONES = [
         nombre: "C1 — Recopilación de información",
         preguntas: [
           { id: "c1-p1",
-            escenario: "Un hospital pequeño quiere digitalizar su proceso de admisión de pacientes. Actualmente la recepcionista registra datos en un cuaderno.",
-            preguntaGuia: "Explica qué técnicas usarías para levantar información y aplica tu respuesta a este escenario." },
+            escenario: "Una clínica dental pequeña quiere automatizar su proceso de citas. Actualmente las citas se agendan por teléfono y se anotan en una libreta. Los pacientes a veces llegan y su cita no aparece registrada.",
+            preguntaGuia: "¿Qué técnicas de levantamiento usarías para entender este proceso y por qué? Explícame qué captura cada una.",
+            queBuscar: "Teoría: nombrar ≥3 de 4 técnicas + qué captura cada una (entrevista=lo que dicen, observación=lo que realmente pasa, cuestionario=percepción de muchos, documento=reglas formales). Aplicación: entrevistar a la recepcionista para entender el flujo, observar cómo se agendan las citas realmente, cuestionario a pacientes, revisar la libreta actual. ROJO: solo nombra técnicas sin explicar qué captura cada una, o no las aplica al caso." },
           { id: "c1-p2",
-            escenario: "Una escuela de 300 estudiantes quiere entender por qué los reportes de calificaciones salen siempre tarde.",
-            preguntaGuia: "Explica las 4 técnicas de recopilación y cómo las combinarías aquí." },
+            escenario: "Un colmado de barrio empezó a recibir pedidos por WhatsApp para delivery. El dueño anota los pedidos en un cuaderno pero a veces se le olvidan o confunde las direcciones.",
+            preguntaGuia: "Si te contrataran como analista, ¿qué técnicas usarías para investigar este proceso? Explícame qué aporta cada una.",
+            queBuscar: "Mismos criterios que Escenario A aplicados al colmado: nombrar ≥3 técnicas con qué captura cada una, y aplicarlas concretamente al proceso del colmado." },
         ],
       },
       {
@@ -258,11 +263,13 @@ const CONFIGURACIONES = [
         nombre: "C2 — Validación de hallazgos (triangulación)",
         preguntas: [
           { id: "c2-p1",
-            escenario: "En una entrevista con el gerente de ventas, él dice que el sistema actual 'pierde pedidos'. La observación directa no confirmó eso.",
-            preguntaGuia: "Explica triangulación y qué harías antes de documentarlo como requerimiento." },
+            escenario: "En una escuela, los maestros dicen que el proceso de reportar calificaciones es muy lento. Tú hiciste una entrevista al director, un cuestionario a 20 maestros, y observaste cómo se registran las notas.",
+            preguntaGuia: "¿Qué es triangular un hallazgo y por qué es importante? Si la entrevista y el cuestionario coinciden en que el proceso es lento, pero en la observación ves que en realidad tarda poco, ¿qué haces?",
+            queBuscar: "Teoría: triangular = confirmar con 2+ fuentes independientes; 1 fuente=opinión, 2+=evidencia. Aplicación: reconocer la contradicción e investigar más (tal vez los maestros perciben lentitud por otra razón, o la observación fue un día atípico); no descartar ninguna fuente sin justificación. ROJO: si dice que simplemente se queda con la mayoría o ignora la observación." },
           { id: "c2-p2",
-            escenario: "Tres fuentes distintas (entrevista, cuestionario, documento) apuntan a un mismo problema de inventario.",
-            preguntaGuia: "Explica cómo codificarías los hallazgos y qué valor agrega la triangulación." },
+            escenario: "En un taller mecánico, el dueño dice que pierde clientes porque no les avisa cuando el carro está listo. Tú encuestaste a 12 clientes y 9 dijeron que sí reciben aviso por teléfono.",
+            preguntaGuia: "¿Qué es triangulación? Aquí el dueño dice una cosa y los clientes dicen otra. ¿Cómo manejas esa contradicción?",
+            queBuscar: "Debe proponer investigación adicional, no simplemente creerle a uno u otro. Mismos criterios de triangulación aplicados al taller." },
         ],
       },
       {
@@ -270,23 +277,27 @@ const CONFIGURACIONES = [
         nombre: "C3 — Definición de requerimientos",
         preguntas: [
           { id: "c3-p1",
-            escenario: "El usuario dice: 'quiero que el sistema sea rápido'.",
-            preguntaGuia: "Convierte esto en un RF y un RNF bien formados con criterios verificables." },
+            escenario: "Un gimnasio quiere un sistema para que los miembros reserven clases en línea. Actualmente llegan y si la clase está llena, se devuelven.",
+            preguntaGuia: "Redáctame un requerimiento funcional y un requerimiento no funcional para este caso. Explícame la diferencia entre ambos.",
+            queBuscar: "Teoría: RF=qué hace el sistema (acción), RNF=cómo se comporta (cualidad con métrica). RF ejemplo: 'El sistema debe permitir al miembro reservar una clase verificando que haya cupo disponible.' RNF ejemplo: 'El sistema debe confirmar la reserva en menos de 3 segundos.' ROJO: RNF sin métrica ('debe ser rápido')." },
           { id: "c3-p2",
-            escenario: "Una farmacia necesita descontar stock al vender un producto.",
-            preguntaGuia: "Escribe el RF con Dado/Cuando/Entonces y un RNF con métrica." },
+            escenario: "Una farmacia necesita controlar el inventario de medicamentos. Algunos vencen y no se detectan a tiempo.",
+            preguntaGuia: "Dame un requerimiento funcional con su criterio de aceptación y un no funcional. ¿Qué hace que un requerimiento sea de calidad?",
+            queBuscar: "RF con criterio Dado/Cuando/Entonces. RNF con métrica. Calidad: claro, específico, verificable, trazable, atómico." },
         ],
       },
       {
         id: "c4-prototipado",
-        nombre: "C4 — Prototipado y validación con usuario",
+        nombre: "C4 — Prototipado y validación",
         preguntas: [
           { id: "c4-p1",
-            escenario: "Tienes requerimientos para un módulo de agendamiento, pero aún no programas.",
-            preguntaGuia: "Explica qué prototipo harías y cómo lo validarías con usuarios reales." },
+            escenario: "Una peluquería quiere que los clientes puedan ver los horarios disponibles y agendar cita desde el celular. Tú ya hiciste un prototipo de 3 pantallas.",
+            preguntaGuia: "¿Para qué sirve un prototipo y cuál es la diferencia entre uno con feedback del usuario y uno sin feedback? ¿Qué harías después de mostrar tu prototipo a los clientes?",
+            queBuscar: "Teoría: prototipo=validar requerimientos antes de programar; sin feedback=solo un dibujo; con feedback=herramienta de validación. Aplicación: documentar comentarios (rol, pantalla, comentario, decisión), aplicar cambios justificados, guardar V1 y V2. ROJO: dice que el prototipo es para que se vea bonito." },
           { id: "c4-p2",
-            escenario: "El prototipo salió 'bonito' pero el usuario dice 'esto no funciona así'.",
-            preguntaGuia: "Explica el valor real del prototipo y cómo documentas el feedback." },
+            escenario: "Una lavandería de autoservicio quiere una pantalla donde el cliente seleccione el tipo de servicio y vea el precio antes de pagar. Hiciste un boceto.",
+            preguntaGuia: "¿Qué debe pasar después de crear el prototipo? ¿Cómo documentas lo que los usuarios te dicen?",
+            queBuscar: "Validación con usuarios, feedback estructurado, cambios aplicados y documentados. Mismos criterios de validación que Escenario A." },
         ],
       },
       {
@@ -294,11 +305,13 @@ const CONFIGURACIONES = [
         nombre: "C5 — Modelado con DFD",
         preguntas: [
           { id: "c5-p1",
-            escenario: "Sistema de préstamos de biblioteca: estudiantes, bibliotecario, catálogo, registro de préstamos.",
-            preguntaGuia: "Explica los 4 símbolos del DFD y dibuja mentalmente el diagrama de contexto." },
+            escenario: "Una biblioteca de una escuela secundaria necesita controlar quién toma prestado los libros. Los estudiantes llenan una ficha de papel.",
+            preguntaGuia: "Si tuvieras que hacer el diagrama de contexto de este sistema, ¿cuáles serían los elementos? Explícame los 4 símbolos del DFD.",
+            queBuscar: "Teoría: 4 símbolos (entidad externa, proceso, flujo, almacén) con definición correcta de cada uno. Aplicación: proceso central (Gestión de Préstamos), entidades externas (Estudiante, Bibliotecario), flujos (SolicitudPrestamo, ConfirmacionPrestamo, etc.). ROJO: confunde DFD con diagrama de flujo (flowchart) o no puede nombrar los 4 símbolos." },
           { id: "c5-p2",
-            escenario: "Un analista te muestra un DFD donde dos entidades externas se comunican directamente con flecha.",
-            preguntaGuia: "Explica qué está mal y cómo corregirlo según las reglas del DFD." },
+            escenario: "Un restaurante quiere un sistema de pedidos. El mesero toma la orden, la envía a cocina, y el cliente recibe la cuenta.",
+            preguntaGuia: "Descríbeme cómo sería el diagrama de contexto y el nivel 0 de este sistema. ¿Qué reglas debe cumplir un DFD?",
+            queBuscar: "Contexto: proceso central + entidades (Mesero, Cliente, Cocina). Nivel 0: procesos (Tomar orden, Preparar pedido, Generar cuenta, etc.). Reglas: entrada/salida obligatorias en procesos, flujos con nombre de dato, no comunicación directa entre entidades externas." },
         ],
       },
       {
@@ -306,11 +319,13 @@ const CONFIGURACIONES = [
         nombre: "C6 — Diccionario de datos y consistencia",
         preguntas: [
           { id: "c6-p1",
-            escenario: "En el DFD aparece un flujo 'SolicitudPrestamo'. En la especificación dice 'PedidoLibro'.",
-            preguntaGuia: "Explica por qué es un error y cómo se usa el diccionario para evitarlo." },
+            escenario: "En un sistema de matrículas universitarias hay un flujo llamado 'SolicitudMatricula'. En el DFD dice 'SolicitudMatricula' pero en el diccionario aparece como 'FormularioInscripcion'.",
+            preguntaGuia: "¿Qué es un diccionario de datos, qué problema hay aquí y cuál es el impacto real?",
+            queBuscar: "Teoría: diccionario=estructura exacta de cada flujo y almacén; consistencia=mismos nombres en todos los artefactos. Aplicación: son dos objetos distintos para un programador; genera confusión y errores; solución: unificar a un solo nombre. ROJO: dice 'no importa, se entiende igual'." },
           { id: "c6-p2",
-            escenario: "Un almacén 'Ejemplares' tiene un atributo de estado.",
-            preguntaGuia: "Escribe su definición en notación de diccionario (=, +, [|])." },
+            escenario: "Un sistema de facturación tiene un almacén D3-Facturas. Dime qué campos podría tener y cómo lo escribirías en notación de diccionario.",
+            preguntaGuia: "Descríbeme la estructura de ese almacén usando la notación del diccionario de datos.",
+            queBuscar: "Debe usar = y + correctamente. Ejemplo: Factura = IDFactura + FechaEmision + IDCliente + {LineaDetalle} + MontoTotal. Debe saber que [ | ] indica alternativas." },
         ],
       },
       {
@@ -318,11 +333,13 @@ const CONFIGURACIONES = [
         nombre: "C7 — Refinamiento y balanceo de DFD",
         preguntas: [
           { id: "c7-p1",
-            escenario: "Descompones 'Registrar Préstamo' (nivel 0) en 3 subprocesos nivel 1. En el nivel 1 aparece una nueva entidad externa 'Auditor'.",
-            preguntaGuia: "Explica si esto rompe el balanceo y qué haces para corregirlo." },
+            escenario: "En el nivel 0 de una tienda en línea, el proceso 2.0 'Gestionar Pedidos' recibe 'DatosPedido' del Cliente y produce 'ConfirmacionPedido'. En el nivel 1, un compañero agregó una nueva entidad externa 'Banco' que no estaba en el nivel 0.",
+            preguntaGuia: "¿Qué es el balanceo padre-hijo y qué error cometió tu compañero?",
+            queBuscar: "Teoría: balanceo=entradas/salidas externas del padre=entradas/salidas del hijo; flujos internos pueden ser nuevos. Aplicación: agregar 'Banco' en nivel 1 rompe el balanceo porque no estaba en nivel 0; solución: agregar Banco al nivel 0, o manejar la interacción como flujo interno. ROJO: dice que está bien agregar entidades nuevas." },
           { id: "c7-p2",
-            escenario: "El proceso padre recibe 2 flujos externos; el hijo tiene 3 subprocesos con flujos internos entre ellos.",
-            preguntaGuia: "Explica qué validarías para que el balanceo sea correcto." },
+            escenario: "El proceso 4.0 'Gestionar Citas' del nivel 0 solo tiene como entrada 'SolicitudCita' del Paciente. Tu compañero bajó al nivel 1 y ahora tiene 4 subprocesos, pero solo uno de ellos recibe datos.",
+            preguntaGuia: "¿Qué problemas ves en ese nivel 1?",
+            queBuscar: "Subprocesos sin entrada = agujeros negros o milagros. El refinamiento debe repartir las entradas/salidas del padre entre los subprocesos. Todos deben recibir o producir datos." },
         ],
       },
       {
@@ -330,11 +347,13 @@ const CONFIGURACIONES = [
         nombre: "C8 — Especificaciones de proceso",
         preguntas: [
           { id: "c8-p1",
-            escenario: "Proceso 'Calcular multa' depende de 3 condiciones (días de retraso, tipo de usuario, valor del libro) con múltiples combinaciones simultáneas.",
-            preguntaGuia: "Explica cuál técnica (Structured English / Tabla / Árbol) usarías y por qué." },
+            escenario: "Un videoclub tiene este proceso: cuando un cliente quiere alquilar una película, se verifica si tiene membresía activa, si no tiene multas, y si la película está disponible.",
+            preguntaGuia: "¿Cómo documentarías la lógica de este proceso? ¿Qué técnica usarías y por qué?",
+            queBuscar: "Teoría: Structured English para lógica secuencial con condiciones claras; palabras clave en MAYÚSCULAS (SI, ENTONCES, FIN SI); nombres del diccionario. Aplicación: fragmento como 'RECIBIR SolicitudAlquiler, CONSULTAR Miembros, SI MembresiActiva = NO ENTONCES GENERAR Rechazo...'. No tiene que ser perfecto pero debe mostrar la estructura. ROJO: no puede dar ningún fragmento de Structured English." },
           { id: "c8-p2",
-            escenario: "Un proceso tiene una lógica secuencial simple: verificar saldo, si suficiente cobrar, si no rechazar.",
-            preguntaGuia: "Escribe la especificación en Structured English." },
+            escenario: "En una aerolínea, al registrar una maleta se verifica: (1) si pesa más de 23 kg, (2) si el pasajero ya tiene 2 maletas, (3) si el vuelo tiene restricción de equipaje. Dependiendo de la combinación, se cobra extra, se rechaza, o se acepta.",
+            preguntaGuia: "¿Qué técnica usarías para documentar esta lógica y por qué? ¿Cuándo conviene una tabla de decisión sobre Structured English?",
+            queBuscar: "Tabla de decisión porque hay múltiples condiciones simultáneas con diferentes combinaciones de acciones; SE sería confuso con tantas combinaciones anidadas. Debe explicar cuándo cada técnica conviene." },
         ],
       },
       {
@@ -342,11 +361,13 @@ const CONFIGURACIONES = [
         nombre: "C9 — Trazabilidad",
         preguntas: [
           { id: "c9-p1",
-            escenario: "En tu matriz de trazabilidad hay un proceso del DFD que no corresponde a ningún RF.",
-            preguntaGuia: "Explica qué significa eso y qué acción tomas." },
+            escenario: "Estás analizando una app de delivery de comida. Tienes un requerimiento que dice 'El sistema debe calcular el tiempo estimado de entrega'. Pero cuando revisas tu DFD, no hay ningún proceso que haga ese cálculo.",
+            preguntaGuia: "¿Qué es la trazabilidad, qué problema hay aquí y cómo lo resolverías?",
+            queBuscar: "Teoría: trazabilidad=poder rastrear cada RF hasta un proceso, datos y pantalla; la matriz vincula todo. Aplicación: RF sin proceso=hueco en el DFD; solución: agregar un proceso que calcule el tiempo, o verificar si está cubierto por otro proceso existente. ROJO: dice que no importa que falte el proceso." },
           { id: "c9-p2",
-            escenario: "Un RF aparece en la matriz sin columna de especificación marcada.",
-            preguntaGuia: "Explica el riesgo y cómo cierras ese hueco." },
+            escenario: "Un sistema de gestión de calificaciones tiene el proceso 'Generar Boletín' en el DFD, pero cuando revisas el backlog de requerimientos, ningún RF menciona boletines.",
+            preguntaGuia: "¿Qué indica esta situación en términos de trazabilidad?",
+            queBuscar: "Proceso sin RF = proceso decorativo o RF faltante. Debe proponer agregar el RF al backlog (con su fuente) o eliminar el proceso si no corresponde a una necesidad real." },
         ],
       },
       {
@@ -354,28 +375,50 @@ const CONFIGURACIONES = [
         nombre: "C10 — Propuesta del sistema",
         preguntas: [
           { id: "c10-p1",
-            escenario: "Debes recomendar entre desarrollo a medida vs software existente para un consultorio dental pequeño.",
-            preguntaGuia: "Explica cómo estructuras las alternativas (costos, beneficios, riesgos) y cómo recomiendas." },
+            escenario: "Una ONG que gestiona adopciones de mascotas necesita un sistema para registrar animales, solicitudes de adopción y seguimiento. Tiene presupuesto muy limitado y solo 2 personas en staff.",
+            preguntaGuia: "¿Qué debe contener una propuesta del sistema? Proponme dos alternativas para este caso y dime cuál recomendarías.",
+            queBuscar: "Teoría: propuesta=alternativas+costos/beneficios+recomendación justificada; costos: desarrollo, infraestructura, capacitación, mantenimiento. Aplicación: (A) software gratuito existente (Trello/Google Sheets adaptado), (B) app web simple a medida; recomendar A por presupuesto limitado y equipo pequeño. ROJO: propone solo una alternativa o no justifica la recomendación." },
           { id: "c10-p2",
-            escenario: "Tu recomendación depende más del presupuesto del cliente que del análisis técnico.",
-            preguntaGuia: "Explica cómo reflejas la restricción de presupuesto en la propuesta final." },
+            escenario: "Un taller de reparación de celulares quiere un sistema para registrar las reparaciones, notificar al cliente cuando está listo, y controlar el inventario de repuestos.",
+            preguntaGuia: "Si tuvieras que presentar una propuesta al dueño del taller, ¿qué alternativas le darías? ¿Qué costos y beneficios mencionarías?",
+            queBuscar: "2 alternativas razonables, mención de costos (categorías, no cifras exactas), beneficios tangibles e intangibles, y una recomendación conectada con el contexto del taller." },
         ],
       },
     ],
 
-    promptTemplate: `Eres evaluador de la materia Análisis de Sistemas. Analiza esta respuesta contra la rúbrica y devuelve observación + nota sugerida.
+    promptTemplate: `Eres un evaluador académico de Análisis de Sistemas (SIST-3311). Te paso la transcripción de una pregunta oral de recuperación. El estudiante debía: (a) explicar el concepto teórico con sus propias palabras, y (b) aplicarlo al escenario planteado.
 
-Competencia: {{competencia}}
-Pregunta: {{pregunta}}
-Escenario: {{escenario}}
-Rúbrica: {{rubrica}}
+Competencia evaluada: {{competencia}}
+Escenario presentado al estudiante: {{escenario}}
+Pregunta realizada: {{pregunta}}
+
+Criterios específicos (QUÉ BUSCAR):
+{{queBuscar}}
+
+ESCALA DE EVALUACIÓN (máx. {{rubrica}}):
+
+TEORÍA (máx. 3.5 pts):
+- 3.5 = Explica el concepto con precisión y claridad.
+- 2.5 = Explicación correcta pero incompleta.
+- 1.5 = Explicación vaga o con errores parciales.
+- 0   = No puede explicar o totalmente incorrecto.
+
+APLICACIÓN AL ESCENARIO (máx. 4 pts):
+- 4   = Aplica correctamente al escenario con acciones concretas.
+- 3   = Aplica pero con imprecisiones menores.
+- 2   = Intenta aplicar pero la respuesta es vaga o parcial.
+- 1   = Mención superficial sin aplicación real.
+- 0   = No aplica o respuesta incorrecta.
 
 Transcripción de la respuesta del estudiante:
 {{transcripcion}}
 
-Responde en español, devuelve:
-1. Observación crítica en 3-4 oraciones (qué demostró y qué faltó).
-2. Nota sugerida entre 0 y 7.5 (sin superar 7.5).`,
+Devuelve en español:
+1. Calificación de teoría (0–3.5) con justificación breve.
+2. Calificación de aplicación (0–4) con justificación breve.
+3. Subtotal (teoría + aplicación) sobre 7.5.
+4. Observación general en 2 líneas sobre el nivel demostrado.
+5. Si el lenguaje suena a lectura o la respuesta parece ensayada para ser leída, señálalo explícitamente.`,
   },
 ];
 
@@ -1334,7 +1377,8 @@ App.Prompt = (function () {
       competencia: comp ? comp.nombre : "",
       pregunta: preg ? preg.preguntaGuia : "",
       escenario: preg ? preg.escenario : "",
-      rubrica: `Máximo ${cfg.rubrica.puntosPorRonda} pts. Criterios: camara encendida, fluidez, comprensión, aplicación al escenario.`,
+      queBuscar: preg ? (preg.queBuscar || "") : "",
+      rubrica: `${cfg.rubrica.puntosPorRonda} pts (Teoría 3.5 + Aplicación 4)`,
       transcripcion: ronda.transcripcion || "[PEGAR TRANSCRIPCIÓN AQUÍ]",
     });
   }
@@ -1621,8 +1665,9 @@ App.Eval = (function () {
     const max = cfg.rubrica.puntosPorRonda;
     return `
       <div class="eval-winner"><strong>Competencia:</strong> ${App.UI.esc(comp.nombre)}</div>
-      <div class="eval-winner"><strong>Pregunta:</strong> ${App.UI.esc(preg ? preg.preguntaGuia : "")}<br>
-        <small>${App.UI.esc(preg ? preg.escenario : "")}</small></div>
+      <div class="eval-winner"><strong>Escenario:</strong> ${App.UI.esc(preg ? preg.escenario : "")}<br>
+        <strong>Pregunta:</strong> ${App.UI.esc(preg ? preg.preguntaGuia : "")}</div>
+      ${preg && preg.queBuscar ? `<div style="margin-top:8px;padding:10px 12px;background:#FEF9C3;border-left:3px solid #CA8A04;border-radius:6px;font-size:12px;color:#713F12"><strong>QUÉ BUSCAR:</strong> ${App.UI.esc(preg.queBuscar)}</div>` : ""}
       <div class="eval-nota-display" id="eval-nota-display-${idx}">${(cur.puntosLive ?? 0).toFixed(1)} / ${max}</div>
       <input type="range" min="0" max="${max}" step="0.5" value="${cur.puntosLive ?? 0}" data-idx="${idx}" class="eval-slider"/>
       <label style="margin-top:10px">Observación rápida</label>
