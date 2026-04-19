@@ -538,8 +538,8 @@ App.UI = (function () {
         b.className = `btn ${a.class || "btn-primary"}`;
         b.textContent = a.label;
         b.onclick = () => {
-          overlay.remove();
           resolve(a.value);
+          setTimeout(() => overlay.remove(), 0);
         };
         acts.appendChild(b);
       });
