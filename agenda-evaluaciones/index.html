@@ -745,7 +745,7 @@ App.Student = (function () {
       <div class="stu-shell">
         <button class="logout-btn" id="stu-back">← Volver</button>
         <h1>Detalle de evaluación</h1>
-        <p class="meta">${App.UI.esc(tipo.etiqueta)} · Nota total: ${ev.puntosTotales ?? "—"} / ${cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda}</p>
+        <p class="meta">${App.UI.esc(tipo ? tipo.etiqueta : reserva.tipoActividadId)} · Nota total: ${ev.puntosTotales ?? "—"} / ${cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda}</p>
 
         <div class="stu-section">
           ${rondas.map((r, i) => renderRondaDetalle(r, i, cfg)).join("")}
@@ -763,7 +763,12 @@ App.Student = (function () {
           ${(ev.videosURLs || []).length ? `
             <div class="detail-global">
               <strong>Videos:</strong><br>
-              ${ev.videosURLs.map(u => `<a href="${App.UI.esc(u)}" target="_blank" rel="noopener">${App.UI.esc(u)}</a>`).join("<br>")}
+              ${ev.videosURLs.map(u => {
+                const safe = /^https?:\/\//i.test(u);
+                return safe
+                  ? `<a href="${App.UI.esc(u)}" target="_blank" rel="noopener">${App.UI.esc(u)}</a>`
+                  : App.UI.esc(u);
+              }).join("<br>")}
             </div>` : ""}
         </div>
       </div>
