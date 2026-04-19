@@ -133,6 +133,27 @@
   .detail-ronda h3 { font-size: 14px; color: var(--navy); margin-bottom: 4px; }
   .detail-nota { font-size: 22px; font-weight: 800; color: var(--blue); float: right; }
   .detail-global { background: var(--gray); padding: 12px 14px; border-radius: 10px; margin-top: 8px; font-size: 13px; }
+
+  /* Teacher agenda */
+  .tch-shell { min-height: 100vh; padding: 24px 20px; max-width: 1100px; margin: 0 auto; color: white; }
+  .tch-shell h1 { font-size: 22px; margin-bottom: 4px; }
+  .tch-section { background: white; color: var(--black); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+
+  .tch-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tch-stat { background: rgba(255,255,255,0.1); padding: 10px 16px; border-radius: 12px; color: white; }
+  .tch-stat strong { font-size: 18px; display: block; }
+
+  .tch-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .chip { padding: 6px 12px; border-radius: 999px; font-size: 12px; background: #E5E7EB;
+          color: var(--navy); cursor: pointer; font-weight: 600; border: 2px solid transparent; }
+  .chip.active { background: var(--blue); color: white; }
+
+  .tch-table { width: 100%; border-collapse: collapse; }
+  .tch-table th, .tch-table td { padding: 10px 8px; text-align: left; font-size: 13px;
+                                 border-bottom: 1px solid #E5E7EB; }
+  .tch-table th { color: var(--dgray); font-weight: 700; text-transform: uppercase;
+                  letter-spacing: 0.5px; font-size: 11px; }
+  .tch-action-btn { padding: 6px 10px; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -797,6 +818,209 @@ App.Student = (function () {
 })();
 
 // ══════════════════════════════════════════════════════════════════
+// App.Teacher — agenda, acciones, reportes wrapper
+// ══════════════════════════════════════════════════════════════════
+App.Teacher = (function () {
+  const filterState = { estado: "todos", tipo: "todos", ventana: "todas" };
+
+  async function renderAgenda() {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const reservas = Object.values(App.Core.state.reservas);
+    const filtradas = applyFilters(reservas);
+    const ordenadas = filtradas.sort(comparaCronologico);
+
+    const byEstado = agruparPor(reservas, r => r.estado);
+    const stats = {
+      total: reservas.length,
+      reservada: (byEstado.reservada || []).length,
+      "en-sesion": (byEstado["en-sesion"] || []).length,
+      completada: (byEstado.completada || []).length,
+      evaluada: (byEstado.evaluada || []).length,
+      publicada: (byEstado.publicada || []).length,
+    };
+
+    document.getElementById("app").innerHTML = `
+      <div class="tch-shell">
+        <button class="logout-btn" id="tch-logout">Salir</button>
+        <h1>Agenda del docente</h1>
+        <p style="color:#CBD5E1;font-size:13px;margin-bottom:16px">
+          ${App.UI.esc(cfg.asignatura.nombre)} · ${App.UI.esc(cfg.asignatura.periodo)}
+        </p>
+
+        <div class="tch-stats">
+          ${["total","reservada","en-sesion","completada","evaluada","publicada"].map(k => `
+            <div class="tch-stat"><strong>${stats[k]}</strong>${k}</div>
+          `).join("")}
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <button class="btn btn-primary" id="tch-publicar-bulk">📢 Publicar todas evaluadas</button>
+          <button class="btn btn-ghost" id="tch-reportes">Reportes</button>
+        </div>
+
+        <div class="tch-section">
+          ${renderFilters(cfg)}
+          <table class="tch-table">
+            <thead>
+              <tr><th>Fecha/Hora</th><th>Estudiante</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tch-tbody">
+              ${ordenadas.length === 0 ? `<tr><td colspan="5" style="text-align:center;color:var(--dgray);padding:24px">Sin reservas con estos filtros.</td></tr>` :
+                ordenadas.map(r => renderRow(r, cfg)).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    wireFilters();
+    wireRowActions();
+    document.getElementById("tch-logout").onclick = () => {
+      App.Auth.clearSession(); App.Core.navigate("#/"); location.reload();
+    };
+    document.getElementById("tch-publicar-bulk").onclick = () => publicarBulk();
+    document.getElementById("tch-reportes").onclick = () => App.Core.navigate("#/profe/reportes");
+  }
+
+  function renderFilters(cfg) {
+    const chip = (group, value, label) =>
+      `<span class="chip ${filterState[group] === value ? "active" : ""}" data-group="${group}" data-value="${value}">${App.UI.esc(label)}</span>`;
+    return `
+      <div class="tch-filters">
+        <strong style="font-size:12px;color:var(--dgray);align-self:center">Estado:</strong>
+        ${chip("estado","todos","todos")}
+        ${["reservada","en-sesion","completada","evaluada","publicada"].map(s => chip("estado",s,s)).join("")}
+      </div>
+      <div class="tch-filters">
+        <strong style="font-size:12px;color:var(--dgray);align-self:center">Tipo:</strong>
+        ${chip("tipo","todos","todos")}
+        ${cfg.tiposActividad.map(t => chip("tipo",t.id,t.etiqueta)).join("")}
+      </div>
+      <div class="tch-filters">
+        <strong style="font-size:12px;color:var(--dgray);align-self:center">Ventana:</strong>
+        ${chip("ventana","todas","todas")}
+        ${cfg.ventanas.map(v => chip("ventana",v.id,`${v.fecha} ${v.inicio}`)).join("")}
+      </div>
+    `;
+  }
+
+  function wireFilters() {
+    document.querySelectorAll(".chip").forEach(c => {
+      c.onclick = () => {
+        filterState[c.dataset.group] = c.dataset.value;
+        renderAgenda();
+      };
+    });
+  }
+
+  function renderRow(r, cfg) {
+    const est = cfg.estudiantes.find(e => e.matricula === r.estudianteMatricula);
+    const tipo = cfg.tiposActividad.find(t => t.id === r.tipoActividadId);
+    const ventana = cfg.ventanas.find(v => v.id === r.ventanaId);
+    return `
+      <tr>
+        <td>${App.UI.esc(ventana ? ventana.fecha : "")} ${App.UI.esc(r.slotInicio)}</td>
+        <td>${App.UI.esc(est ? est.nombre : r.estudianteMatricula)}</td>
+        <td>${App.UI.esc(tipo ? tipo.etiqueta : r.tipoActividadId)}</td>
+        <td><span class="badge badge-${r.estado}">${r.estado}</span></td>
+        <td>${renderActions(r)}</td>
+      </tr>
+    `;
+  }
+
+  function renderActions(r) {
+    const btn = (label, action, cls = "btn-primary") =>
+      `<button class="btn ${cls} tch-action-btn" data-action="${action}" data-id="${r.id}">${label}</button>`;
+    switch (r.estado) {
+      case "reservada":  return btn("Iniciar eval", "start");
+      case "en-sesion":  return btn("Continuar", "start");
+      case "completada": return btn("Procesar", "process");
+      case "evaluada":
+        return btn("Procesar", "process", "btn-ghost") + " " + btn("📢 Publicar", "publish", "btn-success");
+      case "publicada":
+        return btn("Ver", "process", "btn-ghost") + " " + btn("🔒 Despublicar", "unpublish", "btn-danger");
+      default: return "";
+    }
+  }
+
+  function wireRowActions() {
+    document.querySelectorAll(".tch-action-btn").forEach(b => {
+      b.onclick = () => handleAction(b.dataset.action, b.dataset.id);
+    });
+  }
+
+  async function handleAction(action, id) {
+    if (action === "start") { App.Core.navigate(`#/profe/eval/${id}`); return; }
+    if (action === "process") { App.Core.navigate(`#/profe/proceso/${id}`); return; }
+    if (action === "publish") { await setEstado(id, "publicada", { publicadaEn: new Date().toISOString() }); return; }
+    if (action === "unpublish") { await setEstado(id, "evaluada", { publicadaEn: null }); return; }
+  }
+
+  async function setEstado(id, nuevo, extraEval = {}) {
+    try {
+      await App.Core.mutate(reservas => {
+        const r = reservas[id];
+        if (!r) return reservas;
+        r.estado = nuevo;
+        if (Object.keys(extraEval).length) {
+          r.evaluacion = { ...(r.evaluacion || {}), ...extraEval };
+        }
+        return reservas;
+      });
+      App.UI.toast("Estado actualizado", "success");
+      renderAgenda();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
+  }
+
+  async function publicarBulk() {
+    const ok = await App.UI.confirm("Publicar TODAS las reservas en estado 'evaluada'?");
+    if (!ok) return;
+    try {
+      await App.Core.mutate(reservas => {
+        const when = new Date().toISOString();
+        for (const r of Object.values(reservas)) {
+          if (r.estado === "evaluada") {
+            r.estado = "publicada";
+            r.evaluacion = { ...(r.evaluacion || {}), publicadaEn: when };
+          }
+        }
+        return reservas;
+      });
+      App.UI.toast("Publicación masiva completada", "success");
+      renderAgenda();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
+  }
+
+  function applyFilters(rs) {
+    return rs.filter(r =>
+      (filterState.estado === "todos" || r.estado === filterState.estado) &&
+      (filterState.tipo === "todos"   || r.tipoActividadId === filterState.tipo) &&
+      (filterState.ventana === "todas"|| r.ventanaId === filterState.ventana)
+    );
+  }
+
+  function comparaCronologico(a, b) {
+    const cfg = App.Core.config;
+    const va = cfg.ventanas.find(v => v.id === a.ventanaId);
+    const vb = cfg.ventanas.find(v => v.id === b.ventanaId);
+    const fa = (va ? va.fecha : "") + " " + (a.slotInicio || "");
+    const fb = (vb ? vb.fecha : "") + " " + (b.slotInicio || "");
+    return fa.localeCompare(fb);
+  }
+
+  function agruparPor(arr, keyFn) {
+    return arr.reduce((acc, x) => { const k = keyFn(x); (acc[k] ||= []).push(x); return acc; }, {});
+  }
+
+  return { renderAgenda, setEstado };
+})();
+
+// ══════════════════════════════════════════════════════════════════
 // Boot
 // ══════════════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", async () => {
@@ -837,8 +1061,7 @@ function route(hash) {
     if (rm) return App.Student.renderResultado(rm[1]);
   }
   if (session.rol === "profe") {
-    if (hash === "#/profe/agenda") return document.getElementById("app").innerHTML =
-      `<div style="padding:40px;color:white">Profe agenda (Task 8)</div>`;
+    if (hash === "#/profe/agenda") return App.Teacher.renderAgenda();
   }
   document.getElementById("app").innerHTML =
     `<div style="padding:40px;color:white">Ruta pendiente: ${App.UI.esc(hash)}</div>`;
