@@ -767,15 +767,17 @@ App.Student = (function () {
       publicada: "Publicada",
     }[r.estado] || r.estado;
     const puedeVer = r.estado === "publicada";
+    const puedeCancelar = r.estado === "reservada";
     return `
       <div class="res-row">
         <div>
           <div class="res-title">${App.UI.esc(tipo ? tipo.etiqueta : r.tipoActividadId)}</div>
           <div class="res-meta">${App.UI.esc(ventana ? ventana.fecha : "")} · ${App.UI.esc(r.slotInicio)}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
           <span class="badge badge-${App.UI.esc(r.estado)}">${App.UI.esc(label)}</span>
           ${puedeVer ? `<button class="btn btn-ghost res-ver" data-id="${r.id}" style="padding:6px 12px;font-size:13px">Ver detalle</button>` : ""}
+          ${puedeCancelar ? `<button class="btn btn-ghost res-cancelar" data-id="${r.id}" style="padding:6px 12px;font-size:13px;color:var(--red);border-color:var(--red)">Cancelar</button>` : ""}
         </div>
       </div>
     `;
@@ -802,6 +804,38 @@ App.Student = (function () {
     document.querySelectorAll(".res-ver").forEach(b => {
       b.onclick = () => App.Core.navigate(`#/estudiante/resultado/${b.dataset.id}`);
     });
+    document.querySelectorAll(".res-cancelar").forEach(b => {
+      b.onclick = () => cancelarReserva(b.dataset.id);
+    });
+  }
+
+  async function cancelarReserva(reservaId) {
+    const session = App.Auth.loadSession();
+    const r = App.Core.state.reservas[reservaId];
+    if (!r || r.estudianteMatricula !== session.matricula) {
+      App.UI.toast("Reserva no encontrada", "error");
+      return;
+    }
+    if (r.estado !== "reservada") {
+      App.UI.toast("Ya no se puede cancelar (el profesor empezó a trabajar esta reserva).", "error");
+      return;
+    }
+    const ok = await App.UI.confirm("¿Cancelar esta reserva? El slot quedará libre para otro estudiante.");
+    if (!ok) return;
+    try {
+      await App.Core.mutate(reservas => {
+        const actual = reservas[reservaId];
+        if (!actual) throw new Error("Ya fue cancelada");
+        if (actual.estado !== "reservada") throw new Error("Ya no se puede cancelar");
+        delete reservas[reservaId];
+        return reservas;
+      });
+      App.UI.toast("✓ Reserva cancelada", "success");
+      App.Student.renderHome();
+    } catch (e) {
+      App.UI.toast(e.conflict ? "Otro usuario actualizó. Recargando." : (e.message || "Error"), "error");
+      App.Student.renderHome();
+    }
   }
 
   function renderVentanas(tipoId) {
