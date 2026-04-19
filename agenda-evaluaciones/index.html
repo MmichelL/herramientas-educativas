@@ -154,6 +154,22 @@
   .tch-table th { color: var(--dgray); font-weight: 700; text-transform: uppercase;
                   letter-spacing: 0.5px; font-size: 11px; }
   .tch-action-btn { padding: 6px 10px; font-size: 12px; }
+
+  /* Eval panel */
+  .eval-shell { min-height: 100vh; padding: 20px; max-width: 960px; margin: 0 auto; color: white; }
+  .eval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .eval-countdown { font-size: 20px; font-weight: 800; color: var(--amber); }
+  .eval-checks { background: white; color: var(--black); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .eval-checks label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+                       color: var(--navy); font-size: 13px; font-weight: 600; text-transform: none;
+                       letter-spacing: normal; }
+  .eval-ronda { background: white; color: var(--black); border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+  .eval-ronda h3 { font-size: 16px; color: var(--navy); margin-bottom: 8px; }
+  .eval-canvas { display: block; margin: 12px auto; background: white; border-radius: 50%; }
+  .eval-ronda-locked { opacity: 0.45; pointer-events: none; }
+  .eval-nota-display { font-size: 28px; font-weight: 800; color: var(--blue); text-align: center; margin: 10px 0; }
+  .eval-obs { width: 100%; min-height: 60px; resize: vertical; }
+  .eval-winner { font-size: 14px; color: var(--navy); background: var(--gray); padding: 8px 12px; border-radius: 8px; margin: 6px 0; }
 </style>
 </head>
 <body>
@@ -180,8 +196,26 @@ const CONFIGURACIONES = [
     ventanas: [
       { id: "test-win", fecha: "2026-04-19", inicio: "09:00", fin: "10:00", slotMinutos: 5 },
     ],
-    rubrica: { rondasPorEstudiante: 2, puntosPorRonda: 7.5, checksGlobales: [] },
-    competencias: [],
+    rubrica: {
+      rondasPorEstudiante: 2,
+      puntosPorRonda: 7.5,
+      checksGlobales: [
+        { id: "camara-on", etiqueta: "Cámara" },
+        { id: "sin-consultas", etiqueta: "Sin consultas" },
+      ],
+    },
+    competencias: [
+      { id: "c1", nombre: "C1 Demo", preguntas: [
+        { id: "c1p1", escenario: "Escenario X", preguntaGuia: "Explica X" },
+        { id: "c1p2", escenario: "Escenario Y", preguntaGuia: "Aplica Y" },
+      ]},
+      { id: "c2", nombre: "C2 Demo", preguntas: [
+        { id: "c2p1", escenario: "Escenario A", preguntaGuia: "Explica A" },
+      ]},
+      { id: "c3", nombre: "C3 Demo", preguntas: [
+        { id: "c3p1", escenario: "Escenario B", preguntaGuia: "Aplica B" },
+      ]},
+    ],
     promptTemplate: "",
   },
 ];
@@ -1094,6 +1128,274 @@ App.Roulette = (function () {
 })();
 
 // ══════════════════════════════════════════════════════════════════
+// App.Eval — evaluación live (en-sesion) + post-sesión (procesar)
+// ══════════════════════════════════════════════════════════════════
+App.Eval = (function () {
+  let debounceSaveTimer = null;
+
+  async function renderLive(reservaId) {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const reserva = App.Core.state.reservas[reservaId];
+    if (!reserva) { App.UI.toast("Reserva no existe", "error"); App.Core.navigate("#/profe/agenda"); return; }
+
+    // Inicializar evaluación si no existe
+    if (!reserva.evaluacion) {
+      reserva.evaluacion = {
+        rondas: [],
+        checksGlobales: {},
+        observacionGlobal: "",
+        videosURLs: [],
+        puntosTotales: 0,
+      };
+    }
+    if (reserva.estado === "reservada") {
+      await App.Teacher.setEstado(reservaId, "en-sesion");
+      return renderLive(reservaId);
+    }
+
+    const est = cfg.estudiantes.find(e => e.matricula === reserva.estudianteMatricula);
+    const tipo = cfg.tiposActividad.find(t => t.id === reserva.tipoActividadId);
+    const ev = reserva.evaluacion;
+
+    document.getElementById("app").innerHTML = `
+      <div class="eval-shell">
+        <div class="eval-header">
+          <div>
+            <h1 style="font-size:22px">${App.UI.esc(est ? est.nombre : "")}</h1>
+            <p style="color:#CBD5E1;font-size:13px">${App.UI.esc(tipo ? tipo.etiqueta : "")}</p>
+          </div>
+          <div>
+            <span class="eval-countdown" id="eval-countdown">05:00</span>
+            <button class="btn btn-ghost" id="eval-back" style="margin-left:8px">← Volver</button>
+          </div>
+        </div>
+
+        <div class="eval-checks">
+          <strong style="color:var(--navy)">Cumplimiento:</strong>
+          ${cfg.rubrica.checksGlobales.map(c => `
+            <label>
+              <input type="checkbox" data-check="${c.id}" ${ev.checksGlobales[c.id] ? "checked" : ""}/>
+              ${App.UI.esc(c.etiqueta)}
+            </label>
+          `).join("")}
+        </div>
+
+        <div id="eval-rondas"></div>
+
+        <div style="background:white;color:var(--black);border-radius:14px;padding:18px">
+          <label>Observación global (opcional)</label>
+          <textarea id="eval-obs-global" class="eval-obs">${App.UI.esc(ev.observacionGlobal || "")}</textarea>
+        </div>
+
+        <div style="margin-top:16px">
+          <button class="btn btn-success" id="eval-finalizar">Finalizar sesión</button>
+        </div>
+      </div>
+    `;
+
+    renderRondasArea(reserva, cfg);
+    wireChecks(reserva);
+    wireObsGlobal(reserva);
+    startCountdown();
+
+    document.getElementById("eval-back").onclick = () => App.Core.navigate("#/profe/agenda");
+    document.getElementById("eval-finalizar").onclick = () => finalizarSesion(reservaId);
+  }
+
+  function renderRondasArea(reserva, cfg) {
+    const host = document.getElementById("eval-rondas");
+    const total = cfg.rubrica.rondasPorEstudiante;
+    const rondas = reserva.evaluacion.rondas;
+
+    let html = "";
+    for (let i = 0; i < total; i++) {
+      const prev = rondas[i - 1];
+      const locked = i > 0 && (!prev || prev.puntosLive == null);
+      const cur = rondas[i];
+      html += `<div class="eval-ronda ${locked ? "eval-ronda-locked" : ""}" data-idx="${i}">
+        <h3>Ronda ${i + 1} / ${total}</h3>
+        ${renderRondaInner(i, cur, reserva, cfg)}
+      </div>`;
+    }
+    host.innerHTML = html;
+    wireRondas(reserva, cfg);
+  }
+
+  function renderRondaInner(idx, cur, reserva, cfg) {
+    if (!cur || !cur.competenciaId) {
+      return `
+        <p style="color:var(--dgray);font-size:13px">Gira para elegir competencia (sin repetir dentro del estudiante).</p>
+        <canvas class="eval-canvas" width="300" height="300" id="eval-canvas-c-${idx}"></canvas>
+        <div style="text-align:center"><button class="btn btn-primary eval-gira-comp" data-idx="${idx}">🎰 Girar competencia</button></div>
+      `;
+    }
+    const comp = cfg.competencias.find(c => c.id === cur.competenciaId);
+    if (!cur.preguntaId) {
+      return `
+        <div class="eval-winner"><strong>Competencia:</strong> ${App.UI.esc(comp ? comp.nombre : cur.competenciaId)}</div>
+        <canvas class="eval-canvas" width="300" height="300" id="eval-canvas-p-${idx}"></canvas>
+        <div style="text-align:center"><button class="btn btn-primary eval-gira-preg" data-idx="${idx}">🎰 Girar pregunta</button></div>
+      `;
+    }
+    const preg = comp ? comp.preguntas.find(p => p.id === cur.preguntaId) : null;
+    const max = cfg.rubrica.puntosPorRonda;
+    return `
+      <div class="eval-winner"><strong>Competencia:</strong> ${App.UI.esc(comp.nombre)}</div>
+      <div class="eval-winner"><strong>Pregunta:</strong> ${App.UI.esc(preg ? preg.preguntaGuia : "")}<br>
+        <small>${App.UI.esc(preg ? preg.escenario : "")}</small></div>
+      <div class="eval-nota-display" id="eval-nota-display-${idx}">${(cur.puntosLive ?? 0).toFixed(1)} / ${max}</div>
+      <input type="range" min="0" max="${max}" step="0.5" value="${cur.puntosLive ?? 0}" data-idx="${idx}" class="eval-slider"/>
+      <label style="margin-top:10px">Observación rápida</label>
+      <textarea class="eval-obs eval-obs-ronda" data-idx="${idx}">${App.UI.esc(cur.observacion || "")}</textarea>
+    `;
+  }
+
+  function wireRondas(reserva, cfg) {
+    // Girar competencia
+    document.querySelectorAll(".eval-gira-comp").forEach(b => {
+      b.onclick = () => {
+        const idx = Number(b.dataset.idx);
+        const yaGiradas = new Set(reserva.evaluacion.rondas.map(r => r.competenciaId).filter(Boolean));
+        const disponibles = cfg.competencias.filter(c => !yaGiradas.has(c.id));
+        if (disponibles.length === 0) { App.UI.toast("No quedan competencias", "warn"); return; }
+        const items = disponibles.map(c => ({ id: c.id, label: c.nombre }));
+        const canvas = document.getElementById(`eval-canvas-c-${idx}`);
+        App.Roulette.spin({
+          canvas, items,
+          onWinner: async (w) => {
+            if (!w) return;
+            await App.Core.mutate(reservas => {
+              const r = reservas[reserva.id];
+              r.evaluacion.rondas[idx] = { n: idx + 1, competenciaId: w.id, preguntaId: null, puntosLive: null, observacion: "" };
+              return reservas;
+            });
+            reserva = App.Core.state.reservas[reserva.id];
+            renderRondasArea(reserva, cfg);
+          },
+        });
+      };
+    });
+
+    // Girar pregunta
+    document.querySelectorAll(".eval-gira-preg").forEach(b => {
+      b.onclick = () => {
+        const idx = Number(b.dataset.idx);
+        const ronda = reserva.evaluacion.rondas[idx];
+        const comp = cfg.competencias.find(c => c.id === ronda.competenciaId);
+        const items = comp.preguntas.map(p => ({ id: p.id, label: p.preguntaGuia.slice(0, 30) }));
+        const canvas = document.getElementById(`eval-canvas-p-${idx}`);
+        App.Roulette.spin({
+          canvas, items,
+          onWinner: async (w) => {
+            if (!w) return;
+            await App.Core.mutate(reservas => {
+              const r = reservas[reserva.id];
+              r.evaluacion.rondas[idx].preguntaId = w.id;
+              return reservas;
+            });
+            reserva = App.Core.state.reservas[reserva.id];
+            renderRondasArea(reserva, cfg);
+          },
+        });
+      };
+    });
+
+    // Slider de nota — auto-save debounce
+    document.querySelectorAll(".eval-slider").forEach(sl => {
+      sl.oninput = () => {
+        const idx = Number(sl.dataset.idx);
+        const v = Number(sl.value);
+        document.getElementById(`eval-nota-display-${idx}`).textContent = `${v.toFixed(1)} / ${cfg.rubrica.puntosPorRonda}`;
+        debounce(async () => {
+          await App.Core.mutate(reservas => {
+            reservas[reserva.id].evaluacion.rondas[idx].puntosLive = v;
+            return reservas;
+          });
+          reserva = App.Core.state.reservas[reserva.id];
+          // re-render si destraba la siguiente ronda y aún no está visible
+          if (idx + 1 < cfg.rubrica.rondasPorEstudiante &&
+              !reserva.evaluacion.rondas[idx + 1]) {
+            renderRondasArea(reserva, cfg);
+          }
+        }, 400);
+      };
+    });
+
+    // Observación ronda
+    document.querySelectorAll(".eval-obs-ronda").forEach(ta => {
+      ta.onblur = async () => {
+        const idx = Number(ta.dataset.idx);
+        await App.Core.mutate(reservas => {
+          reservas[reserva.id].evaluacion.rondas[idx].observacion = ta.value;
+          return reservas;
+        });
+      };
+    });
+  }
+
+  function wireChecks(reserva) {
+    document.querySelectorAll("[data-check]").forEach(cb => {
+      cb.onchange = async () => {
+        await App.Core.mutate(reservas => {
+          reservas[reserva.id].evaluacion.checksGlobales[cb.dataset.check] = cb.checked;
+          return reservas;
+        });
+      };
+    });
+  }
+
+  function wireObsGlobal(reserva) {
+    const ta = document.getElementById("eval-obs-global");
+    ta.onblur = async () => {
+      await App.Core.mutate(reservas => {
+        reservas[reserva.id].evaluacion.observacionGlobal = ta.value;
+        return reservas;
+      });
+    };
+  }
+
+  function startCountdown() {
+    let remain = 5 * 60;
+    const el = document.getElementById("eval-countdown");
+    if (!el) return;
+    clearInterval(startCountdown._iv);
+    startCountdown._iv = setInterval(() => {
+      remain = Math.max(0, remain - 1);
+      const m = String(Math.floor(remain / 60)).padStart(2, "0");
+      const s = String(remain % 60).padStart(2, "0");
+      const node = document.getElementById("eval-countdown");
+      if (!node) { clearInterval(startCountdown._iv); return; }
+      node.textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  async function finalizarSesion(reservaId) {
+    const ok = await App.UI.confirm("Finalizar sesión? (queda como completada, se puede procesar después)");
+    if (!ok) return;
+    const cfg = App.Core.config;
+    await App.Core.mutate(reservas => {
+      const r = reservas[reservaId];
+      const totalMax = cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda;
+      r.evaluacion.puntosTotales = (r.evaluacion.rondas || [])
+        .reduce((acc, ro) => acc + (ro.puntosLive || 0), 0);
+      r.evaluacion.puntosTotales = Math.min(r.evaluacion.puntosTotales, totalMax);
+      r.estado = "completada";
+      return reservas;
+    });
+    App.UI.toast("Sesión finalizada", "success");
+    App.Core.navigate("#/profe/agenda");
+  }
+
+  function debounce(fn, ms) {
+    clearTimeout(debounceSaveTimer);
+    debounceSaveTimer = setTimeout(fn, ms);
+  }
+
+  return { renderLive };
+})();
+
+// ══════════════════════════════════════════════════════════════════
 // Boot
 // ══════════════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1135,6 +1437,8 @@ function route(hash) {
   }
   if (session.rol === "profe") {
     if (hash === "#/profe/agenda") return App.Teacher.renderAgenda();
+    const em = hash.match(/^#\/profe\/eval\/([^/]+)$/);
+    if (em) return App.Eval.renderLive(em[1]);
   }
   document.getElementById("app").innerHTML =
     `<div style="padding:40px;color:white">Ruta pendiente: ${App.UI.esc(hash)}</div>`;
