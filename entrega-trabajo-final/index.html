@@ -4,9 +4,630 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Entrega Proyecto Final — SIST-3311</title>
+  <style>
+    :root {
+      --navy:  #1A2456;
+      --blue:  #2D5BE3;
+      --mint:  #00D4A0;
+      --amber: #F59E0B;
+      --coral: #FF5C6A;
+      --bg:    #F0F2F8;
+      --card:  #FFFFFF;
+      --text:  #1A2456;
+      --muted: #6B7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    header { background: var(--navy); color: white; padding: 1rem 1.5rem; }
+    header .sub { font-size: 0.75rem; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+
+    .main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+    /* ── Countdown ── */
+    .countdown-box { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 1.25rem; text-align: center; margin-bottom: 1rem; }
+    .cd-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 0.4rem; }
+    .cd-value { font-size: 2.75rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--mint); transition: color .3s; line-height: 1; }
+    .cd-value.amber { color: var(--amber); }
+    .cd-value.red   { color: var(--coral); }
+    .cd-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.4rem; }
+
+    .closed-banner { background: var(--coral); color: white; border-radius: 12px; padding: 1rem 1.25rem; font-weight: 700; font-size: 1rem; text-align: center; margin-bottom: 1rem; display: none; }
+    .closed-banner.on { display: block; }
+
+    /* ── Cards & Forms ── */
+    .card { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 1.5rem; margin-bottom: 1rem; }
+    .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+    .field { margin-bottom: 1.25rem; }
+    label { display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.4rem; }
+    input[type=text], input[type=url] { width: 100%; padding: .7rem .9rem; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color .2s; }
+    input:focus { border-color: var(--blue); }
+
+    .name-badge { background: var(--navy); color: white; border-radius: 8px; padding: .7rem 1rem; margin-bottom: 1rem; }
+    .name-badge .lbl { font-size: 0.68rem; opacity: .65; text-transform: uppercase; letter-spacing: .05em; }
+    .name-badge .val { font-weight: 700; font-size: 1rem; margin-top: .15rem; }
+
+    /* ── Drop zone ── */
+    .drop-zone { border: 2px dashed #CBD5E1; border-radius: 10px; padding: 2rem 1rem; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+    .drop-zone:hover, .drop-zone.over { border-color: var(--blue); background: #EEF2FF; }
+    .drop-zone.done { border-color: var(--mint); background: #F0FDF9; }
+    .dz-icon { font-size: 2rem; margin-bottom: .4rem; }
+    .dz-main { font-weight: 600; color: var(--blue); }
+    .dz-sub  { font-size: .78rem; color: var(--muted); margin-top: .2rem; }
+    .dz-ok   { font-weight: 600; color: var(--mint); }
+
+    /* ── Observation box ── */
+    .obs-box { background: #FFFBEB; border: 1px solid var(--amber); border-radius: 8px; padding: 1rem; font-size: .85rem; color: #92400E; margin-bottom: 1.25rem; }
+    .obs-box strong { display: block; margin-bottom: .3rem; }
+
+    /* ── Buttons ── */
+    .btn { display: block; width: 100%; padding: .85rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity .2s, transform .1s; }
+    .btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .btn:active:not(:disabled) { transform: none; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary  { background: var(--blue);  color: white; }
+    .btn-ghost    { background: #E5E7EB; color: var(--navy); margin-top: .75rem; }
+    .btn-mint     { background: var(--mint);  color: var(--navy); }
+
+    .err { color: var(--coral); font-size: .82rem; margin-top: .4rem; display: none; }
+    .err.on { display: block; }
+
+    /* ── Spinner ── */
+    .spin { display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: rot .6s linear infinite; vertical-align: middle; margin-right: .4rem; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ── Success screen ── */
+    .success-icon { font-size: 3.5rem; text-align: center; margin-bottom: .75rem; }
+    .success-ts   { font-size: .82rem; color: var(--muted); text-align: center; margin-bottom: 1rem; }
+    .success-info { font-size: .9rem; }
+    .success-info p { margin-bottom: .4rem; }
+
+    /* ── Teacher view ── */
+    .stats { display: flex; gap: .75rem; margin-bottom: 1rem; }
+    .stat  { flex: 1; background: var(--navy); color: white; border-radius: 8px; padding: .75rem; text-align: center; }
+    .stat .v { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+    .stat .l { font-size: .68rem; opacity: .65; text-transform: uppercase; letter-spacing: .05em; margin-top: .2rem; }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    th { text-align: left; padding: .5rem; border-bottom: 2px solid #E5E7EB; color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; }
+    td { padding: .7rem .5rem; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .lnk { background: none; border: none; color: var(--blue); cursor: pointer; font-size: .8rem; text-decoration: underline; padding: 0; }
+    .muted { color: var(--muted); font-size: .73rem; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--navy); color: white; padding: .7rem 1.4rem; border-radius: 8px; font-size: .88rem; z-index: 999; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+    .toast.on { opacity: 1; }
+
+    /* ── Screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    @media (max-width: 480px) {
+      .cd-value { font-size: 2.1rem; }
+      .stats { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Entrega Proyecto Final — SIST-3311</h1>
-  <p>En construcción.</p>
+
+<header>
+  <div class="sub">SIST-3311 · Análisis de Sistemas · Enero – Abril 2026</div>
+  <h1>Entrega del Proyecto Final</h1>
+</header>
+
+<div class="main">
+
+  <!-- Countdown — always visible -->
+  <div class="countdown-box" id="cdBox">
+    <div class="cd-label">Tiempo restante para entregar</div>
+    <div class="cd-value" id="cdVal">--:--:--</div>
+    <div class="cd-sub">Cierra el 20 abr 2026 a las 10:00 PM</div>
+  </div>
+  <div class="closed-banner" id="closedBanner">⛔ ENTREGA CERRADA — 20 abr 2026, 10:00 PM</div>
+
+  <!-- ── Screen: Auth ── -->
+  <div class="screen active" id="scrAuth">
+    <div class="card">
+      <h2>Identifícate para entregar</h2>
+      <div class="field">
+        <label for="inMatricula">Número de matrícula</label>
+        <input type="text" id="inMatricula" placeholder="Ej. 2024-0007" maxlength="20" autocomplete="off">
+        <div class="err" id="authErr">Matrícula no encontrada. Verifica el número.</div>
+      </div>
+      <button class="btn btn-primary" id="btnAuth">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ── Screen: Student form ── -->
+  <div class="screen" id="scrForm">
+    <div class="name-badge">
+      <div class="lbl">Estudiante</div>
+      <div class="val" id="stuName">—</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label>Documento del Proyecto Final</label>
+        <div class="drop-zone" id="dropZone">
+          <div id="dzContent">
+            <div class="dz-icon">📄</div>
+            <div class="dz-main">Haz clic o arrastra el archivo aquí</div>
+            <div class="dz-sub">PDF, Word (.doc, .docx) · Máx. 18 MB</div>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf,.doc,.docx" style="display:none">
+        <div class="err" id="fileErr">Selecciona un archivo PDF o Word válido (máx 18 MB).</div>
+      </div>
+      <div class="field">
+        <label for="inVideoUrl">Enlace al video de defensa</label>
+        <input type="url" id="inVideoUrl" placeholder="https://youtu.be/... o cualquier plataforma">
+        <div class="err" id="urlErr">Ingresa un enlace válido (https://...).</div>
+      </div>
+      <div class="obs-box">
+        <strong>⚠ Sobre los anexos</strong>
+        Todos los materiales —diagramas, presentaciones, capturas de pantalla, encuestas y cualquier otro anexo— deben estar incluidos dentro del documento principal. No se aceptarán archivos separados.
+      </div>
+      <button class="btn btn-primary" id="btnSubmit">Enviar Entrega</button>
+      <div class="err" id="submitErr"></div>
+    </div>
+    <button class="btn btn-ghost" id="btnBack">← Volver</button>
+  </div>
+
+  <!-- ── Screen: Success ── -->
+  <div class="screen" id="scrSuccess">
+    <div class="card">
+      <div class="success-icon">✅</div>
+      <h2 style="text-align:center;margin-bottom:.4rem">Entrega registrada</h2>
+      <p class="success-ts" id="sucTs"></p>
+      <div class="success-info" id="sucInfo"></div>
+    </div>
+    <button class="btn btn-ghost" id="btnResubmit">Corregir entrega (reenviar antes del cierre)</button>
+  </div>
+
+  <!-- ── Screen: Teacher ── -->
+  <div class="screen" id="scrTeacher">
+    <div class="stats">
+      <div class="stat">
+        <div class="v" id="tStatRec">—</div>
+        <div class="l">Recibidas</div>
+      </div>
+      <div class="stat" style="background:#374151">
+        <div class="v" id="tStatPen">—</div>
+        <div class="l">Pendientes</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h2 style="margin:0">Entregas recibidas</h2>
+        <button class="btn btn-mint" id="btnExport" style="width:auto;padding:.45rem .9rem;font-size:.82rem">Exportar .txt</button>
+      </div>
+      <div class="tbl-wrap" id="tTeacher">Cargando…</div>
+    </div>
+  </div>
+
+</div><!-- .main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const CFG = {
+  deadline:          new Date("2026-04-20T22:00:00-04:00"),
+  profesorMatricula: "2008464",
+  totalEstudiantes:  25,
+  estudiantes: [
+    { matricula: "2016-0810", nombre: "GIOVANNY BAUTISTA CASTILLO" },
+    { matricula: "2022-0603", nombre: "DARLIN ARROYO POLANCO" },
+    { matricula: "2022-0678", nombre: "ULISES JABRIEL REYES CUEVAS" },
+    { matricula: "2023-0178", nombre: "ROMER ENMANUEL ARNO PEREZ" },
+    { matricula: "2023-0221", nombre: "DANIEL VALDEZ CUELLO" },
+    { matricula: "2023-0239", nombre: "LEURI GALVA DE LA ROSA" },
+    { matricula: "2023-0324", nombre: "ANTHONY PICHARDO CASILLA" },
+    { matricula: "2024-0007", nombre: "CINDY PAOLA ALCANTARA GARCIA" },
+    { matricula: "2024-0023", nombre: "JHAEL ADAMES PEREZ" },
+    { matricula: "2024-0026", nombre: "YASMEYRI MARILIN CASTILLO RIVERA" },
+    { matricula: "2024-0039", nombre: "JOSE ELIEZER LOPEZ FELIZ" },
+    { matricula: "2024-0060", nombre: "HAROLD SMITH BAUTISTA CAPELLAN" },
+    { matricula: "2024-0103", nombre: "JUSTIN PAULINO ALBERTO" },
+    { matricula: "2024-0280", nombre: "ENMANUEL GUZMAN OSORIA" },
+    { matricula: "2024-0282", nombre: "JOSTIN RODRIGUEZ MARTINEZ" },
+    { matricula: "2024-0283", nombre: "ISAIAS HERRERA TORIBIO" },
+    { matricula: "2024-0284", nombre: "ADAM FRANCISCO GARCIA HERRERA" },
+    { matricula: "2024-0286", nombre: "JOHAN ALEXANDER ROJAS TAVAREZ" },
+    { matricula: "2024-0305", nombre: "ELIANNI CAROLINA SANTANA BAUTISTA" },
+    { matricula: "2024-0306", nombre: "JAASIEL LORENZO TEJADA" },
+    { matricula: "2024-0321", nombre: "KAROL ELIZABETH MORA QUEZADA" },
+    { matricula: "2024-0325", nombre: "NAYROBIS VALDEZ GARCIA" },
+    { matricula: "2024-0333", nombre: "JAEL ENCARNACION MATEO" },
+    { matricula: "2024-0357", nombre: "ARLETTE PEREZ HICIANO" },
+    { matricula: "2024-0379", nombre: "CAMILO ALBERT LEON PERALTA" },
+  ],
+};
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+const state = {
+  student:      null,
+  selectedFile: null,
+  hasExisting:  false,
+};
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  setTimeout(() => el.classList.remove("on"), 3000);
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleString("es-DO", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function fmtSize(bytes) {
+  if (!bytes) return "";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+function isDeadlinePassed() {
+  return Date.now() > CFG.deadline.getTime();
+}
+
+function escHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+/* ══════════════════════════════════════════
+   COUNTDOWN
+══════════════════════════════════════════ */
+function tick() {
+  const diff = CFG.deadline.getTime() - Date.now();
+  const cdEl = document.getElementById("cdVal");
+
+  if (diff <= 0) {
+    cdEl.textContent = "00:00:00";
+    cdEl.className = "cd-value red";
+    document.getElementById("cdBox").style.display = "none";
+    document.getElementById("closedBanner").classList.add("on");
+    const btnS = document.getElementById("btnSubmit");
+    if (btnS) { btnS.disabled = true; btnS.textContent = "Entrega cerrada"; }
+    return;
+  }
+
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  cdEl.textContent = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  cdEl.className = diff < 15 * 60_000 ? "cd-value red" : diff < 60 * 60_000 ? "cd-value amber" : "cd-value";
+}
+
+/* ══════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════ */
+function handleAuth() {
+  const raw   = document.getElementById("inMatricula").value.trim();
+  const errEl = document.getElementById("authErr");
+  errEl.classList.remove("on");
+
+  if (raw === CFG.profesorMatricula) {
+    state.student = { matricula: raw, nombre: "Profesor", isProf: true };
+    loadTeacher();
+    return;
+  }
+
+  const found = CFG.estudiantes.find(e => e.matricula === raw);
+  if (!found) { errEl.classList.add("on"); return; }
+
+  state.student = found;
+  loadForm();
+}
+
+/* ══════════════════════════════════════════
+   STUDENT FORM
+══════════════════════════════════════════ */
+async function loadForm() {
+  document.getElementById("stuName").textContent = state.student.nombre;
+  state.selectedFile = null;
+  state.hasExisting  = false;
+  resetDropZone();
+  document.getElementById("inVideoUrl").value = "";
+
+  try {
+    const res  = await fetch("/api/submissions");
+    const data = await res.json();
+    const mine = (data.submissions || []).find(s => s.matricula === state.student.matricula);
+    if (mine) {
+      state.hasExisting = true;
+      document.getElementById("dzContent").innerHTML = `
+        <div class="dz-icon">✅</div>
+        <div class="dz-ok">${escHtml(mine.fileName)}</div>
+        <div class="dz-sub">${fmtSize(mine.fileSize)} · entregado el ${fmtDate(mine.submittedAt)}</div>
+        <div class="dz-sub" style="margin-top:.4rem">Haz clic para reemplazar el archivo</div>
+      `;
+      document.getElementById("dropZone").classList.add("done");
+      document.getElementById("btnSubmit").textContent = "Actualizar Entrega";
+    } else {
+      document.getElementById("btnSubmit").textContent = "Enviar Entrega";
+    }
+  } catch {
+    document.getElementById("btnSubmit").textContent = "Enviar Entrega";
+  }
+
+  if (isDeadlinePassed()) {
+    document.getElementById("btnSubmit").disabled = true;
+    document.getElementById("btnSubmit").textContent = "Entrega cerrada";
+  }
+
+  show("scrForm");
+}
+
+function resetDropZone() {
+  const zone = document.getElementById("dropZone");
+  zone.classList.remove("done", "over");
+  document.getElementById("dzContent").innerHTML = `
+    <div class="dz-icon">📄</div>
+    <div class="dz-main">Haz clic o arrastra el archivo aquí</div>
+    <div class="dz-sub">PDF, Word (.doc, .docx) · Máx. 18 MB</div>
+  `;
+}
+
+function initDropZone() {
+  const zone  = document.getElementById("dropZone");
+  const input = document.getElementById("fileInput");
+  zone.addEventListener("click",     () => input.click());
+  zone.addEventListener("dragover",  e => { e.preventDefault(); zone.classList.add("over"); });
+  zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+  zone.addEventListener("drop",      e => { e.preventDefault(); zone.classList.remove("over"); if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]); });
+  input.addEventListener("change",   () => { if (input.files[0]) onFile(input.files[0]); });
+}
+
+function onFile(file) {
+  const errEl   = document.getElementById("fileErr");
+  const okTypes = ["application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+  const okExt   = /\.(pdf|doc|docx)$/i.test(file.name);
+
+  if (!okTypes.includes(file.type) && !okExt) {
+    errEl.textContent = "Solo se aceptan archivos PDF o Word (.doc, .docx).";
+    errEl.classList.add("on");
+    return;
+  }
+  if (file.size > 18 * 1024 * 1024) {
+    errEl.textContent = "El archivo supera el límite de 18 MB.";
+    errEl.classList.add("on");
+    return;
+  }
+  errEl.classList.remove("on");
+
+  state.selectedFile = file;
+  const zone = document.getElementById("dropZone");
+  zone.classList.add("done");
+  document.getElementById("dzContent").innerHTML = `
+    <div class="dz-icon">✅</div>
+    <div class="dz-ok">${escHtml(file.name)}</div>
+    <div class="dz-sub">${fmtSize(file.size)} · clic para cambiar</div>
+  `;
+}
+
+/* ══════════════════════════════════════════
+   SUBMIT
+══════════════════════════════════════════ */
+async function handleSubmit() {
+  const submitErr = document.getElementById("submitErr");
+  submitErr.classList.remove("on");
+  document.getElementById("fileErr").classList.remove("on");
+  document.getElementById("urlErr").classList.remove("on");
+
+  if (!state.selectedFile) {
+    document.getElementById("fileErr").textContent = state.hasExisting
+      ? "Selecciona el archivo para actualizar tu entrega."
+      : "Selecciona el archivo del Proyecto Final.";
+    document.getElementById("fileErr").classList.add("on");
+    return;
+  }
+
+  const videoUrl = document.getElementById("inVideoUrl").value.trim();
+  if (!videoUrl.startsWith("http")) {
+    document.getElementById("urlErr").classList.add("on");
+    return;
+  }
+
+  if (isDeadlinePassed()) {
+    submitErr.textContent = "La entrega ya está cerrada.";
+    submitErr.classList.add("on");
+    return;
+  }
+
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Enviando…';
+
+  try {
+    const fileData = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(state.selectedFile);
+    });
+
+    const body = {
+      matricula: state.student.matricula,
+      nombre:    state.student.nombre,
+      fileName:  state.selectedFile.name,
+      fileSize:  state.selectedFile.size,
+      fileType:  state.selectedFile.type,
+      fileData,
+      videoUrl,
+    };
+
+    const res  = await fetch("/api/submissions", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al enviar");
+
+    showSuccess(state.selectedFile.name, videoUrl, data.submittedAt);
+
+  } catch (err) {
+    submitErr.textContent = err.message || "Error de red. Intenta de nuevo.";
+    submitErr.classList.add("on");
+    btn.disabled = false;
+    btn.textContent = state.hasExisting ? "Actualizar Entrega" : "Enviar Entrega";
+  }
+}
+
+function showSuccess(fileName, videoUrl, submittedAt) {
+  document.getElementById("sucTs").textContent = `Entregado el ${fmtDate(submittedAt)}`;
+  document.getElementById("sucInfo").innerHTML = `
+    <p>📄 <strong>${escHtml(fileName)}</strong></p>
+    <p style="margin-top:.4rem">🎬 <a href="${escHtml(videoUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">${escHtml(videoUrl)}</a></p>
+  `;
+  document.getElementById("btnResubmit").style.display = isDeadlinePassed() ? "none" : "block";
+  show("scrSuccess");
+}
+
+/* ══════════════════════════════════════════
+   TEACHER VIEW
+══════════════════════════════════════════ */
+async function loadTeacher() {
+  show("scrTeacher");
+  try {
+    const res  = await fetch("/api/submissions");
+    const data = await res.json();
+    renderTeacher(data.submissions || []);
+  } catch {
+    document.getElementById("tTeacher").textContent = "Error al cargar entregas.";
+  }
+}
+
+function renderTeacher(subs) {
+  document.getElementById("tStatRec").textContent = subs.length;
+  document.getElementById("tStatPen").textContent = CFG.totalEstudiantes - subs.length;
+
+  if (subs.length === 0) {
+    document.getElementById("tTeacher").innerHTML = `<p style="color:var(--muted);text-align:center;padding:1.5rem">Sin entregas aún.</p>`;
+    return;
+  }
+
+  const sorted = [...subs].sort((a, b) => new Date(a.submittedAt) - new Date(b.submittedAt));
+  const rows   = sorted.map((s, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>
+        <strong>${escHtml(s.nombre)}</strong><br>
+        <span class="muted">${escHtml(s.matricula)}</span>
+      </td>
+      <td>
+        <button class="lnk" onclick="downloadFile('${escHtml(s.matricula)}','${escHtml(s.fileName)}')">⬇ ${escHtml(s.fileName)}</button><br>
+        <span class="muted">${fmtSize(s.fileSize)}</span>
+      </td>
+      <td>
+        <a href="${escHtml(s.videoUrl)}" target="_blank" rel="noopener noreferrer" class="lnk">▶ Ver video</a>
+      </td>
+      <td style="white-space:nowrap;color:var(--muted)">${fmtDate(s.submittedAt)}</td>
+    </tr>
+  `).join("");
+
+  document.getElementById("tTeacher").innerHTML = `
+    <table>
+      <thead>
+        <tr><th>#</th><th>Estudiante</th><th>Documento</th><th>Video</th><th>Fecha</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+async function downloadFile(matricula, fileName) {
+  toast("Descargando…");
+  try {
+    const res  = await fetch(`/api/submissions?matricula=${encodeURIComponent(matricula)}`);
+    if (!res.ok) throw new Error("No encontrado");
+    const data   = await res.json();
+    const binary = atob(data.fileData);
+    const bytes  = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob   = new Blob([bytes], { type: data.fileType || "application/octet-stream" });
+    const url    = URL.createObjectURL(blob);
+    const a      = document.createElement("a");
+    a.href       = url;
+    a.download   = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("✅ " + fileName);
+  } catch {
+    toast("❌ Error al descargar.");
+  }
+}
+
+async function exportSummary() {
+  try {
+    const res  = await fetch("/api/submissions");
+    const data = await res.json();
+    const subs = data.submissions || [];
+    const lines = [
+      "SIST-3311 — Entrega Proyecto Final ENE-ABR 2026",
+      `Generado: ${new Date().toLocaleString("es-DO")}`,
+      `Recibidas: ${subs.length} / ${CFG.totalEstudiantes}`,
+      "─".repeat(60),
+      "",
+    ];
+    subs.forEach((s, i) => {
+      lines.push(`${i + 1}. ${s.nombre} (${s.matricula})`);
+      lines.push(`   Archivo: ${s.fileName}  (${fmtSize(s.fileSize)})`);
+      lines.push(`   Video:   ${s.videoUrl}`);
+      lines.push(`   Fecha:   ${fmtDate(s.submittedAt)}`);
+      lines.push("");
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `SIST3311_Entregas_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    toast("❌ Error al exportar.");
+  }
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+function init() {
+  tick();
+  setInterval(tick, 1000);
+  initDropZone();
+
+  document.getElementById("btnAuth").addEventListener("click", handleAuth);
+  document.getElementById("inMatricula").addEventListener("keydown", e => { if (e.key === "Enter") handleAuth(); });
+  document.getElementById("btnSubmit").addEventListener("click", handleSubmit);
+  document.getElementById("btnBack").addEventListener("click", () => show("scrAuth"));
+  document.getElementById("btnResubmit").addEventListener("click", loadForm);
+  document.getElementById("btnExport").addEventListener("click", exportSummary);
+
+  if (isDeadlinePassed()) {
+    document.getElementById("cdBox").style.display = "none";
+    document.getElementById("closedBanner").classList.add("on");
+  }
+}
+
+window.downloadFile = downloadFile;
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
 </body>
 </html>
