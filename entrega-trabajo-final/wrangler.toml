@@ -1,5 +1,6 @@
 name = "entrega-trabajo-final"
 compatibility_date = "2024-12-01"
+pages_build_output_dir = "."
 
 [[kv_namespaces]]
 binding = "FINAL_SUBMISSIONS"
