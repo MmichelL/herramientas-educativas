@@ -170,6 +170,49 @@
   .eval-nota-display { font-size: 28px; font-weight: 800; color: var(--blue); text-align: center; margin: 10px 0; }
   .eval-obs { width: 100%; min-height: 60px; resize: vertical; }
   .eval-winner { font-size: 14px; color: var(--navy); background: var(--gray); padding: 8px 12px; border-radius: 8px; margin: 6px 0; }
+
+  /* Transcripción en vista detalle estudiante */
+  .detail-transcripcion {
+    background: #F8FAFC; border-left: 3px solid var(--blue);
+    padding: 10px 14px; border-radius: 0 8px 8px 0;
+    font-size: 13px; color: var(--black); margin: 8px 0;
+    line-height: 1.6; font-style: italic; white-space: pre-wrap;
+  }
+  .detail-quebuscar {
+    background: #FEF9C3; border-left: 3px solid #CA8A04;
+    padding: 10px 12px; border-radius: 0 8px 8px 0;
+    font-size: 12px; color: #713F12; margin: 8px 0;
+  }
+
+  /* Strip de confirmación */
+  .confirm-strip {
+    border-radius: 10px; padding: 14px 16px; margin-top: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .confirm-strip.confirmed { background: #D1FAE5; border: 1px solid #6EE7B7; color: #065F46; }
+  .confirm-strip.pending   { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+
+  /* Tabla de calificaciones */
+  .grades-shell { min-height: 100vh; padding: 24px 20px; max-width: 1200px; margin: 0 auto; color: white; }
+  .grades-shell h1 { font-size: 22px; margin-bottom: 4px; }
+  .grades-section { background: white; color: var(--black); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+  .grades-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .grades-table th { color: var(--dgray); font-weight: 700; text-transform: uppercase;
+                     letter-spacing: 0.5px; font-size: 11px; padding: 10px 8px;
+                     border-bottom: 2px solid #E5E7EB; text-align: left; }
+  .grades-table td { padding: 10px 8px; border-bottom: 1px solid #E5E7EB; vertical-align: middle; }
+  .grades-table tr:last-child td { border-bottom: none; }
+  .score-cell { font-size: 16px; font-weight: 800; }
+  .score-high  { color: #065F46; }
+  .score-mid   { color: #92400E; }
+  .score-low   { color: #991B1B; }
+  .score-none  { color: var(--dgray); }
+
+  /* Detail view profe calificación */
+  .grade-detail-ronda { border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .grade-detail-ronda h3 { font-size: 15px; color: var(--navy); margin-bottom: 6px; }
+  .grade-detail-nota { font-size: 26px; font-weight: 800; color: var(--blue); float: right; }
 </style>
 </head>
 <body>
@@ -1034,29 +1077,39 @@ App.Student = (function () {
     const rondas = ev.rondas || [];
     const checks = ev.checksGlobales || {};
     const checksDefs = cfg.rubrica.checksGlobales;
+    const totalMax = cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda;
+    const confirmado = ev.confirmadaPorEstudiante;
+    const confirmadaEn = ev.confirmadaEn ? new Date(ev.confirmadaEn).toLocaleString("es-DO") : null;
 
     document.getElementById("app").innerHTML = `
       <div class="stu-shell">
         <button class="logout-btn" id="stu-back">← Volver</button>
         <h1>Detalle de evaluación</h1>
-        <p class="meta">${App.UI.esc(tipo ? tipo.etiqueta : reserva.tipoActividadId)} · Nota total: ${ev.puntosTotales ?? "—"} / ${cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda}</p>
+        <p class="meta">${App.UI.esc(tipo ? tipo.etiqueta : reserva.tipoActividadId)}</p>
 
         <div class="stu-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <h2 style="font-size:18px;color:var(--navy)">Resultados</h2>
+            <div style="font-size:28px;font-weight:800;color:var(--blue)">
+              ${ev.puntosTotales != null ? ev.puntosTotales.toFixed(1) : "—"} <span style="font-size:16px;color:var(--dgray);font-weight:600">/ ${totalMax}</span>
+            </div>
+          </div>
+
           ${rondas.map((r, i) => renderRondaDetalle(r, i, cfg)).join("")}
 
           <div class="detail-global">
             <strong>Cumplimiento:</strong><br>
-            ${checksDefs.map(c => `${checks[c.id] ? "✓" : "✗"} ${App.UI.esc(c.etiqueta)}`).join(" · ")}
+            ${checksDefs.map(c => `<span style="margin-right:12px">${checks[c.id] ? "✓" : "✗"} ${App.UI.esc(c.etiqueta)}</span>`).join("")}
           </div>
 
           ${ev.observacionGlobal ? `
-            <div class="detail-global">
-              <strong>Observación general:</strong><br>${App.UI.esc(ev.observacionGlobal)}
+            <div class="detail-global" style="margin-top:8px">
+              <strong>Observación general del profesor:</strong><br>${App.UI.esc(ev.observacionGlobal)}
             </div>` : ""}
 
           ${(ev.videosURLs || []).length ? `
-            <div class="detail-global">
-              <strong>Videos:</strong><br>
+            <div class="detail-global" style="margin-top:8px">
+              <strong>Videos de referencia:</strong><br>
               ${ev.videosURLs.map(u => {
                 const safe = /^https?:\/\//i.test(u);
                 return safe
@@ -1064,25 +1117,72 @@ App.Student = (function () {
                   : App.UI.esc(u);
               }).join("<br>")}
             </div>` : ""}
+
+          <div class="confirm-strip ${confirmado ? "confirmed" : "pending"}">
+            ${confirmado
+              ? `<span>✓ Calificación confirmada el ${App.UI.esc(confirmadaEn)}</span>`
+              : `<div>
+                  <strong>¿Revisaste tu calificación?</strong>
+                  <p style="font-size:13px;margin-top:2px">Confirma que leíste tu nota y retroalimentación.</p>
+                </div>
+                <button class="btn btn-success" id="stu-confirmar" style="white-space:nowrap">✓ Confirmar calificación</button>`
+            }
+          </div>
         </div>
       </div>
     `;
 
     document.getElementById("stu-back").onclick = () =>
       App.Core.navigate("#/estudiante/agenda");
+
+    if (!confirmado) {
+      document.getElementById("stu-confirmar").onclick = () =>
+        confirmarCalificacion(reservaId);
+    }
+  }
+
+  async function confirmarCalificacion(reservaId) {
+    const session = App.Auth.loadSession();
+    try {
+      await App.Core.mutate(reservas => {
+        const r = reservas[reservaId];
+        if (!r || r.estudianteMatricula !== session.matricula) throw new Error("Reserva no válida");
+        r.evaluacion = {
+          ...(r.evaluacion || {}),
+          confirmadaPorEstudiante: true,
+          confirmadaEn: new Date().toISOString(),
+        };
+        return reservas;
+      });
+      App.UI.toast("✓ Calificación confirmada", "success");
+      renderResultado(reservaId);
+    } catch (e) {
+      App.UI.toast(e.message || "Error al confirmar", "error");
+    }
   }
 
   function renderRondaDetalle(r, i, cfg) {
     const comp = cfg.competencias.find(c => c.id === r.competenciaId);
     const preg = comp ? comp.preguntas.find(p => p.id === r.preguntaId) : null;
+    const nota = r.puntosFinal ?? r.puntosLive ?? "—";
     return `
       <div class="detail-ronda">
-        <span class="detail-nota">${r.puntosFinal ?? r.puntosLive ?? "—"}</span>
+        <span class="detail-nota">${nota} / ${cfg.rubrica.puntosPorRonda}</span>
         <h3>Ronda ${i + 1} · ${App.UI.esc(comp ? comp.nombre : r.competenciaId)}</h3>
-        <p style="font-size:13px;color:var(--dgray);margin-bottom:6px">
-          ${App.UI.esc(preg ? preg.escenario : "")}
+        <p style="font-size:13px;color:var(--dgray);margin:4px 0 8px">
+          <strong>Escenario:</strong> ${App.UI.esc(preg ? preg.escenario : "")}
         </p>
-        ${r.observacion ? `<div class="detail-global" style="margin-top:6px">${App.UI.esc(r.observacion)}</div>` : ""}
+        <p style="font-size:13px;color:var(--navy);margin-bottom:8px">
+          <strong>Pregunta:</strong> ${App.UI.esc(preg ? preg.preguntaGuia : "")}
+        </p>
+        ${r.transcripcion ? `
+          <p style="font-size:11px;font-weight:700;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Tu respuesta:</p>
+          <div class="detail-transcripcion">${App.UI.esc(r.transcripcion)}</div>
+        ` : ""}
+        ${r.observacion ? `
+          <p style="font-size:11px;font-weight:700;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Retroalimentación:</p>
+          <div class="detail-global">${App.UI.esc(r.observacion)}</div>
+        ` : ""}
       </div>
     `;
   }
@@ -1127,8 +1227,9 @@ App.Teacher = (function () {
           `).join("")}
         </div>
 
-        <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
           <button class="btn btn-primary" id="tch-publicar-bulk">📢 Publicar todas evaluadas</button>
+          <button class="btn btn-primary" id="tch-calificaciones" style="background:var(--mint);color:var(--navy)">📊 Calificaciones</button>
           <button class="btn btn-ghost" id="tch-reportes">Reportes</button>
         </div>
 
@@ -1153,6 +1254,7 @@ App.Teacher = (function () {
       App.Auth.clearSession(); App.Core.navigate("#/"); location.reload();
     };
     document.getElementById("tch-publicar-bulk").onclick = () => publicarBulk();
+    document.getElementById("tch-calificaciones").onclick = () => App.Core.navigate("#/profe/calificaciones");
     document.getElementById("tch-reportes").onclick = () => App.Core.navigate("#/profe/reportes");
   }
 
@@ -1996,6 +2098,480 @@ App.Eval = (function () {
 })();
 
 // ══════════════════════════════════════════════════════════════════
+// App.Grades — tabla de calificaciones + detalle por estudiante (profe)
+// ══════════════════════════════════════════════════════════════════
+App.Grades = (function () {
+
+  // ── Datos del Reporte Final ENE-ABR 2026 (para importación 1-click) ──────
+  const SEED_EVALUACIONES = [
+    { matricula:"2024-0357", puntosTotales:14.5, rondas:[
+        { competenciaId:"c1-recopilacion", preguntaId:"c1-p1", puntosFinal:7.5,
+          transcripcion:"La primera técnica que utilizaría sería la entrevista para hablar con la persona que agenda las citas y entender cómo lo hace y qué problema persiste, porque quizá muchos mensajes a la vez, algunos quizás no son para precisamente agendar citas. Luego la observación para ver el proceso real y detectar el error como citas que no se registran correctamente. El análisis documental para revisar la libreta y ver la organización y cuáles son las inconsistencias. Y para los pacientes, un cuestionario para conocer su experiencia del otro lado.",
+          observacion:"Excelente. Nombró las 4 técnicas con aplicación concreta y perspicaz. Destacable: aplicó el cuestionario a los pacientes (no al personal) y observó que la entrevista descubre matices. Demuestra criterio analítico real. [Teoría: 3.5/3.5 · Aplicación: 4.0/4.0]" },
+        { competenciaId:"c5-dfd", preguntaId:"c5-p1", puntosFinal:7.0,
+          transcripcion:"La entidad externa, en este caso los estudiantes y el bibliotecario. Los flujos de datos serían la solicitud del préstamo y la confirmación que devuelve el sistema. La entidad externa representa los actores fuera del sistema. El proceso es el que va a gestionar el préstamo. El flujo de datos es la solicitud del préstamo. Y el almacén de datos donde se va a guardar la información.",
+          observacion:"Nombró y definió los 4 símbolos correctamente. Aplicó al caso con acierto. Pidió permiso para dibujar, demostrando pensamiento visual. Ligera falta: no nombró almacenes específicos en la aplicación. [Teoría: 3.5/3.5 · Aplicación: 3.5/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Mejor desempeño de toda la evaluación. Evidentemente estudió el material. Cámara OK. Sin consultas. Lenguaje estructurado. Nerviosismo declarado pero no reflejado." },
+
+    { matricula:"2024-0284", puntosTotales:11.5, rondas:[
+        { competenciaId:"c2-validacion", preguntaId:"c2-p1", puntosFinal:5.5,
+          transcripcion:"La triangulación sería como cruzar los resultados de las tres herramientas para tener hallazgos identificados por dos fuentes o más. Es importante para que no sean hallazgos débiles. El hallazgo se podría tomar en cuenta ya que se encuentra sustentado por 2 fuentes, a pesar de que la observación demuestra un resultado contrario.",
+          observacion:"Definió triangulación correctamente. Ante la contradicción, eligió la mayoría sin proponer investigar por qué la observación contradice. Le faltó el matiz de que ninguna fuente se descarta sin análisis. [Teoría: 3.0/3.5 · Aplicación: 2.5/4.0]" },
+        { competenciaId:"c4-prototipado", preguntaId:"c4-p1", puntosFinal:6.0,
+          transcripcion:"Sirve para diseñar la interfaz de manera visual. Sin feedback es un dibujo sin más. Con feedback se encuentra sustentado por el usuario, se puede actualizar y cambiar.",
+          observacion:"Correcta en esencia. Le faltó que el propósito principal es VALIDAR REQUERIMIENTOS y no detalló cómo documentar el feedback (tabla con rol, pantalla, comentario, decisión). [Teoría: 3.0/3.5 · Aplicación: 3.0/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Comprensión sólida. Debilidad en profundidad analítica ante situaciones complejas. Cámara OK. Mirada estable. Lenguaje natural y fluido." },
+
+    { matricula:"2023-0239", puntosTotales:10.0, rondas:[
+        { competenciaId:"c8-especificaciones", preguntaId:"c8-p2", puntosFinal:5.5,
+          transcripcion:"Estamos hablando de reglas de negocio, son cosas que si se están cumpliendo o no. Básicamente una decisión, si pasa esto va a suceder esto. Tenemos que hacer un diagrama de la regla de negocio. Dependiendo las reglas que se cumple o se deje de cumplir, el resultado va a ser uno o va a ser otro. [Cuándo conviene:] Una tabla de decisión es importante usarla cuando hay cosas que se tienen que decidir. Tenemos varias determinantes y varios resultados. Como tenemos variables y resultados dependiendo la combinación, puedes utilizar la tabla de decisión.",
+          observacion:"No usó el nombre formal 'tabla de decisión' inicialmente (dijo 'diagrama de la regla de negocio') pero su descripción funcional es correcta. La segunda parte fue más precisa: conectó tabla de decisión con 'varias determinantes y resultados dependiendo la combinación'. Demuestra comprensión conceptual aunque con terminología informal. [Teoría: 2.5/3.5 · Aplicación: 3.0/4.0]" },
+        { competenciaId:"c10-propuesta", preguntaId:"c10-p2", puntosFinal:4.5,
+          transcripcion:"Primero tenemos que hacer una investigación. De eso se trata toda la materia, investigación. Te puedo entregar un sistema que registre las reparaciones, notifique al cliente y controle inventario. Podríamos ir en persona al negocio, verificar, hacer un cuestionario a los empleados y verificar que lo que él me está pidiendo es todo. [Costos:] Evidentemente desarrollar el programa no va a ser gratis. Detrás de eso también hay un mantenimiento.",
+          observacion:"Demostró buena comprensión del proceso general de análisis: investigar antes de proponer, verificar que no hay vacíos, evitar construir la solución incorrecta. Mencionó costos de desarrollo y mantenimiento. Solo presentó UNA alternativa (no dos). No desglosó categorías formales de costos, y los beneficios fueron implícitos. [Teoría: 2.0/3.5 · Aplicación: 2.5/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Comprensión buena del proceso de análisis como un todo. Conecta los conceptos con la lógica general de la materia. Terminología informal pero razonamiento correcto. Debilidad en estructura formal de entregables. Cámara OK. Problemas de conexión/audio. Sin consultas." },
+
+    { matricula:"2024-0306", puntosTotales:8.5, rondas:[
+        { competenciaId:"c3-requerimientos", preguntaId:"c3-p2", puntosFinal:3.5,
+          transcripcion:"Los requerimientos funcionales son acciones que hace el sistema, mientras que uno no funcional son cualidades. [RF intentado:] Que el sistema detectara a tiempo las medicinas que vencen para sacarla del inventario. [Sobre calidad:] Que se cumpla lo que se está pidiendo, que sea eficaz.",
+          observacion:"Diferencia RF de RNF correctamente pero de forma básica. No logró formular con estructura formal ni dar criterio de aceptación. No mencionó criterios de calidad formales (claro, específico, verificable, trazable, atómico). [Teoría: 2.0/3.5 · Aplicación: 1.5/4.0]" },
+        { competenciaId:"c8-especificaciones", preguntaId:"c8-p2", puntosFinal:5.0,
+          transcripcion:"Se utilizaría un DFD. El DFD es una tabla que muestra las diferentes opciones o resultados dependiendo de la combinación de los elementos. [Cuándo conviene:] Cuando hay varias opciones de las cuales depende la combinación de acciones.",
+          observacion:"Confundió el nombre (dijo 'DFD' describiendo una tabla de decisión) pero la descripción funcional es correcta. Respondió bien cuándo conviene tabla de decisión sobre Structured English. [Teoría: 2.5/3.5 · Aplicación: 2.5/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Comprensión intermedia. Intuición correcta pero terminología imprecisa. Cámara OK. Pidió repetición varias veces (legítimo). Lenguaje natural." },
+
+    { matricula:"2022-0678", puntosTotales:7.5, rondas:[
+        { competenciaId:"c1-recopilacion", preguntaId:"c1-p2", puntosFinal:6.5,
+          transcripcion:"Las cuatro técnicas: entrevista, cuestionarios, análisis de documento y observación. Con la entrevista podemos hacerle preguntas al encargado. El cuestionario porque quizás en la entrevista el empleado no nos comparta cierta información que en el cuestionario se sienta con la confianza. Con la observación podemos ver cuáles son las cosas que distraen. Y con el análisis documental, si el empleado dice alguna necesidad pero ya está documentada, puedo ver que es real.",
+          observacion:"Excelente. Nombró las 4 técnicas con razonamiento propio. La observación sobre confianza del cuestionario vs. entrevista demuestra comprensión real de la complementariedad. [Teoría: 3.0/3.5 · Aplicación: 3.5/4.0]" },
+        { competenciaId:"c6-diccionario", preguntaId:"c6-p2", puntosFinal:1.0,
+          transcripcion:"Un almacén de factura, uno de los datos podría ser la información o los productos. Ahí estoy un poquito quedado con el diccionario.",
+          observacion:"No pudo dar campos concretos ni usar notación de diccionario. Los campos mencionados son categorías genéricas, no campos de datos. [Teoría: 0.5/3.5 · Aplicación: 0.5/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Perfil desbalanceado. Fuerte en levantamiento, muy débil en diccionario. Cámara OK. Nerviosismo inicial recuperado. Honesto cuando no sabía." },
+
+    { matricula:"2024-0321", puntosTotales:7.5, rondas:[
+        { competenciaId:"c2-validacion", preguntaId:"c2-p2", puntosFinal:4.0,
+          transcripcion:"Tendría que ver los documentos del dueño, interrogaría más al dueño y a los empleados ya que esto puede ser falta de comunicación. [Sobre triangulación:] Es cuando medimos la información que nos da una parte y la otra y nos quedamos con la verdadera respuesta.",
+          observacion:"Aplicación parcialmente buena: propuso investigar más (documentos, empleados) en lugar de elegir un lado. Definición de triangulación imprecisa: no mencionó cruzar fuentes independientes ni confirmar con 2+ fuentes. [Teoría: 1.5/3.5 · Aplicación: 2.5/4.0]" },
+        { competenciaId:"c10-propuesta", preguntaId:"c10-p2", puntosFinal:3.5,
+          transcripcion:"[Alt. 1:] Sistema desde cero con pantallas para feedback, notificación y clientes frecuentes. [Alt. 2:] Algo más simple de una o dos páginas. [Costos:] Dependiendo de lo que vea cómo se ve el negocio y de lo que gasté en páginas. [Beneficios:] La primera es mayor rendimiento. La otra tiene beneficios a corto plazo.",
+          observacion:"Presentó dos alternativas (bien) pero las describió como variaciones de prototipo. No mencionó categorías formales de costo (desarrollo, infraestructura, capacitación). Beneficios genéricos sin conexión con requerimientos. [Teoría: 1.5/3.5 · Aplicación: 2.0/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Mejor en aplicación que en teoría. Intuición correcta pero sin terminología formal. Cámara OK. No pudo compartir pantalla (problema técnico). Sin consultas. Lenguaje natural." },
+
+    { matricula:"2024-0282", puntosTotales:6.0, rondas:[
+        { competenciaId:"c2-validacion", preguntaId:"c2-p1", puntosFinal:3.5,
+          transcripcion:"La triangulación es el método de buscar uno o más hallazgos para que la investigación sea reputable y no haiga divariado en el asunto. [Sobre contradicción:] Faltaría usar el análisis de documentos para terminar de validar y descartar la observación que no coincide.",
+          observacion:"Esencia presente pero formulación muy imprecisa y coloquial. Propuso buscar más evidencia (bueno) pero concluyó que hay que 'descartar' la observación (incorrecto). [Teoría: 2.0/3.5 · Aplicación: 1.5/4.0]" },
+        { competenciaId:"c9-trazabilidad", preguntaId:"c9-p1", puntosFinal:2.5,
+          transcripcion:"Ahí le voy a ser sincero, ahí me quemé. [Sobre el problema:] El analista pasó por alto el punto de agregar el proceso. La solución sería retroceder los pasos para verificar dónde estuvo el error.",
+          observacion:"No definió trazabilidad (lo reconoció). Identificó parcialmente el problema y propuso 'retroceder' (intuición correcta). Honesto. [Teoría: 0.5/3.5 · Aplicación: 2.0/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":false,"fluidez":true},
+      observacionGlobal:"Intuición práctica sin vocabulario técnico. Fue honesto cuando no sabía. Cámara desde celular. Sin consultas. Lenguaje muy coloquial." },
+
+    { matricula:"2024-0283", puntosTotales:3.5, rondas:[
+        { competenciaId:"c7-balanceo", preguntaId:"c7-p2", puntosFinal:2.0,
+          transcripcion:"¿Que no está recibiendo igual que de nivel cero? [pausa] No le está entrando los datos como al nivel cero, ya eso era.",
+          observacion:"Intuyó vagamente que hay un problema de correspondencia entre niveles, pero no articuló. No mencionó 'balanceo', ni 'agujero negro', ni explicó qué implica que 3 subprocesos no reciban datos. Respuesta extremadamente breve. [Teoría: 1.0/3.5 · Aplicación: 1.0/4.0]" },
+        { competenciaId:"c3-requerimientos", preguntaId:"c3-p2", puntosFinal:1.5,
+          transcripcion:"[RF:] Una gestión de productos con nombres, códigos, venta, fecha de vencimiento, cantidad de stock. [RNF:] Que el sistema debe ser fácil, con una interfaz amigable, debe ser rápido, la búsqueda debe ser accesible.",
+          observacion:"Lo que describió como RF es una lista de campos, no un requerimiento (falta 'El sistema debe [verbo]...'). El RNF es el error clásico: 'fácil', 'rápido', 'amigable' sin métrica. No dio criterio de aceptación. [Teoría: 1.0/3.5 · Aplicación: 0.5/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Comprensión muy básica. Confundió campos con RF. RNF sin métrica. Problemas técnicos. Evaluación breve. Sin consultas." },
+
+    { matricula:"2023-0178", puntosTotales:2.0, rondas:[
+        { competenciaId:"c2-validacion", preguntaId:"c2-p1", puntosFinal:1.5,
+          transcripcion:"Son las ideas claras que se obtienen de la información. [Sobre contradicción, tras múltiples repeticiones:] Yo haría lo que haría es recolectar la nueva información para determinar una idea clara.",
+          observacion:"No entiende triangulación. La definió como 'ideas claras de la información', genérico y no corresponde al concepto. Ante la contradicción, propuso 'recolectar nueva información', vago y no aborda fuentes contradictorias. Dificultad para articular, necesitó múltiples repeticiones. [Teoría: 0.5/3.5 · Aplicación: 1.0/4.0]" },
+        { competenciaId:"c5-dfd", preguntaId:"c5-p1", puntosFinal:0.5,
+          transcripcion:"[Tras aclaración del profesor sobre diagrama de contexto:] Yo sé que pondría el ID estudiante. A saber quién cogió. Ya no me llega más.",
+          observacion:"No pudo identificar los elementos del DFD (entidad externa, proceso, flujo, almacén). Lo que mencionó ('ID estudiante') es un campo de datos, no un elemento del diagrama. El profesor le dio múltiples pistas y tiempo adicional sin resultado. [Teoría: 0.0/3.5 · Aplicación: 0.5/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":false,"sin-clics":true,"sin-pausas":false,"lenguaje-natural":false,"fluidez":false},
+      observacionGlobal:"Comprensión muy limitada. No domina los conceptos fundamentales del curso. Reconoció no haberse preparado suficientemente. Cámara OK. Sin consultas. Muy nervioso. Dificultad evidente para articular." },
+
+    { matricula:"2022-0603", puntosTotales:1.5, rondas:[
+        { competenciaId:"c9-trazabilidad", preguntaId:"c9-p1", puntosFinal:1.5,
+          transcripcion:"La trazabilidad es donde se puede verificar la información que ya uno obtiene. [Solución:] Hacer una encuesta con delivery para ver cuánto tiempo toma. Un cuestionario de preguntas cerradas.",
+          observacion:"No entiende trazabilidad. Confundió el problema (RF sin proceso en DFD) con necesidad de levantamiento. Propuso cuestionarios cuando se necesita agregar un proceso al DFD. [Teoría: 1.0/3.5 · Aplicación: 0.5/4.0]" },
+        { competenciaId:"c8-especificaciones", preguntaId:"c8-p1", puntosFinal:0.0,
+          transcripcion:"[Describió los pasos del proceso pero no identificó técnica.] No me acuerdo, profesor.",
+          observacion:"Narró qué ocurre pero no identificó Structured English ni tabla de decisión. Reconoció no saber. [Teoría: 0.0/3.5 · Aplicación: 0.0/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":false,"lenguaje-natural":true,"fluidez":false},
+      observacionGlobal:"Comprensión muy limitada. Confundió conceptos entre sí. Falta de estudio evidente. Cámara OK. Pausas largas por desconocimiento genuino. Sin consultas." },
+
+    { matricula:"2024-0379", puntosTotales:1.5, rondas:[
+        { competenciaId:"c5-dfd", preguntaId:"c5-p1", puntosFinal:0.5,
+          transcripcion:"De ese tema yo no me lo sé muy bien. Yo me centré más en lo que era el feedback.",
+          observacion:"No pudo definir diagrama de contexto ni nombrar sus elementos, aun con pista del profesor. [Teoría: 0.5/3.5 · Aplicación: 0.0/4.0]" },
+        { competenciaId:"c2-validacion", preguntaId:"c2-p2", puntosFinal:1.0,
+          transcripcion:"Sería primero preguntarle al entrevistador, después investigar, y por último preguntarle a las mismas personas. [Sobre contradicción:] Irme por parte de los clientes, ya que si los clientes recibieron la información, el que estaría mal sería el dueño.",
+          observacion:"No entiende triangulación (describió repetir la misma técnica). Eligió un lado sin investigar. [Teoría: 0.5/3.5 · Aplicación: 0.5/4.0]" },
+      ], checksGlobales:{"camara-encendida":true,"mirada-estable":true,"sin-clics":true,"sin-pausas":true,"lenguaje-natural":true,"fluidez":true},
+      observacionGlobal:"Comprensión muy limitada. Condiciones no ideales pero respuestas reflejan falta de estudio. Cámara limitada (calle). No compartió pantalla. Sin consultas." },
+  ];
+
+  async function importarEvaluaciones(publicar) {
+    const cfg = App.Core.config;
+    const estado = publicar ? "publicada" : "evaluada";
+    const now = new Date().toISOString();
+    const ventanaDefault = cfg.ventanas[0]?.id;
+    const slotsDefault = ["09:50","10:00","10:10","10:20","10:30","10:40","10:50","11:00","11:10","11:20","11:30"];
+    let slotIdx = 0;
+    let creados = 0, actualizados = 0;
+
+    await App.Core.mutate(reservas => {
+      for (const ev of SEED_EVALUACIONES) {
+        const evaluacion = {
+          rondas: ev.rondas.map((r, i) => ({
+            n: i + 1, competenciaId: r.competenciaId, preguntaId: r.preguntaId,
+            puntosLive: r.puntosFinal, puntosFinal: r.puntosFinal,
+            transcripcion: r.transcripcion, observacion: r.observacion,
+          })),
+          checksGlobales: ev.checksGlobales,
+          observacionGlobal: ev.observacionGlobal,
+          videosURLs: [],
+          puntosTotales: ev.puntosTotales,
+          ...(publicar ? { publicadaEn: now } : {}),
+        };
+
+        // Buscar reserva existente por matrícula + tipo
+        const existente = Object.values(reservas).find(
+          r => r.estudianteMatricula === ev.matricula && r.tipoActividadId === "eval-recuperacion"
+        );
+
+        if (existente) {
+          reservas[existente.id] = { ...existente, estado, evaluacion };
+          actualizados++;
+        } else {
+          const id = `r-seed-${ev.matricula}`;
+          const slot = slotsDefault[slotIdx++] || "10:00";
+          reservas[id] = {
+            id, estudianteMatricula: ev.matricula, tipoActividadId: "eval-recuperacion",
+            ventanaId: ventanaDefault, slotInicio: slot, estado,
+            creadaEn: now, evaluacion,
+          };
+          creados++;
+        }
+      }
+      return reservas;
+    });
+
+    App.UI.toast(`✓ ${creados} creadas, ${actualizados} actualizadas (${estado})`, "success");
+    renderTabla();
+  }
+
+  function scoreClass(total, max) {
+    if (total == null) return "score-none";
+    const pct = total / max;
+    if (pct >= 0.8) return "score-high";
+    if (pct >= 0.53) return "score-mid";
+    return "score-low";
+  }
+
+  async function renderTabla() {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const totalMax = cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda;
+    const reservasPorMatricula = {};
+    for (const r of Object.values(App.Core.state.reservas)) {
+      reservasPorMatricula[r.estudianteMatricula] = r;
+    }
+
+    const conNota = Object.values(reservasPorMatricula)
+      .filter(r => r.evaluacion && r.evaluacion.puntosTotales != null).length;
+    const publicadas = Object.values(reservasPorMatricula)
+      .filter(r => r.estado === "publicada").length;
+    const confirmadas = Object.values(reservasPorMatricula)
+      .filter(r => r.evaluacion && r.evaluacion.confirmadaPorEstudiante).length;
+
+    const filas = cfg.estudiantes.map(est => {
+      const r = reservasPorMatricula[est.matricula];
+      if (!r) return { est, r: null, total: null, rondas: [], estado: "sin-reserva", confirmado: false };
+      const ev = r.evaluacion || {};
+      const rondas = ev.rondas || [];
+      return { est, r, total: ev.puntosTotales ?? null, rondas, estado: r.estado, confirmado: !!ev.confirmadaPorEstudiante };
+    }).sort((a, b) => {
+      // publicadas primero, luego evaluadas, luego resto; dentro de cada grupo por nota desc
+      const orden = { publicada: 0, evaluada: 1, completada: 2, "en-sesion": 3, reservada: 4, "sin-reserva": 5 };
+      const oa = orden[a.estado] ?? 6, ob = orden[b.estado] ?? 6;
+      if (oa !== ob) return oa - ob;
+      return (b.total ?? -1) - (a.total ?? -1);
+    });
+
+    document.getElementById("app").innerHTML = `
+      <div class="grades-shell">
+        <button class="logout-btn" id="gr-logout">Salir</button>
+        <h1>Calificaciones</h1>
+        <p style="color:#CBD5E1;font-size:13px;margin-bottom:16px">
+          ${App.UI.esc(cfg.asignatura.nombre)} · ${App.UI.esc(cfg.asignatura.periodo)}
+        </p>
+
+        <div class="tch-stats" style="margin-bottom:16px">
+          <div class="tch-stat"><strong>${filas.length}</strong>estudiantes</div>
+          <div class="tch-stat"><strong>${conNota}</strong>calificados</div>
+          <div class="tch-stat"><strong>${publicadas}</strong>publicados</div>
+          <div class="tch-stat"><strong>${confirmadas}</strong>confirmados</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="gr-agenda" style="color:white;border-color:rgba(255,255,255,0.4)">← Agenda</button>
+          <button class="btn btn-success" id="gr-publicar-bulk">📢 Publicar todas evaluadas</button>
+          <button class="btn btn-primary" id="gr-importar" style="background:#8B5CF6">⬆ Importar Reporte Final</button>
+        </div>
+
+        <div class="grades-section">
+          <div style="overflow-x:auto">
+            <table class="grades-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Estudiante</th>
+                  <th>Matrícula</th>
+                  ${Array.from({length: cfg.rubrica.rondasPorEstudiante}, (_, i) => `<th>P${i+1}</th>`).join("")}
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Confirmó</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filas.map((f, idx) => renderFilaEstudiante(f, idx + 1, cfg, totalMax)).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("gr-logout").onclick = () => {
+      App.Auth.clearSession(); App.Core.navigate("#/"); location.reload();
+    };
+    document.getElementById("gr-agenda").onclick = () => App.Core.navigate("#/profe/agenda");
+    document.getElementById("gr-publicar-bulk").onclick = () => publicarBulkGrades();
+    document.getElementById("gr-importar").onclick = async () => {
+      const result = await App.UI.modal({
+        title: "Importar Reporte Final SIST-3311",
+        body: `<p>Carga las evaluaciones del Reporte Final ENE-ABR 2026 (11 estudiantes) directo en KV.</p>
+               <p style="margin-top:8px"><strong>Si ya existen reservas para esos estudiantes, se sobreescribirán.</strong></p>
+               <p style="margin-top:8px">¿Con qué estado deseas cargarlas?</p>`,
+        actions: [
+          { label: "Cancelar",          class: "btn-ghost",    value: null },
+          { label: "Cargar (evaluada)", class: "btn-primary",  value: "evaluada" },
+          { label: "Cargar y publicar", class: "btn-success",  value: "publicada" },
+        ],
+      });
+      if (!result) return;
+      await importarEvaluaciones(result === "publicada");
+    };
+
+    document.querySelectorAll(".gr-ver").forEach(b => {
+      b.onclick = () => App.Core.navigate(`#/profe/calificacion/${b.dataset.id}`);
+    });
+    document.querySelectorAll(".gr-publish").forEach(b => {
+      b.onclick = () => togglePublicar(b.dataset.id, b.dataset.estado);
+    });
+  }
+
+  function renderFilaEstudiante(f, num, cfg, totalMax) {
+    const { est, r, total, rondas, estado, confirmado } = f;
+    const notaClass = scoreClass(total, totalMax);
+    const puedeVer = r && r.evaluacion && (estado === "evaluada" || estado === "publicada" || estado === "completada");
+    const puedePublicar = r && (estado === "evaluada" || estado === "publicada");
+
+    const notasCeldas = Array.from({length: cfg.rubrica.rondasPorEstudiante}, (_, i) => {
+      const ro = rondas[i];
+      const n = ro ? (ro.puntosFinal ?? ro.puntosLive ?? null) : null;
+      return `<td style="font-weight:700;color:${n != null ? "var(--navy)" : "var(--dgray)"}">${n != null ? n.toFixed(1) : "—"}</td>`;
+    }).join("");
+
+    return `
+      <tr>
+        <td style="color:var(--dgray)">${num}</td>
+        <td style="font-weight:600">${App.UI.esc(est.nombre)}</td>
+        <td style="color:var(--dgray);font-size:12px">${App.UI.esc(est.matricula)}</td>
+        ${notasCeldas}
+        <td class="score-cell ${notaClass}">${total != null ? total.toFixed(1) : "—"}</td>
+        <td>${r ? `<span class="badge badge-${App.UI.esc(estado)}">${App.UI.esc(estado)}</span>` : `<span style="color:var(--dgray);font-size:12px">sin reserva</span>`}</td>
+        <td style="text-align:center;font-size:16px">${confirmado ? "✓" : ""}</td>
+        <td style="white-space:nowrap">
+          ${puedeVer ? `<button class="btn btn-ghost tch-action-btn gr-ver" data-id="${r.id}">Ver</button> ` : ""}
+          ${puedePublicar ? `<button class="btn tch-action-btn gr-publish ${estado === "publicada" ? "btn-danger" : "btn-success"}" data-id="${r.id}" data-estado="${estado}">${estado === "publicada" ? "🔒 Despublicar" : "📢 Publicar"}</button>` : ""}
+        </td>
+      </tr>
+    `;
+  }
+
+  async function togglePublicar(reservaId, estadoActual) {
+    const nuevoEstado = estadoActual === "publicada" ? "evaluada" : "publicada";
+    try {
+      await App.Core.mutate(reservas => {
+        const r = reservas[reservaId];
+        if (!r) return reservas;
+        r.estado = nuevoEstado;
+        r.evaluacion = {
+          ...(r.evaluacion || {}),
+          publicadaEn: nuevoEstado === "publicada" ? new Date().toISOString() : null,
+        };
+        return reservas;
+      });
+      App.UI.toast(nuevoEstado === "publicada" ? "Publicado" : "Despublicado", "success");
+      renderTabla();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
+  }
+
+  async function publicarBulkGrades() {
+    const ok = await App.UI.confirm("Publicar TODAS las reservas en estado 'evaluada'?");
+    if (!ok) return;
+    try {
+      await App.Core.mutate(reservas => {
+        const when = new Date().toISOString();
+        for (const r of Object.values(reservas)) {
+          if (r.estado === "evaluada") {
+            r.estado = "publicada";
+            r.evaluacion = { ...(r.evaluacion || {}), publicadaEn: when };
+          }
+        }
+        return reservas;
+      });
+      App.UI.toast("Publicación masiva completada", "success");
+      renderTabla();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
+  }
+
+  async function renderDetalle(reservaId) {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const reserva = App.Core.state.reservas[reservaId];
+    if (!reserva || !reserva.evaluacion) {
+      App.UI.toast("Reserva sin evaluación", "error");
+      App.Core.navigate("#/profe/calificaciones");
+      return;
+    }
+
+    const est = cfg.estudiantes.find(e => e.matricula === reserva.estudianteMatricula);
+    const tipo = cfg.tiposActividad.find(t => t.id === reserva.tipoActividadId);
+    const ventana = cfg.ventanas.find(v => v.id === reserva.ventanaId);
+    const ev = reserva.evaluacion;
+    const rondas = ev.rondas || [];
+    const checks = ev.checksGlobales || {};
+    const checksDefs = cfg.rubrica.checksGlobales;
+    const totalMax = cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda;
+    const confirmado = ev.confirmadaPorEstudiante;
+    const confirmadaEn = ev.confirmadaEn ? new Date(ev.confirmadaEn).toLocaleString("es-DO") : null;
+
+    document.getElementById("app").innerHTML = `
+      <div class="grades-shell">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div>
+            <button class="btn btn-ghost" id="gr-det-back" style="color:white;border-color:rgba(255,255,255,0.4);margin-bottom:8px">← Calificaciones</button>
+            <h1>${App.UI.esc(est ? est.nombre : reserva.estudianteMatricula)}</h1>
+            <p style="color:#CBD5E1;font-size:13px">${App.UI.esc(est ? est.matricula : "")} · ${App.UI.esc(tipo ? tipo.etiqueta : "")} · ${App.UI.esc(ventana ? ventana.fecha : "")} ${App.UI.esc(reserva.slotInicio || "")}</p>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:40px;font-weight:800;color:white">${ev.puntosTotales != null ? ev.puntosTotales.toFixed(1) : "—"}</div>
+            <div style="color:#CBD5E1;font-size:13px">de ${totalMax} pts</div>
+            <span class="badge badge-${App.UI.esc(reserva.estado)}" style="margin-top:4px">${App.UI.esc(reserva.estado)}</span>
+          </div>
+        </div>
+
+        <div class="grades-section">
+          ${rondas.map((r, i) => renderRondaDetalleProfe(r, i, cfg)).join("")}
+
+          <div class="detail-global" style="margin-bottom:8px">
+            <strong>Cumplimiento:</strong><br>
+            ${checksDefs.map(c => `<span style="margin-right:14px">${checks[c.id] ? "✓" : "✗"} ${App.UI.esc(c.etiqueta)}</span>`).join("")}
+          </div>
+
+          ${ev.observacionGlobal ? `
+            <div class="detail-global" style="margin-bottom:8px">
+              <strong>Observación general:</strong><br>${App.UI.esc(ev.observacionGlobal)}
+            </div>` : ""}
+
+          ${(ev.videosURLs || []).length ? `
+            <div class="detail-global" style="margin-bottom:8px">
+              <strong>Videos:</strong><br>
+              ${ev.videosURLs.map(u => {
+                const safe = /^https?:\/\//i.test(u);
+                return safe ? `<a href="${App.UI.esc(u)}" target="_blank" rel="noopener">${App.UI.esc(u)}</a>` : App.UI.esc(u);
+              }).join("<br>")}
+            </div>` : ""}
+
+          <div class="confirm-strip ${confirmado ? "confirmed" : "pending"}">
+            ${confirmado
+              ? `<span>✓ Calificación confirmada por el estudiante el ${App.UI.esc(confirmadaEn)}</span>`
+              : `<span>⏳ Pendiente de confirmación por el estudiante</span>`}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${reserva.estado === "evaluada"
+            ? `<button class="btn btn-success" id="gr-det-publish">📢 Publicar resultado</button>`
+            : reserva.estado === "publicada"
+            ? `<button class="btn btn-danger" id="gr-det-unpublish">🔒 Despublicar</button>`
+            : ""}
+          <button class="btn btn-ghost" id="gr-det-procesar" style="color:white;border-color:rgba(255,255,255,0.4)">Ir a procesar</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("gr-det-back").onclick = () => App.Core.navigate("#/profe/calificaciones");
+    document.getElementById("gr-det-procesar").onclick = () => App.Core.navigate(`#/profe/proceso/${reservaId}`);
+
+    const pubBtn = document.getElementById("gr-det-publish");
+    if (pubBtn) pubBtn.onclick = async () => {
+      await togglePublicar(reservaId, "evaluada");
+      renderDetalle(reservaId);
+    };
+    const unpubBtn = document.getElementById("gr-det-unpublish");
+    if (unpubBtn) unpubBtn.onclick = async () => {
+      await togglePublicar(reservaId, "publicada");
+      renderDetalle(reservaId);
+    };
+  }
+
+  function renderRondaDetalleProfe(r, i, cfg) {
+    const comp = cfg.competencias.find(c => c.id === r.competenciaId);
+    const preg = comp ? comp.preguntas.find(p => p.id === r.preguntaId) : null;
+    const nota = r.puntosFinal ?? r.puntosLive ?? "—";
+    return `
+      <div class="grade-detail-ronda">
+        <span class="grade-detail-nota">${nota} / ${cfg.rubrica.puntosPorRonda}</span>
+        <h3>Ronda ${i + 1} · ${App.UI.esc(comp ? comp.nombre : r.competenciaId)}</h3>
+        <p style="font-size:13px;color:var(--dgray);margin:4px 0">
+          <strong>Escenario:</strong> ${App.UI.esc(preg ? preg.escenario : "")}
+        </p>
+        <p style="font-size:13px;color:var(--navy);margin-bottom:8px">
+          <strong>Pregunta:</strong> ${App.UI.esc(preg ? preg.preguntaGuia : "")}
+        </p>
+        ${preg && preg.queBuscar ? `
+          <div class="detail-quebuscar" style="margin-bottom:8px">
+            <strong>Qué buscar:</strong> ${App.UI.esc(preg.queBuscar)}
+          </div>` : ""}
+        ${r.transcripcion ? `
+          <p style="font-size:11px;font-weight:700;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Transcripción del estudiante:</p>
+          <div class="detail-transcripcion">${App.UI.esc(r.transcripcion)}</div>
+        ` : ""}
+        ${r.observacion ? `
+          <p style="font-size:11px;font-weight:700;color:var(--dgray);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Retroalimentación:</p>
+          <div class="detail-global">${App.UI.esc(r.observacion)}</div>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  return { renderTabla, renderDetalle };
+})();
+
+// ══════════════════════════════════════════════════════════════════
 // Boot
 // ══════════════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", async () => {
@@ -2037,6 +2613,9 @@ function route(hash) {
   }
   if (session.rol === "profe") {
     if (hash === "#/profe/agenda") return App.Teacher.renderAgenda();
+    if (hash === "#/profe/calificaciones") return App.Grades.renderTabla();
+    const gm = hash.match(/^#\/profe\/calificacion\/([^/]+)$/);
+    if (gm) return App.Grades.renderDetalle(decodeURIComponent(gm[1]));
     const em = hash.match(/^#\/profe\/eval\/([^/]+)$/);
     if (em) return App.Eval.renderLive(decodeURIComponent(em[1]));
     const pm = hash.match(/^#\/profe\/proceso\/([^/]+)$/);
