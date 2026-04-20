@@ -149,7 +149,7 @@
     <div class="card">
       <div class="field">
         <label>Documento del Proyecto Final</label>
-        <div class="drop-zone" id="dropZone">
+        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Seleccionar archivo del proyecto">
           <div id="dzContent">
             <div class="dz-icon">📄</div>
             <div class="dz-main">Haz clic o arrastra el archivo aquí</div>
@@ -289,6 +289,10 @@ function escHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 }
 
+function safeUrl(url) {
+  return /^https?:\/\//i.test(url) ? url : "#";
+}
+
 /* ══════════════════════════════════════════
    COUNTDOWN
 ══════════════════════════════════════════ */
@@ -391,6 +395,7 @@ function initDropZone() {
   zone.addEventListener("dragleave", () => zone.classList.remove("over"));
   zone.addEventListener("drop",      e => { e.preventDefault(); zone.classList.remove("over"); if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]); });
   input.addEventListener("change",   () => { if (input.files[0]) onFile(input.files[0]); });
+  zone.addEventListener("keydown",   e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
 }
 
 function onFile(file) {
@@ -500,7 +505,7 @@ function showSuccess(fileName, videoUrl, submittedAt) {
   document.getElementById("sucTs").textContent = `Entregado el ${fmtDate(submittedAt)}`;
   document.getElementById("sucInfo").innerHTML = `
     <p>📄 <strong>${escHtml(fileName)}</strong></p>
-    <p style="margin-top:.4rem">🎬 <a href="${escHtml(videoUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">${escHtml(videoUrl)}</a></p>
+    <p style="margin-top:.4rem">🎬 <a href="${safeUrl(videoUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">${escHtml(videoUrl)}</a></p>
   `;
   document.getElementById("btnResubmit").style.display = isDeadlinePassed() ? "none" : "block";
   show("scrSuccess");
@@ -542,7 +547,7 @@ function renderTeacher(subs) {
         <span class="muted">${fmtSize(s.fileSize)}</span>
       </td>
       <td>
-        <a href="${escHtml(s.videoUrl)}" target="_blank" rel="noopener noreferrer" class="lnk">▶ Ver video</a>
+        <a href="${safeUrl(s.videoUrl)}" target="_blank" rel="noopener noreferrer" class="lnk">▶ Ver video</a>
       </td>
       <td style="white-space:nowrap;color:var(--muted)">${fmtDate(s.submittedAt)}</td>
     </tr>
