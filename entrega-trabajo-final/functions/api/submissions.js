@@ -73,16 +73,26 @@ export async function onRequestPost(context) {
   const version     = existing ? existing.version + 1 : 1;
   const submittedAt = new Date().toISOString();
 
-  const submission = { matricula, nombre, fileName, fileSize, fileType, fileData, videoUrl, submittedAt, version };
-  await kv.put(submissionKey(matricula), JSON.stringify(submission));
+  const MAX_FILE_BYTES = 18 * 1024 * 1024;
+  if (fileSize && fileSize > MAX_FILE_BYTES) {
+    return json({ error: "Archivo demasiado grande (máx 18 MB)" }, 413);
+  }
 
-  // Update index (metadata only, no fileData)
-  const index = await kv.get(INDEX_KEY, "json") ?? [];
-  const entry = { matricula, nombre, fileName, fileSize, submittedAt };
-  const idx   = index.findIndex(e => e.matricula === matricula);
-  if (idx >= 0) index[idx] = entry;
-  else index.push(entry);
-  await kv.put(INDEX_KEY, JSON.stringify(index));
+  const submission = { matricula, nombre, fileName, fileSize, fileType, fileData, videoUrl, submittedAt, version };
+
+  try {
+    await kv.put(submissionKey(matricula), JSON.stringify(submission));
+
+    // Update index (metadata only, no fileData)
+    const index = await kv.get(INDEX_KEY, "json") ?? [];
+    const entry = { matricula, nombre, fileName, fileSize, submittedAt };
+    const idx   = index.findIndex(e => e.matricula === matricula);
+    if (idx >= 0) index[idx] = entry;
+    else index.push(entry);
+    await kv.put(INDEX_KEY, JSON.stringify(index));
+  } catch {
+    return json({ error: "Error al guardar entrega. Intenta de nuevo." }, 500);
+  }
 
   return json({ ok: true, submittedAt, version });
 }
