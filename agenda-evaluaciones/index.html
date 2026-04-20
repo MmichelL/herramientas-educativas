@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Agenda de Evaluaciones — Herramientas Educativas</title>
+<style>
+  :root {
+    --navy: #1A2456;
+    --blue: #2D5BE3;
+    --mint: #00D4A0;
+    --amber: #F59E0B;
+    --coral: #FF5C6A;
+    --gray: #F3F4F8;
+    --dgray: #6B7280;
+    --black: #1F2937;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #0F1A3C 0%, #1A2456 50%, #0F1A3C 100%);
+    color: var(--black);
+    min-height: 100vh;
+  }
+  #app { min-height: 100vh; }
+
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+  .btn {
+    display: inline-block;
+    padding: 14px 22px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(45,91,227,0.4); }
+  .btn-ghost { background: transparent; color: var(--blue); }
+  .btn-danger { background: var(--coral); color: white; }
+  .btn-success { background: var(--mint); color: var(--navy); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+  label { font-size: 12px; font-weight: 700; color: var(--dgray);
+          text-transform: uppercase; letter-spacing: 1px; display: block;
+          margin-bottom: 6px; }
+
+  /* Toast */
+  .toast-host { position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+                display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--navy); color: white; padding: 14px 20px;
+           border-radius: 10px; font-size: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+           animation: slideIn 0.25s ease-out; max-width: 360px; }
+  .toast.success { background: var(--mint); color: var(--navy); }
+  .toast.error { background: var(--coral); }
+  .toast.warn { background: var(--amber); color: var(--navy); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); }
+                       to { opacity: 1; transform: translateX(0); } }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,26,60,0.75);
+                   display: flex; align-items: center; justify-content: center;
+                   z-index: 999; padding: 20px; }
+  .modal { background: white; border-radius: 18px; padding: 28px; max-width: 480px;
+           width: 100%; }
+  .modal h2 { color: var(--navy); margin-bottom: 12px; font-size: 20px; }
+  .modal p { color: var(--dgray); margin-bottom: 20px; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* Save indicator */
+  .save-indicator { position: fixed; top: 16px; right: 16px; z-index: 500;
+                    background: rgba(255,255,255,0.95); padding: 8px 14px;
+                    border-radius: 20px; font-size: 13px; color: var(--dgray);
+                    display: none; }
+  .save-indicator.saving { display: block; color: var(--amber); }
+  .save-indicator.saved  { display: block; color: var(--mint); }
+  .save-indicator.error  { display: block; color: var(--coral); }
+
+  /* Student home */
+  .stu-shell { min-height: 100vh; padding: 24px 20px; max-width: 720px; margin: 0 auto; color: white; }
+  .stu-shell h1 { font-size: 22px; margin-bottom: 4px; }
+  .stu-shell .meta { color: #CBD5E1; font-size: 13px; margin-bottom: 24px; }
+  .stu-section { background: white; color: var(--black); border-radius: 16px; padding: 20px 22px;
+                 margin-bottom: 16px; }
+  .stu-section h2 { font-size: 16px; color: var(--navy); margin-bottom: 12px; }
+
+  .res-row { display: flex; justify-content: space-between; align-items: center;
+             padding: 12px 0; border-bottom: 1px solid #E5E7EB; }
+  .res-row:last-child { border-bottom: none; }
+  .res-title { font-weight: 600; color: var(--navy); }
+  .res-meta { font-size: 13px; color: var(--dgray); margin-top: 2px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px;
+           font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-reservada { background: #E0E7FF; color: #3730A3; }
+  .badge-en-sesion { background: #FEF3C7; color: #92400E; }
+  .badge-completada, .badge-evaluada { background: #DBEAFE; color: #1E40AF; }
+  .badge-publicada { background: #D1FAE5; color: #065F46; }
+
+  .logout-btn { float: right; background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+
+  .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px,1fr));
+               gap: 6px; margin-top: 12px; }
+  .slot {
+    background: var(--mint); color: var(--navy); padding: 10px 0; text-align: center;
+    border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px;
+    border: 2px solid transparent; transition: transform 0.1s;
+  }
+  .slot:hover { transform: translateY(-1px); }
+  .slot-taken { background: #E5E7EB; color: var(--dgray); cursor: not-allowed; }
+  .slot-mine  { background: var(--blue); color: white; cursor: not-allowed; }
+
+  .detail-ronda { border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .detail-ronda h3 { font-size: 14px; color: var(--navy); margin-bottom: 4px; }
+  .detail-nota { font-size: 22px; font-weight: 800; color: var(--blue); float: right; }
+  .detail-global { background: var(--gray); padding: 12px 14px; border-radius: 10px; margin-top: 8px; font-size: 13px; }
+
+  /* Teacher agenda */
+  .tch-shell { min-height: 100vh; padding: 24px 20px; max-width: 1100px; margin: 0 auto; color: white; }
+  .tch-shell h1 { font-size: 22px; margin-bottom: 4px; }
+  .tch-section { background: white; color: var(--black); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+
+  .tch-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tch-stat { background: rgba(255,255,255,0.1); padding: 10px 16px; border-radius: 12px; color: white; }
+  .tch-stat strong { font-size: 18px; display: block; }
+
+  .tch-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .chip { padding: 6px 12px; border-radius: 999px; font-size: 12px; background: #E5E7EB;
+          color: var(--navy); cursor: pointer; font-weight: 600; border: 2px solid transparent; }
+  .chip.active { background: var(--blue); color: white; }
+
+  .tch-table { width: 100%; border-collapse: collapse; }
+  .tch-table th, .tch-table td { padding: 10px 8px; text-align: left; font-size: 13px;
+                                 border-bottom: 1px solid #E5E7EB; }
+  .tch-table th { color: var(--dgray); font-weight: 700; text-transform: uppercase;
+                  letter-spacing: 0.5px; font-size: 11px; }
+  .tch-action-btn { padding: 6px 10px; font-size: 12px; }
+
+  /* Eval panel */
+  .eval-shell { min-height: 100vh; padding: 20px; max-width: 960px; margin: 0 auto; color: white; }
+  .eval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .eval-countdown { font-size: 20px; font-weight: 800; color: var(--amber); }
+  .eval-checks { background: white; color: var(--black); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .eval-checks label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+                       color: var(--navy); font-size: 13px; font-weight: 600; text-transform: none;
+                       letter-spacing: normal; }
+  .eval-ronda { background: white; color: var(--black); border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+  .eval-ronda h3 { font-size: 16px; color: var(--navy); margin-bottom: 8px; }
+  .eval-canvas { display: block; margin: 12px auto; background: white; border-radius: 50%; }
+  .eval-ronda-locked { opacity: 0.45; pointer-events: none; }
+  .eval-nota-display { font-size: 28px; font-weight: 800; color: var(--blue); text-align: center; margin: 10px 0; }
+  .eval-obs { width: 100%; min-height: 60px; resize: vertical; }
+  .eval-winner { font-size: 14px; color: var(--navy); background: var(--gray); padding: 8px 12px; border-radius: 8px; margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<div id="app">Cargando…</div>
+<div id="save-indicator" class="save-indicator"></div>
+<div id="toast-host" class="toast-host"></div>
+<div id="modal-host"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN — Editar aquí para agregar/modificar contextos
+// ══════════════════════════════════════════════════════════════════
+const CONFIGURACIONES = [
+  {
+    id: "sist3311-recuperacion-ene-abr-2026",
+    etiqueta: "Análisis de Sistemas — Recuperación ENE-ABR 2026",
+    asignatura: {
+      codigo:  "SIST-3311",
+      nombre:  "Análisis de Sistemas",
+      periodo: "Enero – Abril 2026",
+      tarea:   "Evaluación de recuperación",
+    },
+
+    estudiantes: [
+      { matricula: "2016-0810", nombre: "GIOVANNY BAUTISTA CASTILLO" },
+      { matricula: "2022-0603", nombre: "DARLIN ARROYO POLANCO" },
+      { matricula: "2022-0678", nombre: "ULISES JABRIEL REYES CUEVAS" },
+      { matricula: "2023-0178", nombre: "ROMER ENMANUEL ARNO PEREZ" },
+      { matricula: "2023-0221", nombre: "DANIEL VALDEZ CUELLO" },
+      { matricula: "2023-0239", nombre: "LEURI GALVA DE LA ROSA" },
+      { matricula: "2023-0324", nombre: "ANTHONY PICHARDO CASILLA" },
+      { matricula: "2024-0007", nombre: "CINDY PAOLA ALCANTARA GARCIA" },
+      { matricula: "2024-0023", nombre: "JHAEL ADAMES PEREZ" },
+      { matricula: "2024-0026", nombre: "YASMEYRI MARILIN CASTILLO RIVERA" },
+      { matricula: "2024-0039", nombre: "JOSE ELIEZER LOPEZ FELIZ" },
+      { matricula: "2024-0060", nombre: "HAROLD SMITH BAUTISTA CAPELLAN" },
+      { matricula: "2024-0103", nombre: "JUSTIN PAULINO ALBERTO" },
+      { matricula: "2024-0280", nombre: "ENMANUEL GUZMAN OSORIA" },
+      { matricula: "2024-0282", nombre: "JOSTIN RODRIGUEZ MARTINEZ" },
+      { matricula: "2024-0283", nombre: "ISAIAS HERRERA TORIBIO" },
+      { matricula: "2024-0284", nombre: "ADAM FRANCISCO GARCIA HERRERA" },
+      { matricula: "2024-0286", nombre: "JOHAN ALEXANDER ROJAS TAVAREZ" },
+      { matricula: "2024-0305", nombre: "ELIANNI CAROLINA SANTANA BAUTISTA" },
+      { matricula: "2024-0306", nombre: "JAASIEL LORENZO TEJADA" },
+      { matricula: "2024-0321", nombre: "KAROL ELIZABETH MORA QUEZADA" },
+      { matricula: "2024-0325", nombre: "NAYROBIS VALDEZ GARCIA" },
+      { matricula: "2024-0333", nombre: "JAEL ENCARNACION MATEO" },
+      { matricula: "2024-0357", nombre: "ARLETTE PEREZ HICIANO" },
+      { matricula: "2024-0379", nombre: "CAMILO ALBERT LEON PERALTA" },
+    ],
+
+    tiposActividad: [
+      { id: "eval-recuperacion", etiqueta: "Evaluación de recuperación" },
+    ],
+
+    ventanas: [
+      { id: "dom-19-abr-mañana", fecha: "2026-04-19", inicio: "09:50", fin: "12:00", slotMinutos: 8, recesoMinutos: 2 },
+      { id: "dom-19-abr-noche",  fecha: "2026-04-19", inicio: "20:20", fin: "21:00", slotMinutos: 8, recesoMinutos: 2 },
+    ],
+
+    rubrica: {
+      rondasPorEstudiante: 2,
+      puntosPorRonda: 7.5,
+      checksGlobales: [
+        { id: "camara-encendida",  etiqueta: "Cámara encendida toda la llamada" },
+        { id: "mirada-estable",    etiqueta: "Mirada estable (no mira fuera de cámara constantemente)" },
+        { id: "sin-clics",         etiqueta: "No se escuchan clics de teclado ni mouse" },
+        { id: "sin-pausas",        etiqueta: "Sin pausas largas sospechosas" },
+        { id: "lenguaje-natural",  etiqueta: "Lenguaje natural, no suena a lectura" },
+        { id: "fluidez",           etiqueta: "Responde con fluidez o con duda genuina" },
+      ],
+    },
+
+    competencias: [
+      {
+        id: "c1-recopilacion",
+        nombre: "C1 — Recopilación de información",
+        preguntas: [
+          { id: "c1-p1",
+            escenario: "Una clínica dental pequeña quiere automatizar su proceso de citas. Actualmente las citas se agendan por teléfono y se anotan en una libreta. Los pacientes a veces llegan y su cita no aparece registrada.",
+            preguntaGuia: "¿Qué técnicas de levantamiento usarías para entender este proceso y por qué? Explícame qué captura cada una.",
+            queBuscar: "Teoría: nombrar ≥3 de 4 técnicas + qué captura cada una (entrevista=lo que dicen, observación=lo que realmente pasa, cuestionario=percepción de muchos, documento=reglas formales). Aplicación: entrevistar a la recepcionista para entender el flujo, observar cómo se agendan las citas realmente, cuestionario a pacientes, revisar la libreta actual. ROJO: solo nombra técnicas sin explicar qué captura cada una, o no las aplica al caso." },
+          { id: "c1-p2",
+            escenario: "Un colmado de barrio empezó a recibir pedidos por WhatsApp para delivery. El dueño anota los pedidos en un cuaderno pero a veces se le olvidan o confunde las direcciones.",
+            preguntaGuia: "Si te contrataran como analista, ¿qué técnicas usarías para investigar este proceso? Explícame qué aporta cada una.",
+            queBuscar: "Mismos criterios que Escenario A aplicados al colmado: nombrar ≥3 técnicas con qué captura cada una, y aplicarlas concretamente al proceso del colmado." },
+        ],
+      },
+      {
+        id: "c2-validacion",
+        nombre: "C2 — Validación de hallazgos (triangulación)",
+        preguntas: [
+          { id: "c2-p1",
+            escenario: "En una escuela, los maestros dicen que el proceso de reportar calificaciones es muy lento. Tú hiciste una entrevista al director, un cuestionario a 20 maestros, y observaste cómo se registran las notas.",
+            preguntaGuia: "¿Qué es triangular un hallazgo y por qué es importante? Si la entrevista y el cuestionario coinciden en que el proceso es lento, pero en la observación ves que en realidad tarda poco, ¿qué haces?",
+            queBuscar: "Teoría: triangular = confirmar con 2+ fuentes independientes; 1 fuente=opinión, 2+=evidencia. Aplicación: reconocer la contradicción e investigar más (tal vez los maestros perciben lentitud por otra razón, o la observación fue un día atípico); no descartar ninguna fuente sin justificación. ROJO: si dice que simplemente se queda con la mayoría o ignora la observación." },
+          { id: "c2-p2",
+            escenario: "En un taller mecánico, el dueño dice que pierde clientes porque no les avisa cuando el carro está listo. Tú encuestaste a 12 clientes y 9 dijeron que sí reciben aviso por teléfono.",
+            preguntaGuia: "¿Qué es triangulación? Aquí el dueño dice una cosa y los clientes dicen otra. ¿Cómo manejas esa contradicción?",
+            queBuscar: "Debe proponer investigación adicional, no simplemente creerle a uno u otro. Mismos criterios de triangulación aplicados al taller." },
+        ],
+      },
+      {
+        id: "c3-requerimientos",
+        nombre: "C3 — Definición de requerimientos",
+        preguntas: [
+          { id: "c3-p1",
+            escenario: "Un gimnasio quiere un sistema para que los miembros reserven clases en línea. Actualmente llegan y si la clase está llena, se devuelven.",
+            preguntaGuia: "Redáctame un requerimiento funcional y un requerimiento no funcional para este caso. Explícame la diferencia entre ambos.",
+            queBuscar: "Teoría: RF=qué hace el sistema (acción), RNF=cómo se comporta (cualidad con métrica). RF ejemplo: 'El sistema debe permitir al miembro reservar una clase verificando que haya cupo disponible.' RNF ejemplo: 'El sistema debe confirmar la reserva en menos de 3 segundos.' ROJO: RNF sin métrica ('debe ser rápido')." },
+          { id: "c3-p2",
+            escenario: "Una farmacia necesita controlar el inventario de medicamentos. Algunos vencen y no se detectan a tiempo.",
+            preguntaGuia: "Dame un requerimiento funcional con su criterio de aceptación y un no funcional. ¿Qué hace que un requerimiento sea de calidad?",
+            queBuscar: "RF con criterio Dado/Cuando/Entonces. RNF con métrica. Calidad: claro, específico, verificable, trazable, atómico." },
+        ],
+      },
+      {
+        id: "c4-prototipado",
+        nombre: "C4 — Prototipado y validación",
+        preguntas: [
+          { id: "c4-p1",
+            escenario: "Una peluquería quiere que los clientes puedan ver los horarios disponibles y agendar cita desde el celular. Tú ya hiciste un prototipo de 3 pantallas.",
+            preguntaGuia: "¿Para qué sirve un prototipo y cuál es la diferencia entre uno con feedback del usuario y uno sin feedback? ¿Qué harías después de mostrar tu prototipo a los clientes?",
+            queBuscar: "Teoría: prototipo=validar requerimientos antes de programar; sin feedback=solo un dibujo; con feedback=herramienta de validación. Aplicación: documentar comentarios (rol, pantalla, comentario, decisión), aplicar cambios justificados, guardar V1 y V2. ROJO: dice que el prototipo es para que se vea bonito." },
+          { id: "c4-p2",
+            escenario: "Una lavandería de autoservicio quiere una pantalla donde el cliente seleccione el tipo de servicio y vea el precio antes de pagar. Hiciste un boceto.",
+            preguntaGuia: "¿Qué debe pasar después de crear el prototipo? ¿Cómo documentas lo que los usuarios te dicen?",
+            queBuscar: "Validación con usuarios, feedback estructurado, cambios aplicados y documentados. Mismos criterios de validación que Escenario A." },
+        ],
+      },
+      {
+        id: "c5-dfd",
+        nombre: "C5 — Modelado con DFD",
+        preguntas: [
+          { id: "c5-p1",
+            escenario: "Una biblioteca de una escuela secundaria necesita controlar quién toma prestado los libros. Los estudiantes llenan una ficha de papel.",
+            preguntaGuia: "Si tuvieras que hacer el diagrama de contexto de este sistema, ¿cuáles serían los elementos? Explícame los 4 símbolos del DFD.",
+            queBuscar: "Teoría: 4 símbolos (entidad externa, proceso, flujo, almacén) con definición correcta de cada uno. Aplicación: proceso central (Gestión de Préstamos), entidades externas (Estudiante, Bibliotecario), flujos (SolicitudPrestamo, ConfirmacionPrestamo, etc.). ROJO: confunde DFD con diagrama de flujo (flowchart) o no puede nombrar los 4 símbolos." },
+          { id: "c5-p2",
+            escenario: "Un restaurante quiere un sistema de pedidos. El mesero toma la orden, la envía a cocina, y el cliente recibe la cuenta.",
+            preguntaGuia: "Descríbeme cómo sería el diagrama de contexto y el nivel 0 de este sistema. ¿Qué reglas debe cumplir un DFD?",
+            queBuscar: "Contexto: proceso central + entidades (Mesero, Cliente, Cocina). Nivel 0: procesos (Tomar orden, Preparar pedido, Generar cuenta, etc.). Reglas: entrada/salida obligatorias en procesos, flujos con nombre de dato, no comunicación directa entre entidades externas." },
+        ],
+      },
+      {
+        id: "c6-diccionario",
+        nombre: "C6 — Diccionario de datos y consistencia",
+        preguntas: [
+          { id: "c6-p1",
+            escenario: "En un sistema de matrículas universitarias hay un flujo llamado 'SolicitudMatricula'. En el DFD dice 'SolicitudMatricula' pero en el diccionario aparece como 'FormularioInscripcion'.",
+            preguntaGuia: "¿Qué es un diccionario de datos, qué problema hay aquí y cuál es el impacto real?",
+            queBuscar: "Teoría: diccionario=estructura exacta de cada flujo y almacén; consistencia=mismos nombres en todos los artefactos. Aplicación: son dos objetos distintos para un programador; genera confusión y errores; solución: unificar a un solo nombre. ROJO: dice 'no importa, se entiende igual'." },
+          { id: "c6-p2",
+            escenario: "Un sistema de facturación tiene un almacén D3-Facturas. Dime qué campos podría tener y cómo lo escribirías en notación de diccionario.",
+            preguntaGuia: "Descríbeme la estructura de ese almacén usando la notación del diccionario de datos.",
+            queBuscar: "Debe usar = y + correctamente. Ejemplo: Factura = IDFactura + FechaEmision + IDCliente + {LineaDetalle} + MontoTotal. Debe saber que [ | ] indica alternativas." },
+        ],
+      },
+      {
+        id: "c7-balanceo",
+        nombre: "C7 — Refinamiento y balanceo de DFD",
+        preguntas: [
+          { id: "c7-p1",
+            escenario: "En el nivel 0 de una tienda en línea, el proceso 2.0 'Gestionar Pedidos' recibe 'DatosPedido' del Cliente y produce 'ConfirmacionPedido'. En el nivel 1, un compañero agregó una nueva entidad externa 'Banco' que no estaba en el nivel 0.",
+            preguntaGuia: "¿Qué es el balanceo padre-hijo y qué error cometió tu compañero?",
+            queBuscar: "Teoría: balanceo=entradas/salidas externas del padre=entradas/salidas del hijo; flujos internos pueden ser nuevos. Aplicación: agregar 'Banco' en nivel 1 rompe el balanceo porque no estaba en nivel 0; solución: agregar Banco al nivel 0, o manejar la interacción como flujo interno. ROJO: dice que está bien agregar entidades nuevas." },
+          { id: "c7-p2",
+            escenario: "El proceso 4.0 'Gestionar Citas' del nivel 0 solo tiene como entrada 'SolicitudCita' del Paciente. Tu compañero bajó al nivel 1 y ahora tiene 4 subprocesos, pero solo uno de ellos recibe datos.",
+            preguntaGuia: "¿Qué problemas ves en ese nivel 1?",
+            queBuscar: "Subprocesos sin entrada = agujeros negros o milagros. El refinamiento debe repartir las entradas/salidas del padre entre los subprocesos. Todos deben recibir o producir datos." },
+        ],
+      },
+      {
+        id: "c8-especificaciones",
+        nombre: "C8 — Especificaciones de proceso",
+        preguntas: [
+          { id: "c8-p1",
+            escenario: "Un videoclub tiene este proceso: cuando un cliente quiere alquilar una película, se verifica si tiene membresía activa, si no tiene multas, y si la película está disponible.",
+            preguntaGuia: "¿Cómo documentarías la lógica de este proceso? ¿Qué técnica usarías y por qué?",
+            queBuscar: "Teoría: Structured English para lógica secuencial con condiciones claras; palabras clave en MAYÚSCULAS (SI, ENTONCES, FIN SI); nombres del diccionario. Aplicación: fragmento como 'RECIBIR SolicitudAlquiler, CONSULTAR Miembros, SI MembresiActiva = NO ENTONCES GENERAR Rechazo...'. No tiene que ser perfecto pero debe mostrar la estructura. ROJO: no puede dar ningún fragmento de Structured English." },
+          { id: "c8-p2",
+            escenario: "En una aerolínea, al registrar una maleta se verifica: (1) si pesa más de 23 kg, (2) si el pasajero ya tiene 2 maletas, (3) si el vuelo tiene restricción de equipaje. Dependiendo de la combinación, se cobra extra, se rechaza, o se acepta.",
+            preguntaGuia: "¿Qué técnica usarías para documentar esta lógica y por qué? ¿Cuándo conviene una tabla de decisión sobre Structured English?",
+            queBuscar: "Tabla de decisión porque hay múltiples condiciones simultáneas con diferentes combinaciones de acciones; SE sería confuso con tantas combinaciones anidadas. Debe explicar cuándo cada técnica conviene." },
+        ],
+      },
+      {
+        id: "c9-trazabilidad",
+        nombre: "C9 — Trazabilidad",
+        preguntas: [
+          { id: "c9-p1",
+            escenario: "Estás analizando una app de delivery de comida. Tienes un requerimiento que dice 'El sistema debe calcular el tiempo estimado de entrega'. Pero cuando revisas tu DFD, no hay ningún proceso que haga ese cálculo.",
+            preguntaGuia: "¿Qué es la trazabilidad, qué problema hay aquí y cómo lo resolverías?",
+            queBuscar: "Teoría: trazabilidad=poder rastrear cada RF hasta un proceso, datos y pantalla; la matriz vincula todo. Aplicación: RF sin proceso=hueco en el DFD; solución: agregar un proceso que calcule el tiempo, o verificar si está cubierto por otro proceso existente. ROJO: dice que no importa que falte el proceso." },
+          { id: "c9-p2",
+            escenario: "Un sistema de gestión de calificaciones tiene el proceso 'Generar Boletín' en el DFD, pero cuando revisas el backlog de requerimientos, ningún RF menciona boletines.",
+            preguntaGuia: "¿Qué indica esta situación en términos de trazabilidad?",
+            queBuscar: "Proceso sin RF = proceso decorativo o RF faltante. Debe proponer agregar el RF al backlog (con su fuente) o eliminar el proceso si no corresponde a una necesidad real." },
+        ],
+      },
+      {
+        id: "c10-propuesta",
+        nombre: "C10 — Propuesta del sistema",
+        preguntas: [
+          { id: "c10-p1",
+            escenario: "Una ONG que gestiona adopciones de mascotas necesita un sistema para registrar animales, solicitudes de adopción y seguimiento. Tiene presupuesto muy limitado y solo 2 personas en staff.",
+            preguntaGuia: "¿Qué debe contener una propuesta del sistema? Proponme dos alternativas para este caso y dime cuál recomendarías.",
+            queBuscar: "Teoría: propuesta=alternativas+costos/beneficios+recomendación justificada; costos: desarrollo, infraestructura, capacitación, mantenimiento. Aplicación: (A) software gratuito existente (Trello/Google Sheets adaptado), (B) app web simple a medida; recomendar A por presupuesto limitado y equipo pequeño. ROJO: propone solo una alternativa o no justifica la recomendación." },
+          { id: "c10-p2",
+            escenario: "Un taller de reparación de celulares quiere un sistema para registrar las reparaciones, notificar al cliente cuando está listo, y controlar el inventario de repuestos.",
+            preguntaGuia: "Si tuvieras que presentar una propuesta al dueño del taller, ¿qué alternativas le darías? ¿Qué costos y beneficios mencionarías?",
+            queBuscar: "2 alternativas razonables, mención de costos (categorías, no cifras exactas), beneficios tangibles e intangibles, y una recomendación conectada con el contexto del taller." },
+        ],
+      },
+    ],
+
+    promptTemplate: `Eres un evaluador académico de Análisis de Sistemas (SIST-3311). Te paso la transcripción de una pregunta oral de recuperación. El estudiante debía: (a) explicar el concepto teórico con sus propias palabras, y (b) aplicarlo al escenario planteado.
+
+Competencia evaluada: {{competencia}}
+Escenario presentado al estudiante: {{escenario}}
+Pregunta realizada: {{pregunta}}
+
+Criterios específicos (QUÉ BUSCAR):
+{{queBuscar}}
+
+ESCALA DE EVALUACIÓN (máx. {{rubrica}}):
+
+TEORÍA (máx. 3.5 pts):
+- 3.5 = Explica el concepto con precisión y claridad.
+- 2.5 = Explicación correcta pero incompleta.
+- 1.5 = Explicación vaga o con errores parciales.
+- 0   = No puede explicar o totalmente incorrecto.
+
+APLICACIÓN AL ESCENARIO (máx. 4 pts):
+- 4   = Aplica correctamente al escenario con acciones concretas.
+- 3   = Aplica pero con imprecisiones menores.
+- 2   = Intenta aplicar pero la respuesta es vaga o parcial.
+- 1   = Mención superficial sin aplicación real.
+- 0   = No aplica o respuesta incorrecta.
+
+Transcripción de la respuesta del estudiante:
+{{transcripcion}}
+
+Devuelve en español:
+1. Calificación de teoría (0–3.5) con justificación breve.
+2. Calificación de aplicación (0–4) con justificación breve.
+3. Subtotal (teoría + aplicación) sobre 7.5.
+4. Observación general en 2 líneas sobre el nivel demostrado.
+5. Si el lenguaje suena a lectura o la respuesta parece ensayada para ser leída, señálalo explícitamente.`,
+  },
+];
+
+const PROFESOR_MATRICULA = "2008464"; // usado como contraseña; UI nunca lo rotula como matrícula
+
+// ══════════════════════════════════════════════════════════════════
+// App.Core — config activa, KV client, router, bus, save-indicator
+// ══════════════════════════════════════════════════════════════════
+const App = {};
+
+App.Core = (function () {
+  let activeConfigId = null;
+  let kvState = { version: 0, reservas: {} };
+  let listeners = {};
+
+  const api = {
+    get config() {
+      return CONFIGURACIONES.find(c => c.id === activeConfigId) || null;
+    },
+    get configId() { return activeConfigId; },
+    setConfig(id) {
+      if (!CONFIGURACIONES.some(c => c.id === id)) {
+        throw new Error(`Config no existe: ${id}`);
+      }
+      activeConfigId = id;
+      emit("config:changed", id);
+    },
+    get state() { return kvState; },
+
+    // ── KV client ─────────────────────────────────────────────
+    async fetchState() {
+      if (!activeConfigId) throw new Error("Config no seleccionada");
+      const res = await fetch(`/api/state?id=${encodeURIComponent(activeConfigId)}`);
+      if (!res.ok) throw new Error(`GET /api/state falló: ${res.status}`);
+      kvState = await res.json();
+      emit("state:changed", kvState);
+      return kvState;
+    },
+
+    // mutator recibe clon de reservas, lo modifica y devuelve el nuevo mapa
+    async mutate(mutator) {
+      if (!activeConfigId) throw new Error("Config no seleccionada");
+      setSaving("saving");
+      try {
+        const nextReservas = mutator(deepClone(kvState.reservas));
+        const res = await fetch(`/api/state?id=${encodeURIComponent(activeConfigId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ version: kvState.version, reservas: nextReservas }),
+        });
+        if (res.status === 409) {
+          const data = await res.json();
+          kvState = data.state;
+          emit("state:changed", kvState);
+          setSaving("error");
+          throw Object.assign(new Error(data.message || "Conflicto de versión"), { conflict: true, state: kvState });
+        }
+        if (!res.ok) {
+          setSaving("error");
+          throw new Error(`PUT /api/state falló: ${res.status}`);
+        }
+        const data = await res.json();
+        kvState = data.state;
+        emit("state:changed", kvState);
+        setSaving("saved");
+        return kvState;
+      } catch (e) {
+        if (!e.conflict) setSaving("error");
+        throw e;
+      }
+    },
+
+    // ── Router hash ───────────────────────────────────────────
+    route() {
+      return window.location.hash || "#/";
+    },
+    navigate(hash) {
+      window.location.hash = hash;
+    },
+    onRoute(handler) {
+      window.addEventListener("hashchange", () => handler(api.route()));
+      window.addEventListener("load", () => handler(api.route()));
+    },
+
+    // ── Bus eventos ───────────────────────────────────────────
+    on(event, handler) {
+      (listeners[event] ||= []).push(handler);
+    },
+
+    // ── Helpers ───────────────────────────────────────────────
+    findEstudiante(matricula) {
+      const cfg = api.config;
+      if (!cfg) return null;
+      return cfg.estudiantes.find(e => e.matricula === matricula) || null;
+    },
+
+    reservasDeEstudiante(matricula) {
+      return Object.values(kvState.reservas)
+        .filter(r => r.estudianteMatricula === matricula);
+    },
+
+    reservasEnVentana(ventanaId) {
+      return Object.values(kvState.reservas)
+        .filter(r => r.ventanaId === ventanaId);
+    },
+
+    slotsOcupados(ventanaId) {
+      return new Set(api.reservasEnVentana(ventanaId).map(r => r.slotInicio));
+    },
+  };
+
+  function emit(event, payload) {
+    (listeners[event] || []).forEach(h => {
+      try { h(payload); } catch (e) { console.error(e); }
+    });
+  }
+
+  function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+  function setSaving(status) {
+    const el = document.getElementById("save-indicator");
+    if (!el) return;
+    el.className = `save-indicator ${status}`;
+    el.textContent = { saving: "● guardando…", saved: "✓ guardado", error: "⚠ error" }[status] || "";
+    if (status === "saved") {
+      clearTimeout(setSaving._t);
+      setSaving._t = setTimeout(() => { el.className = "save-indicator"; el.textContent = ""; }, 1200);
+    }
+  }
+
+  return api;
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.UI — toast, modal, confirm
+// ══════════════════════════════════════════════════════════════════
+App.UI = (function () {
+  function toast(msg, kind = "default", ms = 3000) {
+    const host = document.getElementById("toast-host");
+    const el = document.createElement("div");
+    el.className = `toast ${kind === "default" ? "" : kind}`;
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(() => el.remove(), ms);
+  }
+
+  function modal({ title, body, actions }) {
+    return new Promise((resolve) => {
+      const host = document.getElementById("modal-host");
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay";
+      const m = document.createElement("div");
+      m.className = "modal";
+      m.innerHTML = `<h2>${esc(title)}</h2><div class="modal-body">${body}</div>`;
+      const acts = document.createElement("div");
+      acts.className = "modal-actions";
+      actions.forEach(a => {
+        const b = document.createElement("button");
+        b.className = `btn ${a.class || "btn-primary"}`;
+        b.textContent = a.label;
+        b.onclick = () => {
+          resolve(a.value);
+          setTimeout(() => overlay.remove(), 0);
+        };
+        acts.appendChild(b);
+      });
+      m.appendChild(acts);
+      overlay.appendChild(m);
+      overlay.onclick = (e) => {
+        if (e.target === overlay) { overlay.remove(); resolve(null); }
+      };
+      host.appendChild(overlay);
+    });
+  }
+
+  function confirm(msg) {
+    return modal({
+      title: "Confirmar",
+      body: `<p>${esc(msg)}</p>`,
+      actions: [
+        { label: "Cancelar", class: "btn-ghost", value: false },
+        { label: "Aceptar",  class: "btn-primary", value: true },
+      ],
+    });
+  }
+
+  function prompt(title, placeholder = "") {
+    return new Promise((resolve) => {
+      const id = `input-${Date.now()}`;
+      modal({
+        title,
+        body: `<input id="${id}" type="password" placeholder="${esc(placeholder)}"/>`,
+        actions: [
+          { label: "Cancelar", class: "btn-ghost", value: null },
+          { label: "Aceptar",  class: "btn-primary", value: "__ACCEPT__" },
+        ],
+      }).then(v => {
+        if (v === "__ACCEPT__") {
+          const el = document.getElementById(id);
+          resolve(el ? el.value : null);
+        } else {
+          resolve(null);
+        }
+      });
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.focus();
+      }, 0);
+    });
+  }
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+
+  return { toast, modal, confirm, prompt, esc };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.Auth — login + sesión efímera
+// ══════════════════════════════════════════════════════════════════
+App.Auth = (function () {
+  const SESSION_KEY = "agenda_eval_session";
+
+  function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+  function loadSession() {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; }
+    catch { return null; }
+  }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+  function render() {
+    const host = document.getElementById("app");
+    const configs = CONFIGURACIONES;
+
+    host.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
+        <div class="card" style="max-width:480px;width:100%">
+          <div style="text-align:center;margin-bottom:24px">
+            <div style="width:64px;height:64px;background:var(--blue);border-radius:16px;
+                 display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px">📅</div>
+            <h1 style="color:var(--navy);font-size:22px">Agenda de Evaluaciones</h1>
+            <p style="color:var(--dgray);font-size:14px;margin-top:4px">Herramientas Educativas · UNAD</p>
+          </div>
+
+          <label for="auth-materia">Materia</label>
+          <select id="auth-materia">
+            <option value="">-- seleccionar --</option>
+            ${configs.map(c => `<option value="${c.id}">${App.UI.esc(c.etiqueta)}</option>`).join("")}
+          </select>
+
+          <div id="auth-after-materia" style="display:none;margin-top:16px">
+            <label for="auth-nombre">Nombre</label>
+            <select id="auth-nombre">
+              <option value="">-- seleccionar --</option>
+            </select>
+
+            <div style="margin-top:16px">
+              <label for="auth-matricula">Matrícula</label>
+              <input id="auth-matricula" type="text" placeholder="2024-XXXX" autocomplete="off"/>
+            </div>
+
+            <button id="auth-entrar" class="btn btn-primary" style="width:100%;margin-top:20px">
+              Entrar como estudiante
+            </button>
+
+            <div style="text-align:center;margin-top:16px">
+              <a id="auth-profe" href="#" style="color:var(--dgray);font-size:13px;text-decoration:none">
+                🔒 Soy profesor
+              </a>
+            </div>
+          </div>
+
+          <div id="auth-error" style="color:var(--coral);font-size:13px;margin-top:12px;min-height:16px;text-align:center"></div>
+        </div>
+      </div>
+    `;
+
+    wireEvents();
+  }
+
+  function wireEvents() {
+    const materia = document.getElementById("auth-materia");
+    const after = document.getElementById("auth-after-materia");
+    const nombre = document.getElementById("auth-nombre");
+    const matricula = document.getElementById("auth-matricula");
+    const entrar = document.getElementById("auth-entrar");
+    const profe = document.getElementById("auth-profe");
+    const err = document.getElementById("auth-error");
+
+    materia.onchange = () => {
+      const cfg = CONFIGURACIONES.find(c => c.id === materia.value);
+      if (!cfg) { after.style.display = "none"; return; }
+      after.style.display = "block";
+      nombre.innerHTML = `<option value="">-- seleccionar --</option>` +
+        cfg.estudiantes.map(e => `<option value="${e.matricula}">${App.UI.esc(e.nombre)}</option>`).join("");
+      err.textContent = "";
+    };
+
+    entrar.onclick = async () => {
+      err.textContent = "";
+      const configId = materia.value;
+      const matriculaVal = matricula.value.trim();
+      const nombreVal = nombre.value;
+      if (!configId || !nombreVal || !matriculaVal) {
+        err.textContent = "Completa materia, nombre y matrícula."; return;
+      }
+      if (nombreVal !== matriculaVal) {
+        err.textContent = "La matrícula no corresponde al nombre seleccionado."; return;
+      }
+      // Sesión estudiante
+      App.Core.setConfig(configId);
+      saveSession({ rol: "estudiante", configId, matricula: matriculaVal });
+      try { await App.Core.fetchState(); } catch (e) { err.textContent = "Error cargando datos."; return; }
+      App.Core.navigate("#/estudiante/agenda");
+    };
+
+    profe.onclick = async (e) => {
+      e.preventDefault();
+      err.textContent = "";
+      const configId = materia.value;
+      if (!configId) { err.textContent = "Primero selecciona materia."; return; }
+      const pwd = await App.UI.prompt("Contraseña", "••••••");
+      if (pwd === null) return;
+      if (pwd !== PROFESOR_MATRICULA) {
+        err.textContent = "Contraseña incorrecta."; return;
+      }
+      App.Core.setConfig(configId);
+      saveSession({ rol: "profe", configId });
+      try { await App.Core.fetchState(); } catch (ex) { err.textContent = "Error cargando datos."; return; }
+      App.Core.navigate("#/profe/agenda");
+    };
+  }
+
+  return { render, loadSession, saveSession, clearSession };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.Student — home, reservar, ver resultado
+// ══════════════════════════════════════════════════════════════════
+App.Student = (function () {
+  function renderHome() {
+    const cfg = App.Core.config;
+    const session = App.Auth.loadSession();
+    const estudiante = App.Core.findEstudiante(session.matricula);
+    if (!estudiante) { App.Auth.clearSession(); App.Core.navigate("#/"); return; }
+
+    const reservas = App.Core.reservasDeEstudiante(session.matricula)
+      .sort((a, b) => (a.slotInicio || "").localeCompare(b.slotInicio || ""));
+
+    document.getElementById("app").innerHTML = `
+      <div class="stu-shell">
+        <button class="logout-btn" id="stu-logout">Salir</button>
+        <h1>Hola, ${App.UI.esc(estudiante.nombre.split(" ")[0])}</h1>
+        <p class="meta">${App.UI.esc(cfg.asignatura.nombre)} · ${App.UI.esc(cfg.asignatura.periodo)}</p>
+
+        <div class="stu-section">
+          <h2>Mis reservas</h2>
+          ${reservas.length === 0 ? `<p style="color:var(--dgray);font-size:14px">Aún no tienes reservas.</p>` :
+            reservas.map(r => renderReservaRow(r, cfg)).join("")}
+        </div>
+
+        <div class="stu-section">
+          <h2>Reservar nuevo slot</h2>
+          <p style="color:var(--dgray);font-size:14px;margin-bottom:12px">Puedes reservar hasta 1 slot por tipo de actividad.</p>
+          ${renderTiposDisponibles(cfg, reservas)}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("stu-logout").onclick = () => {
+      App.Auth.clearSession(); App.Core.navigate("#/"); location.reload();
+    };
+    wireTipoButtons();
+    wireResultLinks();
+  }
+
+  function renderReservaRow(r, cfg) {
+    const tipo = cfg.tiposActividad.find(t => t.id === r.tipoActividadId);
+    const ventana = cfg.ventanas.find(v => v.id === r.ventanaId);
+    const label = {
+      reservada: "Pendiente de evaluar",
+      "en-sesion": "En evaluación ahora",
+      completada: "Calificando…",
+      evaluada: "Calificando…",
+      publicada: "Publicada",
+    }[r.estado] || r.estado;
+    const puedeVer = r.estado === "publicada";
+    const puedeCancelar = r.estado === "reservada";
+    return `
+      <div class="res-row">
+        <div>
+          <div class="res-title">${App.UI.esc(tipo ? tipo.etiqueta : r.tipoActividadId)}</div>
+          <div class="res-meta">${App.UI.esc(ventana ? ventana.fecha : "")} · ${App.UI.esc(r.slotInicio)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+          <span class="badge badge-${App.UI.esc(r.estado)}">${App.UI.esc(label)}</span>
+          ${puedeVer ? `<button class="btn btn-ghost res-ver" data-id="${r.id}" style="padding:6px 12px;font-size:13px">Ver detalle</button>` : ""}
+          ${puedeCancelar ? `<button class="btn btn-ghost res-cancelar" data-id="${r.id}" style="padding:6px 12px;font-size:13px;color:var(--red);border-color:var(--red)">Cancelar</button>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTiposDisponibles(cfg, reservas) {
+    const yaReservados = new Set(reservas.map(r => r.tipoActividadId));
+    const libres = cfg.tiposActividad.filter(t => !yaReservados.has(t.id));
+    if (libres.length === 0) return `<p style="color:var(--dgray)">Ya reservaste todos los tipos disponibles.</p>`;
+    return libres.map(t => `
+      <button class="btn btn-primary stu-tipo" data-id="${t.id}" style="margin:4px 6px 0 0">
+        ${App.UI.esc(t.etiqueta)}
+      </button>
+    `).join("");
+  }
+
+  function wireTipoButtons() {
+    document.querySelectorAll(".stu-tipo").forEach(b => {
+      b.onclick = () => renderVentanas(b.dataset.id);
+    });
+  }
+
+  function wireResultLinks() {
+    document.querySelectorAll(".res-ver").forEach(b => {
+      b.onclick = () => App.Core.navigate(`#/estudiante/resultado/${b.dataset.id}`);
+    });
+    document.querySelectorAll(".res-cancelar").forEach(b => {
+      b.onclick = () => cancelarReserva(b.dataset.id);
+    });
+  }
+
+  async function cancelarReserva(reservaId) {
+    const session = App.Auth.loadSession();
+    const r = App.Core.state.reservas[reservaId];
+    if (!r || r.estudianteMatricula !== session.matricula) {
+      App.UI.toast("Reserva no encontrada", "error");
+      return;
+    }
+    if (r.estado !== "reservada") {
+      App.UI.toast("Ya no se puede cancelar (el profesor empezó a trabajar esta reserva).", "error");
+      return;
+    }
+    const ok = await App.UI.confirm("¿Cancelar esta reserva? El slot quedará libre para otro estudiante.");
+    if (!ok) return;
+    try {
+      await App.Core.mutate(reservas => {
+        const actual = reservas[reservaId];
+        if (!actual) throw new Error("Ya fue cancelada");
+        if (actual.estado !== "reservada") throw new Error("Ya no se puede cancelar");
+        delete reservas[reservaId];
+        return reservas;
+      });
+      App.UI.toast("✓ Reserva cancelada", "success");
+      App.Student.renderHome();
+    } catch (e) {
+      App.UI.toast(e.conflict ? "Otro usuario actualizó. Recargando." : (e.message || "Error"), "error");
+      App.Student.renderHome();
+    }
+  }
+
+  function renderVentanas(tipoId) {
+    const cfg = App.Core.config;
+    document.getElementById("app").innerHTML = `
+      <div class="stu-shell">
+        <button class="logout-btn" id="stu-back">← Volver</button>
+        <h1>Escoger ventana</h1>
+        <p class="meta">Tipo: ${App.UI.esc(cfg.tiposActividad.find(t => t.id === tipoId)?.etiqueta ?? tipoId)}</p>
+
+        <div class="stu-section">
+          ${cfg.ventanas.length === 0
+            ? `<p style="color:var(--dgray)">El profesor aún no publicó ventanas para esta tarea.</p>`
+            : cfg.ventanas.map(v => `
+                <div class="res-row" style="cursor:pointer" data-vid="${v.id}">
+                  <div>
+                    <div class="res-title">${App.UI.esc(v.fecha)} · ${App.UI.esc(v.inicio)}–${App.UI.esc(v.fin)}</div>
+                    <div class="res-meta">Slots de ${v.slotMinutos} min${v.recesoMinutos ? ` (+${v.recesoMinutos} min receso)` : ""}</div>
+                  </div>
+                  <div style="color:var(--blue);font-weight:700">→</div>
+                </div>
+              `).join("")}
+        </div>
+      </div>
+    `;
+    document.getElementById("stu-back").onclick = () => App.Core.navigate("#/estudiante/agenda");
+    document.querySelectorAll("[data-vid]").forEach(row => {
+      row.onclick = () => App.Core.navigate(`#/estudiante/reservar/${tipoId}/${row.dataset.vid}`);
+    });
+  }
+
+  function slotsEntre(inicio, fin, minutos, receso = 0) {
+    const [h1, m1] = inicio.split(":").map(Number);
+    const [h2, m2] = fin.split(":").map(Number);
+    const inicioMin = h1 * 60 + m1;
+    const finMin = h2 * 60 + m2;
+    const paso = minutos + receso;
+    const out = [];
+    for (let t = inicioMin; t + minutos <= finMin; t += paso) {
+      const h = String(Math.floor(t / 60)).padStart(2, "0");
+      const m = String(t % 60).padStart(2, "0");
+      out.push(`${h}:${m}`);
+    }
+    return out;
+  }
+
+  async function renderReservar(tipoId, ventanaId) {
+    const cfg = App.Core.config;
+    const ventana = cfg.ventanas.find(v => v.id === ventanaId);
+    const tipo = cfg.tiposActividad.find(t => t.id === tipoId);
+    if (!ventana || !tipo) { App.Core.navigate("#/estudiante/agenda"); return; }
+    const session = App.Auth.loadSession();
+
+    try {
+      await App.Core.fetchState();
+    } catch (e) {
+      App.UI.toast("Error cargando disponibilidad.", "error");
+      App.Core.navigate("#/estudiante/agenda");
+      return;
+    }
+    const ocupados = App.Core.slotsOcupados(ventanaId);
+    const misReservas = App.Core.reservasDeEstudiante(session.matricula);
+    const mios = new Set(misReservas.filter(r => r.ventanaId === ventanaId).map(r => r.slotInicio));
+
+    document.getElementById("app").innerHTML = `
+      <div class="stu-shell">
+        <button class="logout-btn" id="stu-back">← Volver</button>
+        <h1>Escoger slot</h1>
+        <p class="meta">${App.UI.esc(tipo.etiqueta)} · ${App.UI.esc(ventana.fecha)} · ${App.UI.esc(ventana.inicio)}–${App.UI.esc(ventana.fin)}</p>
+
+        <div class="stu-section">
+          <div class="slot-grid" id="slot-grid"></div>
+        </div>
+      </div>
+    `;
+    const grid = document.getElementById("slot-grid");
+    const slots = slotsEntre(ventana.inicio, ventana.fin, ventana.slotMinutos, ventana.recesoMinutos || 0);
+    slots.forEach(s => {
+      if (ocupados.has(s) && !mios.has(s)) return;
+      const div = document.createElement("div");
+      div.textContent = s;
+      if (mios.has(s)) {
+        div.className = "slot slot-mine";
+      } else {
+        div.className = "slot";
+        div.onclick = () => confirmReserva(tipoId, ventanaId, s);
+      }
+      grid.appendChild(div);
+    });
+
+    document.getElementById("stu-back").onclick = () =>
+      App.Core.navigate(`#/estudiante/agenda`);
+  }
+
+  async function confirmReserva(tipoId, ventanaId, slotInicio) {
+    const cfg = App.Core.config;
+    const tipo = cfg.tiposActividad.find(t => t.id === tipoId);
+    const ventana = cfg.ventanas.find(v => v.id === ventanaId);
+    const ok = await App.UI.confirm(
+      `Reservar ${tipo.etiqueta} el ${ventana.fecha} a las ${slotInicio}?`
+    );
+    if (!ok) return;
+
+    const session = App.Auth.loadSession();
+    const id = `r-${crypto.randomUUID()}`;
+    const nueva = {
+      id,
+      estudianteMatricula: session.matricula,
+      tipoActividadId: tipoId,
+      ventanaId,
+      slotInicio,
+      estado: "reservada",
+      creadaEn: new Date().toISOString(),
+    };
+
+    try {
+      await App.Core.mutate(reservas => {
+        // Revalidar localmente: slot libre + cap tipo
+        const ocupado = Object.values(reservas).some(r =>
+          r.ventanaId === ventanaId && r.slotInicio === slotInicio);
+        if (ocupado) throw new Error("Slot ya tomado");
+        const yaTipo = Object.values(reservas).some(r =>
+          r.estudianteMatricula === session.matricula && r.tipoActividadId === tipoId);
+        if (yaTipo) throw new Error("Ya reservaste este tipo");
+        reservas[id] = nueva;
+        return reservas;
+      });
+      App.UI.toast("✓ Reservado", "success");
+      App.Core.navigate("#/estudiante/agenda");
+    } catch (e) {
+      App.UI.toast(e.conflict ? "Otro usuario actualizó. Recargando." : (e.message || "Error"), "error");
+      renderReservar(tipoId, ventanaId); // refresca grid
+    }
+  }
+
+  function renderResultado(reservaId) {
+    const cfg = App.Core.config;
+    const reserva = App.Core.state.reservas[reservaId];
+    const session = App.Auth.loadSession();
+    if (!reserva || reserva.estudianteMatricula !== session.matricula) {
+      App.UI.toast("Reserva no encontrada", "error");
+      App.Core.navigate("#/estudiante/agenda");
+      return;
+    }
+    if (reserva.estado !== "publicada") {
+      App.UI.toast("Resultado aún no publicado", "warn");
+      App.Core.navigate("#/estudiante/agenda");
+      return;
+    }
+
+    const tipo = cfg.tiposActividad.find(t => t.id === reserva.tipoActividadId);
+    const ev = reserva.evaluacion || {};
+    const rondas = ev.rondas || [];
+    const checks = ev.checksGlobales || {};
+    const checksDefs = cfg.rubrica.checksGlobales;
+
+    document.getElementById("app").innerHTML = `
+      <div class="stu-shell">
+        <button class="logout-btn" id="stu-back">← Volver</button>
+        <h1>Detalle de evaluación</h1>
+        <p class="meta">${App.UI.esc(tipo ? tipo.etiqueta : reserva.tipoActividadId)} · Nota total: ${ev.puntosTotales ?? "—"} / ${cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda}</p>
+
+        <div class="stu-section">
+          ${rondas.map((r, i) => renderRondaDetalle(r, i, cfg)).join("")}
+
+          <div class="detail-global">
+            <strong>Cumplimiento:</strong><br>
+            ${checksDefs.map(c => `${checks[c.id] ? "✓" : "✗"} ${App.UI.esc(c.etiqueta)}`).join(" · ")}
+          </div>
+
+          ${ev.observacionGlobal ? `
+            <div class="detail-global">
+              <strong>Observación general:</strong><br>${App.UI.esc(ev.observacionGlobal)}
+            </div>` : ""}
+
+          ${(ev.videosURLs || []).length ? `
+            <div class="detail-global">
+              <strong>Videos:</strong><br>
+              ${ev.videosURLs.map(u => {
+                const safe = /^https?:\/\//i.test(u);
+                return safe
+                  ? `<a href="${App.UI.esc(u)}" target="_blank" rel="noopener">${App.UI.esc(u)}</a>`
+                  : App.UI.esc(u);
+              }).join("<br>")}
+            </div>` : ""}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("stu-back").onclick = () =>
+      App.Core.navigate("#/estudiante/agenda");
+  }
+
+  function renderRondaDetalle(r, i, cfg) {
+    const comp = cfg.competencias.find(c => c.id === r.competenciaId);
+    const preg = comp ? comp.preguntas.find(p => p.id === r.preguntaId) : null;
+    return `
+      <div class="detail-ronda">
+        <span class="detail-nota">${r.puntosFinal ?? r.puntosLive ?? "—"}</span>
+        <h3>Ronda ${i + 1} · ${App.UI.esc(comp ? comp.nombre : r.competenciaId)}</h3>
+        <p style="font-size:13px;color:var(--dgray);margin-bottom:6px">
+          ${App.UI.esc(preg ? preg.escenario : "")}
+        </p>
+        ${r.observacion ? `<div class="detail-global" style="margin-top:6px">${App.UI.esc(r.observacion)}</div>` : ""}
+      </div>
+    `;
+  }
+
+  return { renderHome, renderVentanas, renderReservar, renderResultado };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.Teacher — agenda, acciones, reportes wrapper
+// ══════════════════════════════════════════════════════════════════
+App.Teacher = (function () {
+  const filterState = { estado: "todos", tipo: "todos", ventana: "todas" };
+
+  async function renderAgenda() {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const reservas = Object.values(App.Core.state.reservas);
+    const filtradas = applyFilters(reservas);
+    const ordenadas = filtradas.sort(comparaCronologico);
+
+    const byEstado = agruparPor(reservas, r => r.estado);
+    const stats = {
+      total: reservas.length,
+      reservada: (byEstado.reservada || []).length,
+      "en-sesion": (byEstado["en-sesion"] || []).length,
+      completada: (byEstado.completada || []).length,
+      evaluada: (byEstado.evaluada || []).length,
+      publicada: (byEstado.publicada || []).length,
+    };
+
+    document.getElementById("app").innerHTML = `
+      <div class="tch-shell">
+        <button class="logout-btn" id="tch-logout">Salir</button>
+        <h1>Agenda del docente</h1>
+        <p style="color:#CBD5E1;font-size:13px;margin-bottom:16px">
+          ${App.UI.esc(cfg.asignatura.nombre)} · ${App.UI.esc(cfg.asignatura.periodo)}
+        </p>
+
+        <div class="tch-stats">
+          ${["total","reservada","en-sesion","completada","evaluada","publicada"].map(k => `
+            <div class="tch-stat"><strong>${stats[k]}</strong>${k}</div>
+          `).join("")}
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <button class="btn btn-primary" id="tch-publicar-bulk">📢 Publicar todas evaluadas</button>
+          <button class="btn btn-ghost" id="tch-reportes">Reportes</button>
+        </div>
+
+        <div class="tch-section">
+          ${renderFilters(cfg)}
+          <table class="tch-table">
+            <thead>
+              <tr><th>Fecha/Hora</th><th>Estudiante</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tch-tbody">
+              ${ordenadas.length === 0 ? `<tr><td colspan="5" style="text-align:center;color:var(--dgray);padding:24px">Sin reservas con estos filtros.</td></tr>` :
+                ordenadas.map(r => renderRow(r, cfg)).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    wireFilters();
+    wireRowActions();
+    document.getElementById("tch-logout").onclick = () => {
+      App.Auth.clearSession(); App.Core.navigate("#/"); location.reload();
+    };
+    document.getElementById("tch-publicar-bulk").onclick = () => publicarBulk();
+    document.getElementById("tch-reportes").onclick = () => App.Core.navigate("#/profe/reportes");
+  }
+
+  function renderFilters(cfg) {
+    const chip = (group, value, label) =>
+      `<span class="chip ${filterState[group] === value ? "active" : ""}" data-group="${group}" data-value="${value}">${App.UI.esc(label)}</span>`;
+    return `
+      <div class="tch-filters">
+        <strong style="font-size:12px;color:var(--dgray);align-self:center">Estado:</strong>
+        ${chip("estado","todos","todos")}
+        ${["reservada","en-sesion","completada","evaluada","publicada"].map(s => chip("estado",s,s)).join("")}
+      </div>
+      <div class="tch-filters">
+        <strong style="font-size:12px;color:var(--dgray);align-self:center">Tipo:</strong>
+        ${chip("tipo","todos","todos")}
+        ${cfg.tiposActividad.map(t => chip("tipo",t.id,t.etiqueta)).join("")}
+      </div>
+      <div class="tch-filters">
+        <strong style="font-size:12px;color:var(--dgray);align-self:center">Ventana:</strong>
+        ${chip("ventana","todas","todas")}
+        ${cfg.ventanas.map(v => chip("ventana",v.id,`${v.fecha} ${v.inicio}`)).join("")}
+      </div>
+    `;
+  }
+
+  function wireFilters() {
+    document.querySelectorAll(".chip").forEach(c => {
+      c.onclick = () => {
+        filterState[c.dataset.group] = c.dataset.value;
+        renderAgenda();
+      };
+    });
+  }
+
+  function renderRow(r, cfg) {
+    const est = cfg.estudiantes.find(e => e.matricula === r.estudianteMatricula);
+    const tipo = cfg.tiposActividad.find(t => t.id === r.tipoActividadId);
+    const ventana = cfg.ventanas.find(v => v.id === r.ventanaId);
+    return `
+      <tr>
+        <td>${App.UI.esc(ventana ? ventana.fecha : "")} ${App.UI.esc(r.slotInicio)}</td>
+        <td>${App.UI.esc(est ? est.nombre : r.estudianteMatricula)}</td>
+        <td>${App.UI.esc(tipo ? tipo.etiqueta : r.tipoActividadId)}</td>
+        <td><span class="badge badge-${App.UI.esc(r.estado)}">${App.UI.esc(r.estado)}</span></td>
+        <td>${renderActions(r)}</td>
+      </tr>
+    `;
+  }
+
+  function renderActions(r) {
+    const btn = (label, action, cls = "btn-primary") =>
+      `<button class="btn ${cls} tch-action-btn" data-action="${action}" data-id="${r.id}">${label}</button>`;
+    switch (r.estado) {
+      case "reservada":  return btn("Iniciar eval", "start");
+      case "en-sesion":  return btn("Continuar", "start") + " " + btn("↩ Revertir", "revert", "btn-danger");
+      case "completada": return btn("Procesar", "process") + " " + btn("↩ Revertir", "revert", "btn-danger");
+      case "evaluada":
+        return btn("Procesar", "process", "btn-ghost") + " " + btn("📢 Publicar", "publish", "btn-success") + " " + btn("↩ Revertir", "revert", "btn-danger");
+      case "publicada":
+        return btn("Ver", "process", "btn-ghost") + " " + btn("🔒 Despublicar", "unpublish", "btn-danger");
+      default: return "";
+    }
+  }
+
+  function wireRowActions() {
+    document.querySelectorAll(".tch-action-btn").forEach(b => {
+      b.onclick = () => handleAction(b.dataset.action, b.dataset.id);
+    });
+  }
+
+  async function handleAction(action, id) {
+    if (action === "start") { App.Core.navigate(`#/profe/eval/${id}`); return; }
+    if (action === "process") { App.Core.navigate(`#/profe/proceso/${id}`); return; }
+    if (action === "publish") { await setEstado(id, "publicada", { publicadaEn: new Date().toISOString() }); return; }
+    if (action === "unpublish") { await setEstado(id, "evaluada", { publicadaEn: null }); return; }
+    if (action === "revert") { await revertirEval(id); return; }
+  }
+
+  async function revertirEval(id) {
+    const ok = await App.UI.confirm(
+      "¿Revertir evaluación a Pendiente?\n\nSe borrará todo el progreso (rondas, notas, checks). El estudiante quedará con su slot reservado y podrá cancelarlo si lo desea."
+    );
+    if (!ok) return;
+    try {
+      await App.Core.mutate(reservas => {
+        const r = reservas[id];
+        if (!r) return reservas;
+        r.estado = "reservada";
+        r.evaluacion = { rondas: [], checksGlobales: {}, observacionGlobal: "", puntosTotales: null };
+        return reservas;
+      });
+      App.UI.toast("✓ Evaluación revertida a Pendiente", "success");
+      renderAgenda();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
+  }
+
+  async function setEstado(id, nuevo, extraEval = {}) {
+    try {
+      await App.Core.mutate(reservas => {
+        const r = reservas[id];
+        if (!r) return reservas;
+        r.estado = nuevo;
+        if (Object.keys(extraEval).length) {
+          r.evaluacion = { ...(r.evaluacion || {}), ...extraEval };
+        }
+        return reservas;
+      });
+      App.UI.toast("Estado actualizado", "success");
+      renderAgenda();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
+  }
+
+  async function publicarBulk() {
+    const ok = await App.UI.confirm("Publicar TODAS las reservas en estado 'evaluada'?");
+    if (!ok) return;
+    try {
+      await App.Core.mutate(reservas => {
+        const when = new Date().toISOString();
+        for (const r of Object.values(reservas)) {
+          if (r.estado === "evaluada") {
+            r.estado = "publicada";
+            r.evaluacion = { ...(r.evaluacion || {}), publicadaEn: when };
+          }
+        }
+        return reservas;
+      });
+      App.UI.toast("Publicación masiva completada", "success");
+      renderAgenda();
+    } catch (e) {
+      App.UI.toast(e.message || "Error", "error");
+    }
+  }
+
+  function applyFilters(rs) {
+    return rs.filter(r =>
+      (filterState.estado === "todos" || r.estado === filterState.estado) &&
+      (filterState.tipo === "todos"   || r.tipoActividadId === filterState.tipo) &&
+      (filterState.ventana === "todas"|| r.ventanaId === filterState.ventana)
+    );
+  }
+
+  function comparaCronologico(a, b) {
+    const cfg = App.Core.config;
+    const va = cfg.ventanas.find(v => v.id === a.ventanaId);
+    const vb = cfg.ventanas.find(v => v.id === b.ventanaId);
+    const fa = (va ? va.fecha : "") + " " + (a.slotInicio || "");
+    const fb = (vb ? vb.fecha : "") + " " + (b.slotInicio || "");
+    return fa.localeCompare(fb);
+  }
+
+  function agruparPor(arr, keyFn) {
+    return arr.reduce((acc, x) => { const k = keyFn(x); (acc[k] ||= []).push(x); return acc; }, {});
+  }
+
+  return { renderAgenda, setEstado };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.Roulette — rueda canvas genérica
+// items: [{ id, label, color? }]
+// onWinner(item) se llama al parar
+// ══════════════════════════════════════════════════════════════════
+App.Roulette = (function () {
+  const PALETTE = ["#2D5BE3","#00D4A0","#F59E0B","#FF5C6A","#8B5CF6","#14B8A6","#EC4899","#3B82F6","#10B981","#F97316"];
+
+  function draw(canvas, items, angle) {
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+    const cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 10;
+    ctx.clearRect(0, 0, w, h);
+    if (items.length === 0) return;
+    const slice = (2 * Math.PI) / items.length;
+    items.forEach((it, i) => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, angle + i * slice, angle + (i + 1) * slice);
+      ctx.closePath();
+      ctx.fillStyle = it.color || PALETTE[i % PALETTE.length];
+      ctx.fill();
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // label
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle + i * slice + slice / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "white";
+      ctx.font = "bold 13px system-ui";
+      const label = (it.label || "").slice(0, 22);
+      ctx.fillText(label, r - 14, 4);
+      ctx.restore();
+    });
+    // pointer
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r - 6);
+    ctx.lineTo(cx - 10, cy - r + 10);
+    ctx.lineTo(cx + 10, cy - r + 10);
+    ctx.closePath();
+    ctx.fillStyle = "#1F2937";
+    ctx.fill();
+  }
+
+  function spin({ canvas, items, onWinner }) {
+    if (items.length === 0) { onWinner(null); return; }
+    const slice = (2 * Math.PI) / items.length;
+    const winnerIdx = Math.floor(Math.random() * items.length);
+    // ángulo final: pointer arriba (=-PI/2). queremos que centro de winner quede debajo del pointer
+    const totalSpins = 5 + Math.random() * 2; // 5-7 vueltas
+    const targetAngle = (-Math.PI / 2) - (winnerIdx * slice + slice / 2) - totalSpins * 2 * Math.PI;
+    const durationMs = 3500;
+    const start = performance.now();
+    const startAngle = 0;
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function frame(now) {
+      const t = Math.min(1, (now - start) / durationMs);
+      const angle = startAngle + (targetAngle - startAngle) * easeOut(t);
+      draw(canvas, items, angle);
+      if (t < 1) requestAnimationFrame(frame);
+      else onWinner(items[winnerIdx]);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  return { draw, spin };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.Prompt — genera prompt con template filler
+// ══════════════════════════════════════════════════════════════════
+App.Prompt = (function () {
+  function build(ronda, reserva, cfg) {
+    const comp = cfg.competencias.find(c => c.id === ronda.competenciaId);
+    const preg = comp ? comp.preguntas.find(p => p.id === ronda.preguntaId) : null;
+    const tpl = cfg.promptTemplate || defaultTemplate();
+    return fillTemplate(tpl, {
+      competencia: comp ? comp.nombre : "",
+      pregunta: preg ? preg.preguntaGuia : "",
+      escenario: preg ? preg.escenario : "",
+      queBuscar: preg ? (preg.queBuscar || "") : "",
+      rubrica: `${cfg.rubrica.puntosPorRonda} pts (Teoría 3.5 + Aplicación 4)`,
+      transcripcion: ronda.transcripcion || "[PEGAR TRANSCRIPCIÓN AQUÍ]",
+    });
+  }
+
+  function fillTemplate(tpl, vars) {
+    return tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "");
+  }
+
+  function defaultTemplate() {
+    return `Eres evaluador de la materia. Analiza esta respuesta contra la rúbrica.
+
+Competencia: {{competencia}}
+Pregunta: {{pregunta}}
+Escenario: {{escenario}}
+Rúbrica: {{rubrica}}
+
+Transcripción de la respuesta del estudiante:
+{{transcripcion}}
+
+Devuelve:
+1. Observación crítica (qué estuvo bien / qué faltó) en 3-4 oraciones.
+2. Nota sugerida entre 0 y 7.5.`;
+  }
+
+  async function copyToClipboard(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch { return false; }
+  }
+
+  return { build, copyToClipboard };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.Reports — export .txt individual y global
+// ══════════════════════════════════════════════════════════════════
+App.Reports = (function () {
+  function renderPanel() {
+    const cfg = App.Core.config;
+    document.getElementById("app").innerHTML = `
+      <div class="tch-shell">
+        <button class="logout-btn" id="rep-back">← Volver</button>
+        <h1>Reportes</h1>
+        <div class="tch-section">
+          <h2 style="color:var(--navy);font-size:16px">Exportar individual</h2>
+          <label>Estudiante</label>
+          <select id="rep-estudiante">
+            <option value="">-- seleccionar --</option>
+            ${cfg.estudiantes.map(e => `<option value="${e.matricula}">${App.UI.esc(e.nombre)}</option>`).join("")}
+          </select>
+          <button class="btn btn-primary" id="rep-individual" style="margin-top:10px">⬇ Descargar</button>
+        </div>
+
+        <div class="tch-section">
+          <h2 style="color:var(--navy);font-size:16px">Exportar global de la sección</h2>
+          <button class="btn btn-primary" id="rep-global">⬇ Descargar resumen</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("rep-back").onclick = () => App.Core.navigate("#/profe/agenda");
+    document.getElementById("rep-individual").onclick = () => {
+      const m = document.getElementById("rep-estudiante").value;
+      if (!m) { App.UI.toast("Selecciona estudiante", "warn"); return; }
+      exportIndividual(m);
+    };
+    document.getElementById("rep-global").onclick = () => exportGlobal();
+  }
+
+  function exportIndividual(matricula) {
+    const cfg = App.Core.config;
+    const est = cfg.estudiantes.find(e => e.matricula === matricula);
+    const reservas = App.Core.reservasDeEstudiante(matricula);
+    const lines = [];
+    lines.push(`== ${cfg.asignatura.nombre.toUpperCase()} — ${cfg.asignatura.periodo} ==`);
+    lines.push(`Tarea: ${cfg.asignatura.tarea}`);
+    lines.push(`Estudiante: ${est.nombre} (${est.matricula})`);
+    lines.push(`Fecha reporte: ${new Date().toLocaleString("es-DO")}`);
+    lines.push(``);
+    if (reservas.length === 0) lines.push("(sin reservas)");
+    reservas.forEach(r => appendReservaDetalle(lines, r, cfg));
+    download(`${cfg.asignatura.codigo}_Evaluacion_${matricula}_${stamp()}.txt`, lines.join("\n"));
+  }
+
+  function exportGlobal() {
+    const cfg = App.Core.config;
+    const lines = [];
+    lines.push(`== ${cfg.asignatura.nombre.toUpperCase()} — ${cfg.asignatura.periodo} ==`);
+    lines.push(`Tarea: ${cfg.asignatura.tarea}`);
+    lines.push(`Fecha reporte: ${new Date().toLocaleString("es-DO")}`);
+    lines.push(``);
+    lines.push(`MATRICULA   | ESTUDIANTE                         | TIPO                      | ESTADO      | TOTAL`);
+    lines.push(`------------|------------------------------------|---------------------------|-------------|------`);
+    cfg.estudiantes.forEach(est => {
+      const rs = App.Core.reservasDeEstudiante(est.matricula);
+      if (rs.length === 0) {
+        lines.push(pad(est.matricula, 12) + "| " + pad(est.nombre, 35) + "| " + pad("-", 26) + "| " + pad("sin reserva", 12) + "| -");
+      } else {
+        rs.forEach(r => {
+          const tipo = cfg.tiposActividad.find(t => t.id === r.tipoActividadId);
+          const total = r.evaluacion && typeof r.evaluacion.puntosTotales === "number" ? r.evaluacion.puntosTotales.toFixed(1) : "-";
+          lines.push(
+            pad(est.matricula, 12) + "| " +
+            pad(est.nombre, 35) + "| " +
+            pad(tipo ? tipo.etiqueta : r.tipoActividadId, 26) + "| " +
+            pad(r.estado, 12) + "| " + total
+          );
+        });
+      }
+    });
+    download(`${cfg.asignatura.codigo}_Resumen_${stamp()}.txt`, lines.join("\n"));
+  }
+
+  function appendReservaDetalle(lines, r, cfg) {
+    const ventana = cfg.ventanas.find(v => v.id === r.ventanaId);
+    const tipo = cfg.tiposActividad.find(t => t.id === r.tipoActividadId);
+    lines.push(`--- ${tipo ? tipo.etiqueta : r.tipoActividadId} ---`);
+    lines.push(`Horario: ${ventana ? ventana.fecha : "?"} ${r.slotInicio}`);
+    lines.push(`Estado: ${r.estado}`);
+    const ev = r.evaluacion || {};
+    const rondas = ev.rondas || [];
+    rondas.forEach((ro, i) => {
+      const comp = cfg.competencias.find(c => c.id === ro.competenciaId);
+      const preg = comp ? comp.preguntas.find(p => p.id === ro.preguntaId) : null;
+      lines.push(``);
+      lines.push(`  Ronda ${i + 1}`);
+      lines.push(`    Competencia: ${comp ? comp.nombre : ro.competenciaId}`);
+      lines.push(`    Pregunta:    ${preg ? preg.preguntaGuia : ro.preguntaId}`);
+      lines.push(`    Nota:        ${ro.puntosFinal ?? ro.puntosLive ?? "-"} / ${cfg.rubrica.puntosPorRonda}`);
+      if (ro.observacion) lines.push(`    Observación: ${ro.observacion}`);
+    });
+    if (ev.checksGlobales) {
+      const checks = cfg.rubrica.checksGlobales
+        .map(c => `${ev.checksGlobales[c.id] ? "[x]" : "[ ]"} ${c.etiqueta}`).join("  ");
+      lines.push(``);
+      lines.push(`  Cumplimiento: ${checks}`);
+    }
+    if (ev.observacionGlobal) {
+      lines.push(`  Observación general: ${ev.observacionGlobal}`);
+    }
+    if ((ev.videosURLs || []).length) {
+      lines.push(`  Videos:`);
+      ev.videosURLs.forEach(u => lines.push(`    - ${u}`));
+    }
+    lines.push(``);
+    lines.push(`  TOTAL: ${ev.puntosTotales ?? 0} / ${cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda}`);
+    lines.push(``);
+  }
+
+  function download(filename, content) {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+  }
+
+  function pad(s, n) {
+    s = String(s ?? "");
+    if (s.length >= n) return s.slice(0, n);
+    return s + " ".repeat(n - s.length);
+  }
+
+  function stamp() {
+    const d = new Date();
+    const pad2 = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}`;
+  }
+
+  return { renderPanel };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// App.Eval — evaluación live (en-sesion) + post-sesión (procesar)
+// ══════════════════════════════════════════════════════════════════
+App.Eval = (function () {
+  const debounceTimers = {};
+
+  async function renderLive(reservaId) {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const reserva = App.Core.state.reservas[reservaId];
+    if (!reserva) { App.UI.toast("Reserva no existe", "error"); App.Core.navigate("#/profe/agenda"); return; }
+
+    // Inicializar evaluación si no existe
+    if (!reserva.evaluacion) {
+      reserva.evaluacion = {
+        rondas: [],
+        checksGlobales: {},
+        observacionGlobal: "",
+        videosURLs: [],
+        puntosTotales: 0,
+      };
+    }
+    if (reserva.estado === "reservada") {
+      await App.Teacher.setEstado(reservaId, "en-sesion");
+      return renderLive(reservaId);
+    }
+
+    const est = cfg.estudiantes.find(e => e.matricula === reserva.estudianteMatricula);
+    const tipo = cfg.tiposActividad.find(t => t.id === reserva.tipoActividadId);
+    const ev = reserva.evaluacion;
+
+    document.getElementById("app").innerHTML = `
+      <div class="eval-shell">
+        <div class="eval-header">
+          <div>
+            <h1 style="font-size:22px">${App.UI.esc(est ? est.nombre : "")}</h1>
+            <p style="color:#CBD5E1;font-size:13px">${App.UI.esc(tipo ? tipo.etiqueta : "")}</p>
+          </div>
+          <div>
+            <span class="eval-countdown" id="eval-countdown">05:00</span>
+            <button class="btn btn-ghost" id="eval-back" style="margin-left:8px">← Volver</button>
+          </div>
+        </div>
+
+        <div class="eval-checks">
+          <strong style="color:var(--navy)">Cumplimiento:</strong>
+          ${cfg.rubrica.checksGlobales.map(c => `
+            <label>
+              <input type="checkbox" data-check="${c.id}" ${ev.checksGlobales[c.id] ? "checked" : ""}/>
+              ${App.UI.esc(c.etiqueta)}
+            </label>
+          `).join("")}
+        </div>
+
+        <div id="eval-rondas"></div>
+
+        <div style="background:white;color:var(--black);border-radius:14px;padding:18px">
+          <label>Observación global (opcional)</label>
+          <textarea id="eval-obs-global" class="eval-obs">${App.UI.esc(ev.observacionGlobal || "")}</textarea>
+        </div>
+
+        <div style="margin-top:16px">
+          <button class="btn btn-success" id="eval-finalizar">Finalizar sesión</button>
+        </div>
+      </div>
+    `;
+
+    renderRondasArea(reserva, cfg);
+    wireChecks(reserva);
+    wireObsGlobal(reserva);
+    startCountdown();
+
+    document.getElementById("eval-back").onclick = () => App.Core.navigate("#/profe/agenda");
+    document.getElementById("eval-finalizar").onclick = () => finalizarSesion(reservaId);
+  }
+
+  function renderRondasArea(reserva, cfg) {
+    const host = document.getElementById("eval-rondas");
+    const total = cfg.rubrica.rondasPorEstudiante;
+    const rondas = reserva.evaluacion.rondas;
+
+    let html = "";
+    for (let i = 0; i < total; i++) {
+      const prev = rondas[i - 1];
+      const locked = i > 0 && (!prev || prev.puntosLive == null);
+      const cur = rondas[i];
+      html += `<div class="eval-ronda ${locked ? "eval-ronda-locked" : ""}" data-idx="${i}">
+        <h3>Ronda ${i + 1} / ${total}</h3>
+        ${renderRondaInner(i, cur, reserva, cfg)}
+      </div>`;
+    }
+    host.innerHTML = html;
+    wireRondas(reserva, cfg);
+  }
+
+  function renderRondaInner(idx, cur, reserva, cfg) {
+    if (!cur || !cur.competenciaId) {
+      return `
+        <p style="color:var(--dgray);font-size:13px">Gira para elegir competencia (sin repetir dentro del estudiante).</p>
+        <canvas class="eval-canvas" width="300" height="300" id="eval-canvas-c-${idx}"></canvas>
+        <div style="text-align:center"><button class="btn btn-primary eval-gira-comp" data-idx="${idx}">🎰 Girar competencia</button></div>
+      `;
+    }
+    const comp = cfg.competencias.find(c => c.id === cur.competenciaId);
+    if (!cur.preguntaId) {
+      return `
+        <div class="eval-winner"><strong>Competencia:</strong> ${App.UI.esc(comp ? comp.nombre : cur.competenciaId)}</div>
+        <canvas class="eval-canvas" width="300" height="300" id="eval-canvas-p-${idx}"></canvas>
+        <div style="text-align:center"><button class="btn btn-primary eval-gira-preg" data-idx="${idx}">🎰 Girar pregunta</button></div>
+      `;
+    }
+    const preg = comp ? comp.preguntas.find(p => p.id === cur.preguntaId) : null;
+    const max = cfg.rubrica.puntosPorRonda;
+    return `
+      <div class="eval-winner"><strong>Competencia:</strong> ${App.UI.esc(comp.nombre)}</div>
+      <div class="eval-winner"><strong>Escenario:</strong> ${App.UI.esc(preg ? preg.escenario : "")}<br>
+        <strong>Pregunta:</strong> ${App.UI.esc(preg ? preg.preguntaGuia : "")}</div>
+      ${preg && preg.queBuscar ? `<div style="margin-top:8px;padding:10px 12px;background:#FEF9C3;border-left:3px solid #CA8A04;border-radius:6px;font-size:12px;color:#713F12"><strong>QUÉ BUSCAR:</strong> ${App.UI.esc(preg.queBuscar)}</div>` : ""}
+      <div class="eval-nota-display" id="eval-nota-display-${idx}">${(cur.puntosLive ?? 0).toFixed(1)} / ${max}</div>
+      <input type="range" min="0" max="${max}" step="0.5" value="${cur.puntosLive ?? 0}" data-idx="${idx}" class="eval-slider"/>
+      <label style="margin-top:10px">Observación rápida</label>
+      <textarea class="eval-obs eval-obs-ronda" data-idx="${idx}">${App.UI.esc(cur.observacion || "")}</textarea>
+    `;
+  }
+
+  function wireRondas(reserva, cfg) {
+    // Girar competencia
+    document.querySelectorAll(".eval-gira-comp").forEach(b => {
+      b.onclick = () => {
+        b.disabled = true;
+        const idx = Number(b.dataset.idx);
+        const yaGiradas = new Set(reserva.evaluacion.rondas.map(r => r.competenciaId).filter(Boolean));
+        const disponibles = cfg.competencias.filter(c => !yaGiradas.has(c.id));
+        if (disponibles.length === 0) { App.UI.toast("No quedan competencias", "warn"); return; }
+        const items = disponibles.map(c => ({ id: c.id, label: c.nombre }));
+        const canvas = document.getElementById(`eval-canvas-c-${idx}`);
+        App.Roulette.spin({
+          canvas, items,
+          onWinner: async (w) => {
+            if (!w) return;
+            await App.Core.mutate(reservas => {
+              const r = reservas[reserva.id];
+              r.evaluacion.rondas[idx] = { n: idx + 1, competenciaId: w.id, preguntaId: null, puntosLive: null, observacion: "" };
+              return reservas;
+            });
+            reserva = App.Core.state.reservas[reserva.id];
+            renderRondasArea(reserva, cfg);
+          },
+        });
+      };
+    });
+
+    // Girar pregunta
+    document.querySelectorAll(".eval-gira-preg").forEach(b => {
+      b.onclick = () => {
+        b.disabled = true;
+        const idx = Number(b.dataset.idx);
+        const ronda = reserva.evaluacion.rondas[idx];
+        const comp = cfg.competencias.find(c => c.id === ronda.competenciaId);
+        const items = comp.preguntas.map(p => ({ id: p.id, label: p.preguntaGuia.slice(0, 30) }));
+        const canvas = document.getElementById(`eval-canvas-p-${idx}`);
+        App.Roulette.spin({
+          canvas, items,
+          onWinner: async (w) => {
+            if (!w) return;
+            await App.Core.mutate(reservas => {
+              const r = reservas[reserva.id];
+              r.evaluacion.rondas[idx].preguntaId = w.id;
+              return reservas;
+            });
+            reserva = App.Core.state.reservas[reserva.id];
+            renderRondasArea(reserva, cfg);
+          },
+        });
+      };
+    });
+
+    // Slider de nota — auto-save debounce
+    document.querySelectorAll(".eval-slider").forEach(sl => {
+      sl.oninput = () => {
+        const idx = Number(sl.dataset.idx);
+        const v = Number(sl.value);
+        document.getElementById(`eval-nota-display-${idx}`).textContent = `${v.toFixed(1)} / ${cfg.rubrica.puntosPorRonda}`;
+        clearTimeout(debounceTimers[idx]);
+        debounceTimers[idx] = setTimeout(async () => {
+          await App.Core.mutate(reservas => {
+            reservas[reserva.id].evaluacion.rondas[idx].puntosLive = v;
+            return reservas;
+          });
+          reserva = App.Core.state.reservas[reserva.id];
+          // re-render si destraba la siguiente ronda y aún no está visible
+          if (idx + 1 < cfg.rubrica.rondasPorEstudiante &&
+              !reserva.evaluacion.rondas[idx + 1]) {
+            renderRondasArea(reserva, cfg);
+          }
+        }, 400);
+      };
+    });
+
+    // Observación ronda
+    document.querySelectorAll(".eval-obs-ronda").forEach(ta => {
+      ta.onblur = async () => {
+        const idx = Number(ta.dataset.idx);
+        await App.Core.mutate(reservas => {
+          reservas[reserva.id].evaluacion.rondas[idx].observacion = ta.value;
+          return reservas;
+        });
+      };
+    });
+  }
+
+  function wireChecks(reserva) {
+    document.querySelectorAll("[data-check]").forEach(cb => {
+      cb.onchange = async () => {
+        await App.Core.mutate(reservas => {
+          reservas[reserva.id].evaluacion.checksGlobales[cb.dataset.check] = cb.checked;
+          return reservas;
+        });
+      };
+    });
+  }
+
+  function wireObsGlobal(reserva) {
+    const ta = document.getElementById("eval-obs-global");
+    ta.onblur = async () => {
+      await App.Core.mutate(reservas => {
+        reservas[reserva.id].evaluacion.observacionGlobal = ta.value;
+        return reservas;
+      });
+    };
+  }
+
+  function startCountdown() {
+    let remain = 5 * 60;
+    const el = document.getElementById("eval-countdown");
+    if (!el) return;
+    clearInterval(startCountdown._iv);
+    startCountdown._iv = setInterval(() => {
+      remain = Math.max(0, remain - 1);
+      const m = String(Math.floor(remain / 60)).padStart(2, "0");
+      const s = String(remain % 60).padStart(2, "0");
+      const node = document.getElementById("eval-countdown");
+      if (!node) { clearInterval(startCountdown._iv); return; }
+      node.textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  async function finalizarSesion(reservaId) {
+    const ok = await App.UI.confirm("Finalizar sesión? (queda como completada, se puede procesar después)");
+    if (!ok) return;
+    const cfg = App.Core.config;
+    await App.Core.mutate(reservas => {
+      const r = reservas[reservaId];
+      const totalMax = cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda;
+      r.evaluacion.puntosTotales = (r.evaluacion.rondas || [])
+        .reduce((acc, ro) => acc + (ro.puntosLive || 0), 0);
+      r.evaluacion.puntosTotales = Math.min(r.evaluacion.puntosTotales, totalMax);
+      r.estado = "completada";
+      return reservas;
+    });
+    App.UI.toast("Sesión finalizada", "success");
+    App.Core.navigate("#/profe/agenda");
+  }
+
+  async function renderProceso(reservaId) {
+    await App.Core.fetchState();
+    const cfg = App.Core.config;
+    const reserva = App.Core.state.reservas[reservaId];
+    if (!reserva || !reserva.evaluacion) {
+      App.UI.toast("Reserva sin evaluación previa", "error");
+      App.Core.navigate("#/profe/agenda");
+      return;
+    }
+    const est = cfg.estudiantes.find(e => e.matricula === reserva.estudianteMatricula);
+    const ev = reserva.evaluacion;
+    const totalMax = cfg.rubrica.rondasPorEstudiante * cfg.rubrica.puntosPorRonda;
+
+    document.getElementById("app").innerHTML = `
+      <div class="eval-shell">
+        <div class="eval-header">
+          <div>
+            <h1 style="font-size:22px">Procesar evaluación</h1>
+            <p style="color:#CBD5E1;font-size:13px">${App.UI.esc(est ? est.nombre : "")}</p>
+          </div>
+          <button class="btn btn-ghost" id="proc-back">← Volver</button>
+        </div>
+
+        <div id="proc-rondas"></div>
+
+        <div style="background:white;color:var(--black);border-radius:14px;padding:18px;margin-bottom:12px">
+          <label>Videos (URLs, 1 por línea)</label>
+          <textarea id="proc-videos" class="eval-obs" style="min-height:50px">${App.UI.esc((ev.videosURLs || []).join("\n"))}</textarea>
+
+          <label style="margin-top:10px">Observación global</label>
+          <textarea id="proc-obs-global" class="eval-obs">${App.UI.esc(ev.observacionGlobal || "")}</textarea>
+
+          <p style="margin-top:12px"><strong>Nota total:</strong> <span id="proc-total">${(ev.puntosTotales || 0).toFixed(1)}</span> / ${totalMax}</p>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" id="proc-guardar">Guardar (evaluada)</button>
+          <button class="btn btn-success" id="proc-publicar">Guardar y publicar</button>
+        </div>
+      </div>
+    `;
+
+    renderProcesoRondas(reserva, cfg);
+
+    document.getElementById("proc-back").onclick = () => App.Core.navigate("#/profe/agenda");
+    document.getElementById("proc-guardar").onclick = () => guardarProceso(reservaId, "evaluada");
+    document.getElementById("proc-publicar").onclick = () => guardarProceso(reservaId, "publicada");
+
+    document.getElementById("proc-videos").onblur = async () => {
+      const urls = document.getElementById("proc-videos").value
+        .split("\n").map(s => s.trim()).filter(Boolean);
+      await App.Core.mutate(r => { r[reservaId].evaluacion.videosURLs = urls; return r; });
+    };
+    document.getElementById("proc-obs-global").onblur = async () => {
+      const v = document.getElementById("proc-obs-global").value;
+      await App.Core.mutate(r => { r[reservaId].evaluacion.observacionGlobal = v; return r; });
+    };
+  }
+
+  function renderProcesoRondas(reserva, cfg) {
+    const host = document.getElementById("proc-rondas");
+    host.innerHTML = reserva.evaluacion.rondas.map((r, i) => {
+      const comp = cfg.competencias.find(c => c.id === r.competenciaId);
+      const preg = comp ? comp.preguntas.find(p => p.id === r.preguntaId) : null;
+      const max = cfg.rubrica.puntosPorRonda;
+      return `
+        <div class="eval-ronda">
+          <h3>Ronda ${i + 1} · ${App.UI.esc(comp ? comp.nombre : r.competenciaId)}</h3>
+          <p style="font-size:13px;color:var(--dgray);margin-bottom:6px">${App.UI.esc(preg ? preg.preguntaGuia : "")}</p>
+
+          <label>Transcripción (pegar)</label>
+          <textarea class="eval-obs proc-transcripcion" data-idx="${i}" style="min-height:90px">${App.UI.esc(r.transcripcion || "")}</textarea>
+
+          <div style="margin-top:8px"><button class="btn btn-ghost proc-copy" data-idx="${i}" style="padding:8px 14px;font-size:13px">📋 Copiar prompt para IA</button></div>
+
+          <label style="margin-top:12px">Observación final (pegar respuesta IA editada)</label>
+          <textarea class="eval-obs proc-obs" data-idx="${i}" style="min-height:70px">${App.UI.esc(r.observacion || "")}</textarea>
+
+          <label style="margin-top:10px">Nota final</label>
+          <input type="number" min="0" max="${max}" step="0.5" value="${r.puntosFinal ?? r.puntosLive ?? 0}" class="proc-nota" data-idx="${i}"/>
+        </div>
+      `;
+    }).join("");
+
+    host.querySelectorAll(".proc-transcripcion").forEach(ta => {
+      ta.onblur = async () => {
+        const idx = Number(ta.dataset.idx);
+        await App.Core.mutate(res => {
+          res[reserva.id].evaluacion.rondas[idx].transcripcion = ta.value;
+          return res;
+        });
+      };
+    });
+
+    host.querySelectorAll(".proc-obs").forEach(ta => {
+      ta.onblur = async () => {
+        const idx = Number(ta.dataset.idx);
+        await App.Core.mutate(res => {
+          res[reserva.id].evaluacion.rondas[idx].observacion = ta.value;
+          return res;
+        });
+      };
+    });
+
+    host.querySelectorAll(".proc-nota").forEach(inp => {
+      inp.onchange = async () => {
+        const idx = Number(inp.dataset.idx);
+        const v = Number(inp.value);
+        const max = cfg.rubrica.puntosPorRonda;
+        const clamped = Math.max(0, Math.min(max, v));
+        inp.value = clamped;
+        await App.Core.mutate(res => {
+          res[reserva.id].evaluacion.rondas[idx].puntosFinal = clamped;
+          return res;
+        });
+        await actualizarTotal(reserva.id, cfg);
+      };
+    });
+
+    host.querySelectorAll(".proc-copy").forEach(b => {
+      b.onclick = async () => {
+        const idx = Number(b.dataset.idx);
+        const transcripcionEl = host.querySelector(`.proc-transcripcion[data-idx="${idx}"]`);
+        const ronda = reserva.evaluacion.rondas[idx];
+        const rondaLive = {
+          ...ronda,
+          transcripcion: transcripcionEl ? transcripcionEl.value : ronda.transcripcion,
+        };
+        const prompt = App.Prompt.build(rondaLive, reserva, cfg);
+        const ok = await App.Prompt.copyToClipboard(prompt);
+        App.UI.toast(ok ? "Prompt copiado. Pegar en ChatGPT/Claude" : "No se pudo copiar — selecciona y copia manual", ok ? "success" : "warn");
+      };
+    });
+  }
+
+  async function actualizarTotal(id, cfg) {
+    await App.Core.mutate(r => {
+      const rondas = r[id].evaluacion.rondas || [];
+      r[id].evaluacion.puntosTotales = rondas
+        .reduce((acc, ro) => acc + (ro.puntosFinal ?? ro.puntosLive ?? 0), 0);
+      return r;
+    });
+    const disp = document.getElementById("proc-total");
+    if (disp) disp.textContent = (App.Core.state.reservas[id].evaluacion.puntosTotales || 0).toFixed(1);
+  }
+
+  async function guardarProceso(id, destino) {
+    await App.Core.mutate(r => {
+      r[id].estado = destino;
+      if (destino === "publicada") r[id].evaluacion.publicadaEn = new Date().toISOString();
+      return r;
+    });
+    App.UI.toast(destino === "publicada" ? "Publicado" : "Guardado", "success");
+    App.Core.navigate("#/profe/agenda");
+  }
+
+  return { renderLive, renderProceso };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// Boot
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", async () => {
+  const session = App.Auth.loadSession();
+  if (session && CONFIGURACIONES.some(c => c.id === session.configId)) {
+    try {
+      App.Core.setConfig(session.configId);
+      await App.Core.fetchState();
+      const defaultHash = session.rol === "profe" ? "#/profe/agenda" : "#/estudiante/agenda";
+      if (!window.location.hash || window.location.hash === "#/") {
+        App.Core.navigate(defaultHash);
+      }
+    } catch (e) {
+      App.Auth.clearSession();
+      App.Auth.render();
+      return;
+    }
+  }
+  App.Core.onRoute(route);
+  route(window.location.hash || "#/");
+});
+
+function route(hash) {
+  const session = App.Auth.loadSession();
+  if (!session) {
+    App.Auth.render();
+    return;
+  }
+  if (hash === "#/" || !hash) {
+    App.Core.navigate(session.rol === "profe" ? "#/profe/agenda" : "#/estudiante/agenda");
+    return;
+  }
+  if (session.rol === "estudiante") {
+    if (hash === "#/estudiante/agenda") return App.Student.renderHome();
+    const vm = hash.match(/^#\/estudiante\/reservar\/([^/]+)\/([^/]+)$/);
+    if (vm) return App.Student.renderReservar(decodeURIComponent(vm[1]), decodeURIComponent(vm[2]));
+    const rm = hash.match(/^#\/estudiante\/resultado\/([^/]+)$/);
+    if (rm) return App.Student.renderResultado(decodeURIComponent(rm[1]));
+  }
+  if (session.rol === "profe") {
+    if (hash === "#/profe/agenda") return App.Teacher.renderAgenda();
+    const em = hash.match(/^#\/profe\/eval\/([^/]+)$/);
+    if (em) return App.Eval.renderLive(decodeURIComponent(em[1]));
+    const pm = hash.match(/^#\/profe\/proceso\/([^/]+)$/);
+    if (pm) return App.Eval.renderProceso(decodeURIComponent(pm[1]));
+    if (hash === "#/profe/reportes") return App.Reports.renderPanel();
+  }
+  document.getElementById("app").innerHTML =
+    `<div style="padding:40px;color:white">Ruta pendiente: ${App.UI.esc(hash)}</div>`;
+}
+</script>
+
+</body>
+</html>

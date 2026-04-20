@@ -1,0 +1,7 @@
+name = "agenda-evaluaciones"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "AGENDA_EVAL_STATE"
+id = "79692a43270042d5baf881c90bdceaf8"
