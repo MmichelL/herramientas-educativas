@@ -1,0 +1,6 @@
+name = "entrega-trabajo-final"
+compatibility_date = "2024-12-01"
+
+[[kv_namespaces]]
+binding = "FINAL_SUBMISSIONS"
+id = "da12c5ee0b37404593d50613388fb105"
