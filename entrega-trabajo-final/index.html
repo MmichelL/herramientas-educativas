@@ -477,6 +477,13 @@ async function handleSubmit() {
       body:    JSON.stringify(body),
     });
     const data = await res.json();
+    if (res.status === 403) {
+      submitErr.textContent = "La entrega ya está cerrada.";
+      submitErr.classList.add("on");
+      btn.disabled = false;
+      btn.textContent = state.hasExisting ? "Actualizar Entrega" : "Enviar Entrega";
+      return;
+    }
     if (!res.ok) throw new Error(data.error || "Error al enviar");
 
     showSuccess(state.selectedFile.name, videoUrl, data.submittedAt);
