@@ -970,6 +970,96 @@
       }
     }
 
+    async function renderAdminPanel() {
+      const { data: phaseData } = await api("/api/phase");
+      const currentPhase = phaseData.phase || "apertura";
+
+      const [{ data: aperAgg }, { data: cierAgg }] = await Promise.all([
+        api("/api/aggregate?fase=apertura"),
+        api("/api/aggregate?fase=cierre"),
+      ]);
+
+      app().innerHTML = `
+        <div class="header">
+          <h1>Panel facilitador</h1>
+          <div class="meta">Encuesta diagnóstica IA · UNAD</div>
+        </div>
+        <div class="container">
+          <div class="card">
+            <h2>Fase activa</h2>
+            <p>Estado actual: <strong>${currentPhase.toUpperCase()}</strong></p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button onclick="changePhase('apertura')" ${currentPhase === "apertura" ? "disabled" : ""}>Apertura</button>
+              <button onclick="changePhase('cierre')" ${currentPhase === "cierre" ? "disabled" : ""}>Cierre</button>
+              <button class="btn-danger" onclick="changePhase('cerrada')" ${currentPhase === "cerrada" ? "disabled" : ""}>Cerrar encuesta</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Datos actuales</h2>
+            <ul>
+              <li>Apertura: <strong>${aperAgg.n}</strong> respuestas${aperAgg.lastTs ? ` · última ${timeAgo(aperAgg.lastTs)}` : ""}</li>
+              <li>Cierre: <strong>${cierAgg.n}</strong> respuestas${cierAgg.lastTs ? ` · última ${timeAgo(cierAgg.lastTs)}` : ""}</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h2>🧪 Sembrar respuestas demo</h2>
+            <p class="hint">Genera respuestas aleatorias con distribuciones realistas. Útil para verificar el dashboard antes del taller. Recuerda hacer wipe antes del taller real.</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <label>Cantidad: <input type="number" id="seed-n" value="80" min="1" max="200" style="width:80px; padding:6px;"></label>
+              <button onclick="seedDemo('apertura')">Sembrar apertura</button>
+              <button onclick="seedDemo('cierre')">Sembrar cierre</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>🗑️ Wipe data</h2>
+            <p class="hint">Doble confirmación + escribir BORRAR. Sin recuperación.</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn-danger" onclick="wipeData('apertura')">Wipe apertura</button>
+              <button class="btn-danger" onclick="wipeData('cierre')">Wipe cierre</button>
+              <button class="btn-danger" onclick="wipeData('all')">⚠ Wipe TODO + reset fase</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>⬇ Export</h2>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn-secondary" onclick="exportData('apertura', 'json')">JSON apertura</button>
+              <button class="btn-secondary" onclick="exportData('cierre', 'json')">JSON cierre</button>
+              <button class="btn-secondary" onclick="exportData('apertura', 'csv')">CSV apertura</button>
+              <button class="btn-secondary" onclick="exportData('cierre', 'csv')">CSV cierre</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <button class="btn-secondary" onclick="logoutAdmin()">Cerrar sesión admin</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function changePhase(phase) {
+      if (!confirm(`¿Cambiar fase activa a "${phase}"?`)) return;
+      const { status, data } = await api("/api/phase", {
+        method: "PUT",
+        body: JSON.stringify({ phase }),
+        requireAdmin: true,
+      });
+      if (status === 200) {
+        toast(`Fase cambiada a ${phase}`, "success");
+        renderAdminPanel();
+      } else {
+        toast(`Error: ${data.error || "intenta de nuevo"}`, "error");
+      }
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem("encuesta_ia_admin_token");
+      navigate("landing");
+    }
+
     // ══════════════════════════════════════════════════════════════════
     // Routes (filled in by subsequent tasks)
     // ══════════════════════════════════════════════════════════════════
@@ -1137,8 +1227,44 @@
 
         startDashboardPolling(fase, showBenchmark, activeFilters);
       },
-      admin() {
-        app().innerHTML = `<div class="container"><h1>Admin</h1><p>Pendiente — Task 14.</p></div>`;
+      admin(params) {
+        const token = sessionStorage.getItem("encuesta_ia_admin_token");
+        if (!token) {
+          app().innerHTML = `
+            <div class="header"><h1>Acceso facilitador</h1></div>
+            <div class="container">
+              <div class="card">
+                <h2>Ingresa la matrícula del facilitador</h2>
+                <form id="auth-form">
+                  <div class="field">
+                    <input type="password" id="auth-token" placeholder="Matrícula" style="width:100%; padding:12px; font-size:1rem; border:2px solid #d1d5db; border-radius:8px;" autocomplete="off" />
+                  </div>
+                  <button type="submit">Ingresar</button>
+                </form>
+              </div>
+            </div>`;
+          $("#auth-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const v = $("#auth-token").value.trim();
+            sessionStorage.setItem("encuesta_ia_admin_token", v);
+            // Verify by trying to PUT phase to current value
+            const { data: phaseData } = await api("/api/phase");
+            const { status } = await api("/api/phase", {
+              method: "PUT",
+              body: JSON.stringify({ phase: phaseData.phase || "apertura" }),
+              requireAdmin: true,
+            });
+            if (status === 200) {
+              render(); // re-render to show admin
+            } else {
+              sessionStorage.removeItem("encuesta_ia_admin_token");
+              toast("Matrícula incorrecta", "error");
+            }
+          });
+          return;
+        }
+
+        renderAdminPanel();
       },
     };
   </script>
