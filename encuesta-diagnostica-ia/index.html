@@ -410,6 +410,177 @@
     window.addEventListener("DOMContentLoaded", render);
 
     // ══════════════════════════════════════════════════════════════════
+    // Form rendering
+    // ══════════════════════════════════════════════════════════════════
+    function renderField(q, value) {
+      const id = `f_${q.code}`;
+      const hint = q.hint ? `<div class="hint">${escapeHtml(q.hint)}</div>` : "";
+
+      if (q.type === "likert5") {
+        const labels = ["Muy mal", "Mal", "Regular", "Bien", "Excelente"];
+        return `
+          <div class="field" data-code="${q.code}" data-scope="${q.scope}" data-type="likert5">
+            <label>${escapeHtml(q.label)}</label>
+            ${hint}
+            <div class="likert-row">
+              ${[1,2,3,4,5].map(n => `
+                <label class="option ${value === n ? "selected" : ""}">
+                  <input type="radio" name="${id}" value="${n}" ${value === n ? "checked" : ""} hidden>
+                  <div>
+                    <div class="num">${n}</div>
+                    <div class="label">${labels[n-1]}</div>
+                  </div>
+                </label>`).join("")}
+            </div>
+          </div>`;
+      }
+
+      if (q.type === "single") {
+        return `
+          <div class="field" data-code="${q.code}" data-scope="${q.scope}" data-type="single">
+            <label>${escapeHtml(q.label)}</label>
+            ${hint}
+            <div class="options">
+              ${q.options.map(o => `
+                <label class="option ${value === o.id ? "selected" : ""}">
+                  <input type="radio" name="${id}" value="${o.id}" ${value === o.id ? "checked" : ""}>
+                  <span>${escapeHtml(o.label)}</span>
+                </label>`).join("")}
+            </div>
+          </div>`;
+      }
+
+      if (q.type === "multi") {
+        const set = new Set(value || []);
+        return `
+          <div class="field" data-code="${q.code}" data-scope="${q.scope}" data-type="multi">
+            <label>${escapeHtml(q.label)}</label>
+            ${hint}
+            <div class="options">
+              ${q.options.map(o => `
+                <label class="option ${set.has(o.id) ? "selected" : ""}">
+                  <input type="checkbox" name="${id}" value="${o.id}" ${set.has(o.id) ? "checked" : ""}>
+                  <span>${escapeHtml(o.label)}</span>
+                </label>`).join("")}
+            </div>
+          </div>`;
+      }
+
+      return "";
+    }
+
+    function bindFieldInteractions(root) {
+      // Visual selected state on radios/checkboxes
+      root.querySelectorAll(".option input").forEach((input) => {
+        input.addEventListener("change", () => {
+          const field = input.closest(".field");
+          if (input.type === "radio") {
+            field.querySelectorAll(".option").forEach((o) => o.classList.remove("selected"));
+            input.closest(".option").classList.add("selected");
+          } else {
+            input.closest(".option").classList.toggle("selected", input.checked);
+          }
+        });
+      });
+    }
+
+    function readForm(preguntas, root) {
+      const data = { demograficas: {}, respuestas: {} };
+      const errors = [];
+
+      for (const q of preguntas) {
+        const field = root.querySelector(`.field[data-code="${q.code}"]`);
+        if (!field) continue;
+        let val;
+
+        if (q.type === "likert5" || q.type === "single") {
+          const checked = field.querySelector(`input:checked`);
+          val = checked ? checked.value : null;
+          if (q.type === "likert5" && val !== null) val = Number(val);
+        } else if (q.type === "multi") {
+          val = Array.from(field.querySelectorAll(`input:checked`)).map((i) => i.value);
+        }
+
+        if (val === null || (Array.isArray(val) && val.length === 0)) {
+          errors.push(q.label);
+          continue;
+        }
+
+        data[q.scope][q.code] = val;
+      }
+
+      return { data, errors };
+    }
+
+    function renderFormPage(opts) {
+      const { title, subtitle, preguntas, fase } = opts;
+      const sections = {};
+      for (const q of preguntas) {
+        sections[q.section] = sections[q.section] || [];
+        sections[q.section].push(q);
+      }
+
+      const html = `
+        <div class="header">
+          <h1>${escapeHtml(title)}</h1>
+          <div class="meta">${escapeHtml(subtitle)}</div>
+        </div>
+        <div class="container">
+          <p>Tus respuestas son <strong>anónimas</strong>. Tiempo estimado: ${fase === "apertura" ? "4–5" : "1–2"} minutos.</p>
+          <form id="survey-form" novalidate>
+            ${Object.entries(sections).map(([sec, qs]) => `
+              <div class="card">
+                <h2>${escapeHtml(sec)}</h2>
+                ${qs.map(q => renderField(q)).join("")}
+              </div>
+            `).join("")}
+            <button type="submit" id="submit-btn">Enviar respuesta</button>
+          </form>
+        </div>
+      `;
+      app().innerHTML = html;
+      bindFieldInteractions(app());
+
+      $("#survey-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = $("#submit-btn");
+        btn.disabled = true;
+        btn.textContent = "Enviando…";
+
+        const { data, errors } = readForm(preguntas, app());
+        if (errors.length) {
+          toast(`Faltan ${errors.length} pregunta(s) por responder`, "error");
+          btn.disabled = false;
+          btn.textContent = "Enviar respuesta";
+          // Scroll to first incomplete
+          const firstIncomplete = preguntas.find((q) => errors.includes(q.label));
+          if (firstIncomplete) {
+            const el = app().querySelector(`.field[data-code="${firstIncomplete.code}"]`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+          return;
+        }
+
+        const respId = uuid();
+        const payload = { fase, respId, demograficas: data.demograficas, respuestas: data.respuestas };
+        const { status, data: resp } = await api("/api/responses", { method: "POST", body: JSON.stringify(payload) });
+
+        if (status === 201) {
+          localStorage.setItem(`encuesta_ia_resp_${fase}`, respId);
+          navigate("gracias", { fase });
+        } else if (status === 403) {
+          toast("La encuesta está cerrada.", "error", 5000);
+          btn.disabled = false;
+          btn.textContent = "Enviar respuesta";
+        } else {
+          toast(`Error: ${resp.error || "intenta de nuevo"}`, "error", 5000);
+          btn.disabled = false;
+          btn.textContent = "Enviar respuesta";
+        }
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     // Routes (filled in by subsequent tasks)
     // ══════════════════════════════════════════════════════════════════
     const ROUTES = {
@@ -432,14 +603,57 @@
           </div>
         `;
       },
-      apertura() {
-        app().innerHTML = `<div class="container"><h1>Apertura</h1><p>Pendiente — Task 9.</p></div>`;
+      apertura(params) {
+        // Anti-duplicado
+        const existing = localStorage.getItem("encuesta_ia_resp_apertura");
+        if (existing && !params.force) {
+          app().innerHTML = `
+            <div class="header"><h1>Apertura</h1></div>
+            <div class="container">
+              <div class="card">
+                <h2>Ya enviaste tu respuesta</h2>
+                <p>Detectamos que ya respondiste la encuesta de apertura desde este dispositivo. Si necesitas corregir, contacta al facilitador.</p>
+                <a class="btn" href="#dashboard">Ver dashboard</a>
+                <button class="btn-secondary" style="margin-left: 8px;" onclick="navigate('apertura', {force: '1'})">Re-enviar de todos modos</button>
+              </div>
+            </div>`;
+          return;
+        }
+
+        // Check phase
+        api("/api/phase").then(({ data }) => {
+          if (data.phase === "cerrada") {
+            app().innerHTML = `
+              <div class="header"><h1>Apertura</h1></div>
+              <div class="container">
+                <div class="card"><h2>La encuesta está cerrada</h2><p>Gracias por participar.</p></div>
+              </div>`;
+            return;
+          }
+          renderFormPage({
+            title: "Encuesta apertura",
+            subtitle: "Capacitación IA · UNAD · sesión 1",
+            preguntas: PREGUNTAS_APERTURA,
+            fase: "apertura",
+          });
+        });
       },
       cierre() {
         app().innerHTML = `<div class="container"><h1>Cierre</h1><p>Pendiente — Task 10.</p></div>`;
       },
-      gracias() {
-        app().innerHTML = `<div class="container"><h1>¡Gracias!</h1><p>Tu respuesta fue registrada. Espera la proyección del facilitador.</p></div>`;
+      gracias(params) {
+        const isApertura = params.fase === "apertura";
+        app().innerHTML = `
+          <div class="header"><h1>¡Gracias!</h1></div>
+          <div class="container">
+            <div class="card">
+              <h2>Tu respuesta fue registrada</h2>
+              <p>${isApertura
+                ? "Espera la proyección del facilitador para ver los resultados del grupo."
+                : "Vamos a comparar estas respuestas con las del inicio."}</p>
+              <a class="btn btn-secondary" href="#">Volver al inicio</a>
+            </div>
+          </div>`;
       },
       dashboard() {
         app().innerHTML = `<div class="container-wide"><h1>Dashboard</h1><p>Pendiente — Task 11.</p></div>`;
