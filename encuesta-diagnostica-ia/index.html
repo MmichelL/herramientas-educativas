@@ -638,8 +638,38 @@
           });
         });
       },
-      cierre() {
-        app().innerHTML = `<div class="container"><h1>Cierre</h1><p>Pendiente — Task 10.</p></div>`;
+      cierre(params) {
+        const existing = localStorage.getItem("encuesta_ia_resp_cierre");
+        if (existing && !params.force) {
+          app().innerHTML = `
+            <div class="header"><h1>Cierre</h1></div>
+            <div class="container">
+              <div class="card">
+                <h2>Ya enviaste tu respuesta</h2>
+                <p>Detectamos que ya respondiste la encuesta de cierre desde este dispositivo.</p>
+                <a class="btn" href="#dashboard">Ver dashboard</a>
+                <button class="btn-secondary" style="margin-left: 8px;" onclick="navigate('cierre', {force: '1'})">Re-enviar de todos modos</button>
+              </div>
+            </div>`;
+          return;
+        }
+
+        api("/api/phase").then(({ data }) => {
+          if (data.phase === "cerrada") {
+            app().innerHTML = `
+              <div class="header"><h1>Cierre</h1></div>
+              <div class="container">
+                <div class="card"><h2>La encuesta está cerrada</h2><p>Gracias por participar.</p></div>
+              </div>`;
+            return;
+          }
+          renderFormPage({
+            title: "Encuesta cierre",
+            subtitle: "Capacitación IA · UNAD · sesión 2",
+            preguntas: PREGUNTAS_CIERRE,
+            fase: "cierre",
+          });
+        });
       },
       gracias(params) {
         const isApertura = params.fase === "apertura";
