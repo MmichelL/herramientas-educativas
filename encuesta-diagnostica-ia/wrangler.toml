@@ -9,4 +9,4 @@ pages_build_output_dir = "."
 # desde el dashboard de Cloudflare Pages → Settings → Functions → KV bindings.
 [[kv_namespaces]]
 binding = "ENCUESTA_IA_STATE"
-id = "0000000000000000000000000000000a"
+id = "4e3157d60bfb4a97bdbcc80b83dc1091"
