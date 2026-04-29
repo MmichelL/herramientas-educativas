@@ -1,0 +1,12 @@
+name = "encuesta-diagnostica-ia"
+compatibility_date = "2026-04-01"
+pages_build_output_dir = "."
+
+# KV binding. Para local dev, wrangler crea un KV efímero automáticamente.
+# Para deploy de producción, crear el namespace con:
+#   wrangler kv namespace create ENCUESTA_IA_STATE
+# y reemplazar el id placeholder de abajo con el real, o configurarlo
+# desde el dashboard de Cloudflare Pages → Settings → Functions → KV bindings.
+[[kv_namespaces]]
+binding = "ENCUESTA_IA_STATE"
+id = "0000000000000000000000000000000a"
