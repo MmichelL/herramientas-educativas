@@ -724,10 +724,11 @@
       });
     }
 
-    function startDashboardPolling(fase, showBenchmark) {
+    function startDashboardPolling(fase, showBenchmark, activeFilters = {}) {
       stopDashboardPolling();
+      const qs = new URLSearchParams({ fase, ...activeFilters }).toString();
       const tick = async () => {
-        const { status, data } = await api(`/api/aggregate?fase=${fase}`);
+        const { status, data } = await api(`/api/aggregate?${qs}`);
         if (status !== 200) return;
         renderDashboardData(fase, data, showBenchmark);
       };
@@ -757,17 +758,37 @@
       return `hace ${Math.floor(m / 60)}h`;
     }
 
+    function renderFilterDropdown(code, label, options, activeFilters) {
+      const current = activeFilters[code] || "";
+      return `
+        <select class="filter-dd" data-code="${code}" style="min-height:36px; padding: 4px 8px; font-size: 0.9rem;">
+          <option value="">${escapeHtml(label)}: todos</option>
+          ${options.map(o => `<option value="${escapeHtml(o.id)}" ${current === o.id ? "selected" : ""}>${escapeHtml(o.label)}</option>`).join("")}
+        </select>
+      `;
+    }
+
     function renderDashboardData(fase, data, showBenchmark) {
       const meta = $("#dashboard-meta");
       if (meta) {
-        meta.textContent = `n=${data.n} respuestas · última ${timeAgo(data.lastTs)}`;
+        const filterCount = Object.keys(data.filters || {}).length;
+        meta.textContent = `n=${data.n}${filterCount ? ` filtrado · ${data.nTotal} total` : ""} · última ${timeAgo(data.lastTs)}`;
       }
 
       const sections = $("#dashboard-sections");
       if (!sections) return;
 
       if (data.n === 0) {
-        sections.innerHTML = `<div class="card"><h2>Esperando respuestas…</h2><p>El dashboard se actualiza solo cuando lleguen respuestas.</p></div>`;
+        sections.innerHTML = `<div class="card"><h2>Sin datos para mostrar</h2><p>Cambia los filtros o espera más respuestas.</p></div>`;
+        sections.dataset.builtFor = "";
+        destroyAllCharts();
+        return;
+      }
+
+      if (data.n < 5 && Object.keys(data.filters || {}).length > 0) {
+        sections.innerHTML = `<div class="card"><h2>n insuficiente (n=${data.n})</h2><p>Para evitar gráficas engañosas con celdas pequeñas, no se muestra el detalle cuando hay menos de 5 respuestas en la combinación de filtros activos. Quita uno o más filtros para ver más datos.</p></div>`;
+        sections.dataset.builtFor = "";
+        destroyAllCharts();
         return;
       }
 
@@ -779,8 +800,9 @@
         grouped[q.section].push(q);
       }
 
-      // Build skeleton if not already present
-      if (!sections.dataset.builtFor || sections.dataset.builtFor !== fase) {
+      const builtFor = `${fase}::${JSON.stringify(data.filters || {})}`;
+      if (sections.dataset.builtFor !== builtFor) {
+        destroyAllCharts();
         sections.innerHTML = "";
         for (const [secName, qs] of Object.entries(grouped)) {
           const card = document.createElement("div");
@@ -800,10 +822,9 @@
           }
           sections.appendChild(card);
         }
-        sections.dataset.builtFor = fase;
+        sections.dataset.builtFor = builtFor;
       }
 
-      // Update charts
       for (const q of preguntas) {
         if (q.scope === "demograficas") continue;
         if (q.type === "likert5") {
@@ -930,6 +951,10 @@
       dashboard(params) {
         const fase = params.fase || "apertura";
         const showBenchmark = params.benchmark === "1";
+        const activeFilters = {};
+        for (const k of ["facultad", "coordinacion", "tiempo_docencia", "sexo", "postura"]) {
+          if (params[k]) activeFilters[k] = params[k];
+        }
 
         app().innerHTML = `
           <div class="header">
@@ -938,14 +963,28 @@
           </div>
           <div class="container-wide">
             <div class="card">
-              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;">
                 <strong>Fase:</strong>
                 <a class="btn ${fase === "apertura" ? "" : "btn-secondary"}" href="#dashboard?fase=apertura">Apertura</a>
                 <a class="btn ${fase === "cierre" ? "" : "btn-secondary"}" href="#dashboard?fase=cierre">Cierre</a>
                 <span style="flex: 1"></span>
-                <button class="${showBenchmark ? "btn btn-success" : "btn-secondary"}" onclick="navigate('dashboard', {fase: '${fase}', benchmark: '${showBenchmark ? "" : "1"}'})">
+                <button class="${showBenchmark ? "btn btn-success" : "btn-secondary"}" onclick="navigate('dashboard', Object.assign(${JSON.stringify({fase, ...activeFilters})}, {benchmark: '${showBenchmark ? "" : "1"}'}))">
                   ${showBenchmark ? "✓ Mostrando evidencia" : "Mostrar evidencia"}
                 </button>
+              </div>
+              <div id="filter-bar" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <strong>Filtros:</strong>
+                ${renderFilterDropdown("facultad", "Facultad", FACULTADES, activeFilters)}
+                ${renderFilterDropdown("tiempo_docencia", "Tiempo docencia", [
+                  {id:"<5",label:"<5"},{id:"5-14",label:"5-14"},{id:"15-24",label:"15-24"},{id:"25+",label:"25+"}
+                ], activeFilters)}
+                ${renderFilterDropdown("sexo", "Sexo", [
+                  {id:"F",label:"Femenino"},{id:"M",label:"Masculino"},{id:"prefiero-no-decir",label:"PND"}
+                ], activeFilters)}
+                ${fase === "apertura" ? renderFilterDropdown("postura", "Postura", [
+                  {id:"entusiasmo",label:"Entusiasmo"},{id:"curiosidad-cautelosa",label:"Curiosidad"},{id:"neutral",label:"Neutral"},{id:"preocupacion",label:"Preocupación"},{id:"rechazo",label:"Rechazo"}
+                ], activeFilters) : ""}
+                ${Object.keys(activeFilters).length > 0 ? `<button class="btn-secondary" onclick="navigate('dashboard', {fase: '${fase}'${showBenchmark ? ", benchmark: '1'" : ""}})">Limpiar filtros</button>` : ""}
               </div>
             </div>
 
@@ -953,7 +992,17 @@
           </div>
         `;
 
-        startDashboardPolling(fase, showBenchmark);
+        // Bind filter dropdowns
+        document.querySelectorAll(".filter-dd").forEach((sel) => {
+          sel.addEventListener("change", () => {
+            const newFilters = { ...activeFilters };
+            if (sel.value) newFilters[sel.dataset.code] = sel.value;
+            else delete newFilters[sel.dataset.code];
+            navigate("dashboard", { fase, ...newFilters, ...(showBenchmark ? { benchmark: "1" } : {}) });
+          });
+        });
+
+        startDashboardPolling(fase, showBenchmark, activeFilters);
       },
       admin() {
         app().innerHTML = `<div class="container"><h1>Admin</h1><p>Pendiente — Task 14.</p></div>`;
