@@ -3,279 +3,351 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1F1A14" />
+  <meta name="theme-color" content="#028A5A" />
   <title>Encuesta diagnóstica IA — UNAD</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ══════════════════════════════════════════════════════════════════
        Encuesta diagnóstica IA — UNAD
-       Aesthetic: editorial académico cálido. Paleta papel/tinta/oxblood.
+       Identidad visual: unad.edu.do
+       Verde institucional · Inter · botones pill · cards rounded white.
        ══════════════════════════════════════════════════════════════════ */
     :root {
-      --cream:   #FAF6EE;   /* fondo página */
-      --paper:   #FFFCF6;   /* fondo card */
-      --bone:    #EFE7D5;   /* fondo opción */
-      --blush:   #E6D9BD;   /* hover opción */
-      --rule:    #D9CDB4;   /* hairline */
-      --rule-soft:#E8DDC5;  /* subdivisión */
-      --ink:     #1F1A14;   /* texto cuerpo */
-      --ink-soft:#564B3D;   /* texto secundario */
-      --ink-mute:#867968;   /* hint */
-      --oxblood: #7A2424;   /* primario / acento */
-      --oxblood-deep:#5A1717;
-      --gold:    #B6863E;   /* highlights */
-      --sage:    #5F6F4F;   /* éxito / secundario */
-      --sage-deep:#43523A;
-      --crimson: #9B3B3B;   /* peligro */
-      --crimson-deep:#732424;
+      --green:        #028A5A;   /* primario UNAD */
+      --green-deep:   #016B45;
+      --green-soft:   #DFF1E8;
+      --green-tint:   #F1F9F5;
+      --topbar:       #0B7A3E;   /* verde un poco más oscuro/saturado */
+      --footer:       #1A1A1A;
+      --ink:          #070707;   /* texto fuerte */
+      --body:         #6E7A84;   /* gris azulado UNAD */
+      --rule:         #E5E9EC;
+      --rule-soft:    #F1F3F5;
+      --surface:      #F5F7F8;   /* fondo seccion */
+      --bg:           #FFFFFF;
+      --amber:        #F2B135;
+      --crimson:      #D14848;
+      --crimson-deep: #A93030;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { min-height: 100%; }
 
     body {
-      font-family: 'Manrope', system-ui, sans-serif;
-      background: var(--cream);
-      color: var(--ink);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--body);
       line-height: 1.55;
       font-size: 16px;
-      font-feature-settings: "ss01", "cv11";
-      /* sutil grano de papel */
-      background-image:
-        radial-gradient(rgba(122,36,36,0.012) 1px, transparent 1px),
-        radial-gradient(rgba(31,26,20,0.010) 1px, transparent 1px);
-      background-size: 23px 23px, 41px 41px;
-      background-position: 0 0, 12px 19px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     /* Layout */
-    .container       { max-width: 680px;  margin: 0 auto; padding: 32px 20px 60px; }
-    .container-wide  { max-width: 1080px; margin: 0 auto; padding: 32px 20px 60px; }
+    .container       { max-width: 720px;  margin: 0 auto; padding: 56px 24px 80px; }
+    .container-wide  { max-width: 1180px; margin: 0 auto; padding: 56px 24px 80px; }
 
-    /* Tipografía editorial */
+    /* Tipografía UNAD */
     h1, h2, h3 {
-      font-family: 'Fraunces', Georgia, serif;
-      font-weight: 500;
       color: var(--ink);
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
       line-height: 1.15;
+      font-weight: 700;
     }
-    h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 600; font-variation-settings: "opsz" 96, "SOFT" 50; }
-    h2 { font-size: 1.35rem; font-weight: 600; margin: 0.2em 0 0.6em; font-variation-settings: "opsz" 36; }
-    h3 { font-size: 1.02rem; font-weight: 600; color: var(--ink); margin: 0.4em 0 0.5em; font-variation-settings: "opsz" 24; }
-    p  { margin-bottom: 0.75em; color: var(--ink-soft); }
-    a  { color: var(--oxblood); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
-    a:hover { color: var(--oxblood-deep); }
+    h1 { font-size: clamp(2.2rem, 5.5vw, 4rem); font-weight: 800; }
+    h2 { font-size: clamp(1.5rem, 2.5vw, 2.2rem); font-weight: 700; margin: 0 0 0.5em; }
+    h3 { font-size: 1.15rem; font-weight: 600; color: var(--ink); margin: 0 0 0.5em; }
+    p  { margin-bottom: 0.75em; color: var(--body); }
+    a  { color: var(--green); text-decoration: none; transition: color 0.15s; }
+    a:hover { color: var(--green-deep); text-decoration: underline; text-underline-offset: 3px; }
 
     .eyebrow {
       display: inline-block;
-      font-family: 'Manrope', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--oxblood);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--body);
     }
-    .eyebrow.muted { color: var(--ink-mute); }
+    .eyebrow.muted { color: var(--body); opacity: 0.7; }
 
     .rule { height: 1px; background: var(--rule); margin: 18px 0; border: 0; }
-    .rule-double {
-      border-top: 1px solid var(--ink);
-      border-bottom: 1px solid var(--ink);
-      height: 4px;
-      margin: 14px 0;
-    }
     .ornament {
       text-align: center;
-      color: var(--gold);
-      font-family: 'Fraunces', serif;
-      font-size: 0.95rem;
+      color: var(--green);
+      font-size: 1.2rem;
       letter-spacing: 0.6em;
       margin: 8px 0 18px;
       user-select: none;
     }
-    .ornament::before { content: "✦   ✦   ✦"; }
+    .ornament::before { content: "•   •   •"; }
 
-    /* Header editorial */
-    .masthead {
-      text-align: center;
-      padding: 36px 20px 12px;
+    /* ── Top bar UNAD verde ── */
+    .top-bar {
+      background: var(--topbar);
+      color: #fff;
+      font-size: 0.78rem;
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .top-bar .top-meta { display: flex; gap: 14px; align-items: center; }
+    .top-bar .top-links { display: flex; gap: 14px; align-items: center; }
+    .top-bar a { color: #fff; opacity: 0.92; text-decoration: none; }
+    .top-bar a:hover { opacity: 1; text-decoration: underline; }
+    .top-bar .divider { opacity: 0.4; }
+
+    /* ── Site header (logo + nav) ── */
+    .site-header {
+      background: var(--bg);
       border-bottom: 1px solid var(--rule);
-      background: transparent;
+      padding: 18px 24px;
     }
-    .masthead .eyebrow { display: block; margin-bottom: 16px; }
-    .masthead h1       { margin: 0 auto 6px; max-width: 720px; }
-    .masthead .meta {
-      font-family: 'Fraunces', serif;
-      font-style: italic;
-      font-size: 0.95rem;
-      color: var(--ink-soft);
-      margin-top: 8px;
+    .site-header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
     }
-    .masthead-narrow .eyebrow { font-size: 0.65rem; }
-    .masthead-narrow h1 { font-size: clamp(1.5rem, 3.2vw, 2rem); }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .brand:hover { text-decoration: none; }
+    .brand-mark {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      box-shadow: 0 0 0 4px var(--green-soft);
+    }
+    .brand-text { line-height: 1.05; }
+    .brand-text .brand-name {
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: var(--green);
+      letter-spacing: -0.01em;
+    }
+    .brand-text .brand-tag {
+      display: block;
+      font-size: 0.62rem;
+      color: var(--body);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .site-nav {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+    .site-nav a {
+      color: var(--ink);
+      font-weight: 500;
+      font-size: 0.92rem;
+    }
+    .site-nav a:hover { color: var(--green); text-decoration: none; }
+    @media (max-width: 720px) {
+      .site-nav { display: none; }
+    }
 
-    /* Cards — papel */
-    .card {
-      background: var(--paper);
-      border: 1px solid var(--rule);
-      border-radius: 2px;
-      padding: 28px 26px;
-      margin-bottom: 18px;
-      box-shadow:
-        0 1px 0 0 rgba(31,26,20,0.04),
-        0 14px 30px -22px rgba(31,26,20,0.18);
-      position: relative;
+    /* ── Hero / masthead estilo UNAD ── */
+    .hero {
+      padding: 64px 24px 32px;
+      max-width: 1180px;
+      margin: 0 auto;
     }
-    .card > h2 + .rule,
-    .card .section-head + .rule { margin: 12px 0 22px; }
+    .hero .kicker {
+      font-size: 0.9rem;
+      color: var(--body);
+      font-weight: 400;
+      margin-bottom: 18px;
+    }
+    .hero .kicker::before { content: "– "; }
+    .hero h1 {
+      max-width: 800px;
+      margin-bottom: 24px;
+    }
+    .hero .lead {
+      max-width: 560px;
+      font-size: 1.05rem;
+      color: var(--body);
+      margin-bottom: 32px;
+    }
+    .hero-narrow { padding: 56px 24px 16px; text-align: left; }
+    .hero-narrow h1 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); }
+
+    /* Cards */
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      padding: 32px 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 2px rgba(7,7,7,0.03), 0 4px 16px -8px rgba(7,7,7,0.06);
+    }
+    .card.flat { box-shadow: none; }
 
     .section-head {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
       gap: 16px;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
     }
-    .section-head .eyebrow { color: var(--oxblood); }
+    .section-head .eyebrow { color: var(--green); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.7rem; }
+    .section-head .eyebrow.muted { color: var(--body); }
 
-    /* Botones — diseño editorial */
+    /* Botones — pill rounded UNAD */
     button, .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 12px 22px;
-      font-family: 'Manrope', sans-serif;
-      font-size: 0.92rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      border: 1px solid var(--oxblood);
-      border-radius: 1px;
+      padding: 12px 24px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      border: 1px solid var(--green);
+      border-radius: 6px;
       cursor: pointer;
       min-height: 46px;
-      background: var(--oxblood);
-      color: var(--paper);
+      background: var(--green);
+      color: #fff;
       text-decoration: none;
-      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
-      box-shadow: inset 0 0 0 1px rgba(255,252,246,0.06);
+      transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
     }
     button:hover, .btn:hover {
-      background: var(--oxblood-deep);
-      border-color: var(--oxblood-deep);
-      color: var(--paper);
+      background: var(--green-deep);
+      border-color: var(--green-deep);
+      color: #fff;
+      text-decoration: none;
     }
     button:active, .btn:active { transform: translateY(1px); }
     button:disabled, .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .btn-secondary {
-      background: transparent;
-      color: var(--ink);
-      border: 1px solid var(--ink);
-      box-shadow: none;
+      background: var(--bg);
+      color: var(--green);
+      border: 1px solid var(--green);
     }
     .btn-secondary:hover {
-      background: var(--ink);
-      color: var(--paper);
-      border-color: var(--ink);
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+    .btn-ghost {
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--rule);
+    }
+    .btn-ghost:hover {
+      background: var(--green-tint);
+      color: var(--green-deep);
+      border-color: var(--green);
     }
     .btn-danger {
       background: var(--crimson);
       border-color: var(--crimson);
+      color: #fff;
     }
     .btn-danger:hover { background: var(--crimson-deep); border-color: var(--crimson-deep); }
     .btn-success {
-      background: var(--sage);
-      border-color: var(--sage);
-      color: var(--paper);
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
     }
-    .btn-success:hover { background: var(--sage-deep); border-color: var(--sage-deep); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--oxblood);
-      border: 1px solid var(--rule);
-    }
-    .btn-ghost:hover { background: var(--bone); color: var(--oxblood-deep); border-color: var(--oxblood); }
+    .btn-success:hover { background: var(--green-deep); border-color: var(--green-deep); }
 
     /* Form */
-    .field { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--rule-soft); }
+    .field { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--rule-soft); }
     .field:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
     .field > label {
       display: block;
-      font-family: 'Fraunces', serif;
-      font-weight: 500;
-      font-size: 1.04rem;
+      font-weight: 600;
+      font-size: 1rem;
       margin-bottom: 12px;
       color: var(--ink);
-      line-height: 1.35;
-      font-variation-settings: "opsz" 24;
+      line-height: 1.4;
     }
     .field .hint {
-      font-family: 'Manrope', sans-serif;
-      font-size: 0.78rem;
-      color: var(--ink-mute);
+      font-size: 0.82rem;
+      color: var(--body);
       margin-bottom: 10px;
-      letter-spacing: 0.02em;
     }
 
     /* Opciones */
-    .options { display: flex; flex-direction: column; gap: 6px; }
+    .options { display: flex; flex-direction: column; gap: 8px; }
     .option {
       display: flex;
       align-items: center;
-      padding: 12px 14px;
-      background: transparent;
+      padding: 12px 16px;
+      background: var(--bg);
       border: 1px solid var(--rule);
-      border-radius: 1px;
+      border-radius: 8px;
       cursor: pointer;
-      min-height: 46px;
+      min-height: 48px;
       user-select: none;
-      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
       font-size: 0.95rem;
       color: var(--ink);
-      gap: 10px;
+      gap: 12px;
     }
-    .option:hover { background: var(--bone); border-color: var(--ink-soft); }
+    .option:hover { background: var(--green-tint); border-color: var(--green); }
     .option input {
       appearance: none;
-      width: 16px; height: 16px;
-      border: 1px solid var(--ink-soft);
-      background: var(--paper);
+      width: 18px; height: 18px;
+      border: 1.5px solid #C5CCD3;
+      background: #fff;
       cursor: pointer;
       flex-shrink: 0;
       position: relative;
+      transition: background 0.15s, border-color 0.15s;
     }
     .option input[type="radio"] { border-radius: 50%; }
-    .option input[type="checkbox"] { border-radius: 1px; }
+    .option input[type="checkbox"] { border-radius: 4px; }
     .option input:checked {
-      background: var(--oxblood);
-      border-color: var(--oxblood);
+      background: var(--green);
+      border-color: var(--green);
     }
     .option input[type="radio"]:checked::after {
       content: "";
       position: absolute;
-      inset: 3px;
-      background: var(--paper);
+      inset: 4px;
+      background: #fff;
       border-radius: 50%;
     }
     .option input[type="checkbox"]:checked::after {
       content: "";
       position: absolute;
-      left: 4px; top: 1px;
-      width: 5px; height: 9px;
-      border: solid var(--paper);
-      border-width: 0 1.5px 1.5px 0;
+      left: 5px; top: 1px;
+      width: 5px; height: 10px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
       transform: rotate(45deg);
     }
     .option.selected {
-      background: var(--bone);
-      border-color: var(--oxblood);
+      background: var(--green-soft);
+      border-color: var(--green);
       color: var(--ink);
     }
 
-    /* Likert — fila editorial */
+    /* Likert */
     .likert-row {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -287,33 +359,29 @@
       justify-content: center;
       padding: 14px 4px 12px;
       text-align: center;
-      gap: 2px;
-      position: relative;
+      gap: 4px;
     }
     .likert-row .option input { display: none; }
     .likert-row .option .num {
-      font-family: 'Fraunces', serif;
-      font-style: italic;
       font-size: 1.4rem;
-      font-weight: 500;
+      font-weight: 700;
       color: var(--ink);
-      font-variation-settings: "opsz" 36;
       line-height: 1;
     }
     .likert-row .option .label {
-      font-size: 0.65rem;
-      letter-spacing: 0.08em;
+      font-size: 0.66rem;
+      letter-spacing: 0.04em;
+      color: var(--body);
       text-transform: uppercase;
-      color: var(--ink-mute);
-      margin-top: 4px;
+      font-weight: 500;
     }
     .likert-row .option.selected {
-      background: var(--ink);
-      border-color: var(--ink);
+      background: var(--green);
+      border-color: var(--green);
     }
     .likert-row .option.selected .num,
     .likert-row .option.selected .label {
-      color: var(--paper);
+      color: #fff;
     }
 
     /* Inputs */
@@ -322,26 +390,27 @@
     input[type="number"],
     select {
       width: 100%;
-      padding: 10px 12px;
-      font-family: 'Manrope', sans-serif;
+      padding: 12px 14px;
+      font-family: inherit;
       font-size: 0.95rem;
       border: 1px solid var(--rule);
-      border-radius: 1px;
-      background: var(--paper);
-      min-height: 44px;
+      border-radius: 8px;
+      background: var(--bg);
+      min-height: 46px;
       color: var(--ink);
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
     input:focus, select:focus {
       outline: none;
-      border-color: var(--oxblood);
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(2,138,90,0.12);
     }
     .filter-dd {
       min-height: 38px;
-      padding: 6px 10px;
+      padding: 6px 12px;
       font-size: 0.86rem;
       font-weight: 500;
-      background: var(--paper);
+      background: var(--bg);
       width: auto;
       min-width: 180px;
     }
@@ -352,67 +421,103 @@
       bottom: 28px;
       left: 50%;
       transform: translateX(-50%);
-      padding: 12px 20px;
+      padding: 14px 22px;
       background: var(--ink);
-      color: var(--paper);
-      border-radius: 1px;
-      box-shadow: 0 14px 40px -10px rgba(31,26,20,0.4);
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 14px 40px -10px rgba(7,7,7,0.4);
       z-index: 1000;
       max-width: 92vw;
       font-size: 0.92rem;
-      letter-spacing: 0.02em;
       animation: toast-in 0.25s ease-out;
     }
     @keyframes toast-in {
       from { opacity: 0; transform: translate(-50%, 12px); }
       to   { opacity: 1; transform: translate(-50%, 0); }
     }
-    .toast.success { background: var(--sage); }
+    .toast.success { background: var(--green); }
     .toast.error   { background: var(--crimson); }
 
     .hidden { display: none !important; }
 
-    /* Landing */
-    .landing-lead {
-      font-family: 'Fraunces', serif;
-      font-style: italic;
-      font-size: 1.15rem;
-      color: var(--ink-soft);
-      margin: 28px 0 36px;
-      text-align: center;
-      max-width: 540px;
-      margin-left: auto;
-      margin-right: auto;
-      line-height: 1.5;
-    }
+    /* Landing CTA */
     .landing-cta {
       display: grid;
-      gap: 10px;
+      gap: 12px;
       margin-top: 22px;
-      max-width: 520px;
-      margin-left: auto;
-      margin-right: auto;
+      max-width: 540px;
     }
     .landing-cta .btn {
-      padding: 22px 24px;
+      padding: 18px 24px;
       font-size: 1rem;
-      letter-spacing: 0.06em;
       justify-content: space-between;
+      border-radius: 8px;
     }
     .landing-cta .btn::after {
       content: "→";
-      font-family: 'Fraunces', serif;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
+      font-weight: 400;
     }
     .landing-foot {
-      margin-top: 48px;
-      text-align: center;
-      font-size: 0.78rem;
-      color: var(--ink-mute);
-      letter-spacing: 0.05em;
+      margin-top: 56px;
+      font-size: 0.82rem;
+      color: var(--body);
     }
-    .landing-foot a { color: var(--ink-mute); text-decoration: none; border-bottom: 1px solid var(--rule); }
-    .landing-foot a:hover { color: var(--oxblood); border-color: var(--oxblood); }
+    .landing-foot a { color: var(--body); border-bottom: 1px dotted var(--rule); }
+    .landing-foot a:hover { color: var(--green); border-color: var(--green); text-decoration: none; }
+
+    /* Hero grid (landing) */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
+      align-items: center;
+    }
+    @media (max-width: 880px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+    }
+    .hero-visual {
+      position: relative;
+      min-height: 360px;
+    }
+    .hero-blob {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 70% 30%, var(--green-soft) 0%, transparent 55%),
+        radial-gradient(circle at 30% 70%, var(--green-tint) 0%, transparent 60%);
+      border-radius: 24px;
+    }
+    .hero-card {
+      position: absolute;
+      background: #fff;
+      border: 1px solid var(--rule);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 20px 60px -20px rgba(7,7,7,0.18);
+    }
+    .hero-card-1 { top: 30px; left: 20px; right: 20%; }
+    .hero-card-2 { bottom: 24px; left: 28%; right: 0; }
+    .hero-card .num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1;
+    }
+    .hero-card .lab {
+      font-size: 0.82rem;
+      color: var(--body);
+      margin-top: 4px;
+    }
+    .hero-card .bar { display: flex; gap: 4px; margin-top: 14px; }
+    .hero-card .bar span {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--green-soft);
+    }
+    .hero-card .bar span.fill { background: var(--green); }
 
     /* Dashboard chrome */
     .dash-toolbar {
@@ -421,52 +526,90 @@
       gap: 10px;
       align-items: center;
       padding: 16px 20px;
-      background: var(--paper);
+      background: var(--bg);
       border: 1px solid var(--rule);
-      border-radius: 2px;
+      border-radius: 12px;
       margin-bottom: 20px;
     }
-    .dash-toolbar > .eyebrow { color: var(--ink-mute); margin-right: 4px; }
+    .dash-toolbar > .eyebrow { color: var(--body); margin-right: 4px; }
     .dash-toolbar .spacer { flex: 1; }
-    .dash-toolbar .btn { min-height: 38px; padding: 8px 16px; font-size: 0.82rem; }
+    .dash-toolbar .btn { min-height: 38px; padding: 8px 16px; font-size: 0.86rem; border-radius: 6px; }
 
     .dash-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 28px 32px;
+      gap: 32px 36px;
       margin-top: 8px;
     }
     @media (max-width: 720px) {
-      .dash-grid { grid-template-columns: 1fr; gap: 22px; }
+      .dash-grid { grid-template-columns: 1fr; gap: 24px; }
     }
     .dash-chart-wrap { margin: 0; min-width: 0; }
     .dash-chart-wrap.full { grid-column: 1 / -1; }
     .dash-chart-wrap > h3 {
-      font-family: 'Fraunces', serif;
-      font-style: italic;
-      font-weight: 500;
-      margin-bottom: 10px;
+      font-weight: 600;
+      margin-bottom: 12px;
       color: var(--ink);
+      font-size: 1.02rem;
     }
     .benchmark {
-      margin-top: 8px;
-      padding: 10px 14px;
-      background: rgba(122,36,36,0.04);
-      border-left: 2px solid var(--oxblood);
-      font-size: 0.85rem;
-      color: var(--ink-soft);
-      font-style: italic;
+      margin-top: 10px;
+      padding: 12px 16px;
+      background: var(--green-tint);
+      border-left: 3px solid var(--green);
+      border-radius: 0 6px 6px 0;
+      font-size: 0.86rem;
+      color: var(--ink);
       line-height: 1.5;
     }
     .benchmark strong {
-      font-style: normal;
-      font-family: 'Manrope', sans-serif;
-      font-weight: 600;
-      letter-spacing: 0.08em;
+      font-weight: 700;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
       font-size: 0.7rem;
-      color: var(--oxblood);
+      color: var(--green);
       margin-right: 6px;
+      display: inline-block;
+    }
+    .benchmark em { color: var(--body); font-style: normal; }
+
+    /* Site footer estilo UNAD */
+    .site-footer {
+      background: var(--footer);
+      color: #C8CDD2;
+      padding: 48px 24px 28px;
+      margin-top: 64px;
+    }
+    .site-footer-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 36px;
+      align-items: start;
+    }
+    .site-footer .brand-name { color: #fff; }
+    .site-footer .brand-tag { color: #888d92; }
+    .site-footer h4 {
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .site-footer ul { list-style: none; padding: 0; }
+    .site-footer li { margin-bottom: 6px; }
+    .site-footer a { color: #C8CDD2; font-size: 0.86rem; }
+    .site-footer a:hover { color: #fff; text-decoration: none; }
+    .site-footer-bottom {
+      max-width: 1180px;
+      margin: 32px auto 0;
+      padding-top: 20px;
+      border-top: 1px solid #2A2D31;
+      font-size: 0.78rem;
+      color: #888d92;
+    }
+    @media (max-width: 720px) {
+      .site-footer-inner { grid-template-columns: 1fr; }
     }
 
     /* Stagger reveal */
@@ -489,16 +632,17 @@
 
     /* Responsive */
     @media (max-width: 540px) {
-      .container, .container-wide { padding: 22px 16px 48px; }
-      .masthead { padding: 24px 16px 10px; }
-      .card { padding: 22px 18px; }
+      .container, .container-wide { padding: 32px 16px 56px; }
+      .hero { padding: 40px 16px 16px; }
+      .card { padding: 24px 18px; }
       .likert-row { gap: 5px; }
       .likert-row .option { padding: 12px 2px 10px; }
       .likert-row .option .num { font-size: 1.15rem; }
       .likert-row .option .label { font-size: 0.55rem; }
-      .dash-toolbar { padding: 14px 14px; }
+      .dash-toolbar { padding: 12px 14px; }
       .dash-toolbar .btn { width: 100%; }
       .dash-toolbar .spacer { display: none; }
+      .top-bar { padding: 8px 14px; font-size: 0.72rem; }
     }
 
     /* Reduced motion */
@@ -696,7 +840,81 @@
     // Utilities
     // ══════════════════════════════════════════════════════════════════
     const $ = (sel) => document.querySelector(sel);
-    const app = () => document.getElementById("app");
+    function app() {
+      ensureShell();
+      return document.getElementById("route-content");
+    }
+    function ensureShell() {
+      const root = document.getElementById("app");
+      if (root.dataset.shell === "1") return;
+      root.dataset.shell = "1";
+      root.innerHTML = `
+        <div class="top-bar">
+          <div class="top-meta">
+            <span>Universidad Adventista Dominicana</span>
+            <span class="divider">·</span>
+            <span>Capacitación docente · Abril 2026</span>
+          </div>
+          <div class="top-links">
+            <a href="https://www.unad.edu.do/" target="_blank" rel="noopener">unad.edu.do</a>
+            <span class="divider">|</span>
+            <a href="#admin">Facilitador</a>
+          </div>
+        </div>
+        <header class="site-header">
+          <div class="site-header-inner">
+            <a class="brand" href="#">
+              <span class="brand-mark">UNAD</span>
+              <span class="brand-text">
+                <span class="brand-name">Encuesta diagnóstica IA</span>
+                <span class="brand-tag">Facultad de Ingeniería y Tecnología</span>
+              </span>
+            </a>
+            <nav class="site-nav">
+              <a href="#apertura">Apertura</a>
+              <a href="#cierre">Cierre</a>
+              <a href="#dashboard">Dashboard</a>
+            </nav>
+          </div>
+        </header>
+        <main id="route-content"></main>
+        <footer class="site-footer">
+          <div class="site-footer-inner">
+            <div>
+              <div class="brand">
+                <span class="brand-mark">UNAD</span>
+                <span class="brand-text">
+                  <span class="brand-name">UNAD</span>
+                  <span class="brand-tag">Universidad Adventista Dominicana</span>
+                </span>
+              </div>
+              <p style="margin-top: 16px; color: #888d92; font-size: 0.86rem; max-width: 320px;">
+                Encuesta diagnóstica para la capacitación docente sobre Inteligencia Artificial en la Educación Superior.
+              </p>
+            </div>
+            <div>
+              <h4>La capacitación</h4>
+              <ul>
+                <li><a href="#apertura">Encuesta apertura</a></li>
+                <li><a href="#cierre">Encuesta cierre</a></li>
+                <li><a href="#dashboard">Dashboard en vivo</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4>Institucional</h4>
+              <ul>
+                <li><a href="https://www.unad.edu.do/" target="_blank" rel="noopener">unad.edu.do</a></li>
+                <li><a href="https://www.unad.edu.do/facultades/" target="_blank" rel="noopener">Facultades</a></li>
+                <li><a href="#admin">Acceso facilitador</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="site-footer-bottom">
+            © 2026 · Prof. Misael Michel · Todos los derechos reservados
+          </div>
+        </footer>
+      `;
+    }
 
     function uuid() {
       if (crypto.randomUUID) return crypto.randomUUID();
@@ -887,7 +1105,7 @@
       }
 
       const html = `
-        <div class="masthead masthead-narrow">
+        <div class="hero hero-narrow">
           <span class="eyebrow">Universidad Adventista Dominicana · Abril 2026</span>
           <h1>${escapeHtml(title)}</h1>
           <div class="meta">${escapeHtml(subtitle)}</div>
@@ -1040,9 +1258,9 @@
           datasets: [{
             label: "respuestas",
             data: counts,
-            backgroundColor: "#7A2424",
-            hoverBackgroundColor: "#5A1717",
-            borderRadius: 2,
+            backgroundColor: "#028A5A",
+            hoverBackgroundColor: "#016B45",
+            borderRadius: 6,
             borderSkipped: false,
           }],
         },
@@ -1054,14 +1272,14 @@
             title: {
               display: true,
               text: data.mean !== undefined ? `Promedio del grupo: ${data.mean.toFixed(2)} / 5` : "",
-              font: { size: 14, family: "'Fraunces', serif", style: "italic", weight: "500" },
-              color: "#1F1A14",
+              font: { size: 13, family: "'Inter', sans-serif", weight: "600" },
+              color: "#070707",
               padding: { top: 4, bottom: 12 },
             },
           },
           scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1, color: "#867968", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { color: "#E8DDC5" } },
-            x: { ticks: { color: "#564B3D", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, color: "#6E7A84", font: { family: "'Inter', sans-serif", size: 11 } }, grid: { color: "#F1F3F5" } },
+            x: { ticks: { color: "#070707", font: { family: "'Inter', sans-serif", size: 11 } }, grid: { display: false } },
           },
           animation: { duration: 400 },
         },
@@ -1074,8 +1292,8 @@
       return { annotations: {} };
     }
 
-    // Paleta secuencial para doughnuts (oxblood family + complementarios)
-    const DOUGHNUT_PALETTE = ["#7A2424", "#B6863E", "#5F6F4F", "#1F1A14", "#9B3B3B", "#8E6627", "#828B6E", "#3F4A36"];
+    // Paleta secuencial para doughnuts (verdes UNAD + complementarios)
+    const DOUGHNUT_PALETTE = ["#028A5A", "#0B7A3E", "#5BB587", "#A8D8BD", "#F2B135", "#1A1A1A", "#6E7A84", "#D14848"];
 
     function chartKindFor(q) {
       // Categorical singles → doughnut. Ordinal singles + likerts → bar. Multi → horizontal bar.
@@ -1179,9 +1397,9 @@
           datasets: [{
             label: "respuestas",
             data: values,
-            backgroundColor: horizontal ? "#5F6F4F" : "#B6863E",
-            hoverBackgroundColor: horizontal ? "#43523A" : "#8E6627",
-            borderRadius: 2,
+            backgroundColor: horizontal ? "#028A5A" : "#5BB587",
+            hoverBackgroundColor: horizontal ? "#016B45" : "#028A5A",
+            borderRadius: 6,
             borderSkipped: false,
           }],
         },
@@ -1191,8 +1409,8 @@
           indexAxis: horizontal ? "y" : "x",
           plugins: { legend: { display: false } },
           scales: {
-            x: { beginAtZero: true, ticks: { color: "#867968", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { color: "#E8DDC5" } },
-            y: { ticks: { color: "#564B3D", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { display: false } },
+            x: { beginAtZero: true, ticks: { color: "#6E7A84", font: { family: "'Inter', sans-serif", size: 11 } }, grid: { color: "#F1F3F5" } },
+            y: { ticks: { color: "#070707", font: { family: "'Inter', sans-serif", size: 11 } }, grid: { display: false } },
           },
           animation: { duration: 400 },
         },
@@ -1445,8 +1663,8 @@
           data: {
             labels,
             datasets: [
-              { label: "Apertura", data: aperData2, backgroundColor: "#B6863E", hoverBackgroundColor: "#8E6627", borderRadius: 2, borderSkipped: false },
-              { label: "Cierre",   data: cierData2, backgroundColor: "#7A2424", hoverBackgroundColor: "#5A1717", borderRadius: 2, borderSkipped: false },
+              { label: "Apertura", data: aperData2, backgroundColor: "#A8D8BD", hoverBackgroundColor: "#5BB587", borderRadius: 6, borderSkipped: false },
+              { label: "Cierre",   data: cierData2, backgroundColor: "#028A5A", hoverBackgroundColor: "#016B45", borderRadius: 6, borderSkipped: false },
             ],
           },
           options: {
@@ -1456,15 +1674,15 @@
               title: {
                 display: c.type === "likert5",
                 text: c.type === "likert5" ? `Promedio apertura ${aperVal?.mean?.toFixed(2) || "—"}  →  cierre ${cierVal?.mean?.toFixed(2) || "—"}` : "",
-                font: { size: 14, family: "'Fraunces', serif", style: "italic", weight: "500" },
-                color: "#1F1A14",
+                font: { size: 13, family: "'Inter', sans-serif", weight: "600" },
+                color: "#070707",
                 padding: { top: 4, bottom: 12 },
               },
               legend: {
                 position: "top",
                 labels: {
-                  font: { family: "'Manrope', sans-serif", size: 11 },
-                  color: "#564B3D",
+                  font: { family: "'Inter', sans-serif", size: 11 },
+                  color: "#070707",
                   boxWidth: 12,
                   boxHeight: 12,
                   padding: 12,
@@ -1472,8 +1690,8 @@
               },
             },
             scales: {
-              y: { beginAtZero: true, ticks: { color: "#867968", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { color: "#E8DDC5" } },
-              x: { ticks: { color: "#564B3D", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { display: false } },
+              y: { beginAtZero: true, ticks: { color: "#6E7A84", font: { family: "'Inter', sans-serif", size: 11 } }, grid: { color: "#F1F3F5" } },
+              x: { ticks: { color: "#070707", font: { family: "'Inter', sans-serif", size: 11 } }, grid: { display: false } },
             },
             animation: { duration: 400 },
           },
@@ -1500,7 +1718,7 @@
       ]);
 
       app().innerHTML = `
-        <div class="masthead masthead-narrow">
+        <div class="hero hero-narrow">
           <span class="eyebrow">Panel del facilitador</span>
           <h1>Encuesta diagnóstica IA</h1>
           <div class="meta">Universidad Adventista Dominicana · Abril 2026</div>
@@ -1510,7 +1728,7 @@
             <div class="section-head"><span class="eyebrow">Estado</span><span class="eyebrow muted">Fase activa</span></div>
             <h2>${currentPhase === "cerrada" ? "Encuesta cerrada" : currentPhase === "apertura" ? "Sesión 1 — Apertura" : "Sesión 2 — Cierre"}</h2>
             <hr class="rule" />
-            <p>Estado actual: <strong style="font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--oxblood);">${currentPhase.toUpperCase()}</strong></p>
+            <p>Estado actual: <strong style="font-weight: 700; color: var(--green);">${currentPhase.toUpperCase()}</strong></p>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button onclick="changePhase('apertura')" ${currentPhase === "apertura" ? "disabled" : ""}>Apertura</button>
               <button onclick="changePhase('cierre')" ${currentPhase === "cierre" ? "disabled" : ""}>Cierre</button>
@@ -1525,12 +1743,12 @@
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
               <div>
                 <div class="eyebrow muted" style="margin-bottom: 6px;">Apertura</div>
-                <div style="font-family: 'Fraunces', serif; font-style: italic; font-size: 2.4rem; font-weight: 600; color: var(--ink); line-height: 1;">${aperAgg.n}</div>
+                <div style="font-size: 2.6rem; font-weight: 800; color: var(--green); line-height: 1; letter-spacing: -0.03em;">${aperAgg.n}</div>
                 <div style="font-size: 0.78rem; color: var(--ink-mute); margin-top: 4px;">${aperAgg.lastTs ? `última ${timeAgo(aperAgg.lastTs)}` : "sin respuestas"}</div>
               </div>
               <div>
                 <div class="eyebrow muted" style="margin-bottom: 6px;">Cierre</div>
-                <div style="font-family: 'Fraunces', serif; font-style: italic; font-size: 2.4rem; font-weight: 600; color: var(--ink); line-height: 1;">${cierAgg.n}</div>
+                <div style="font-size: 2.6rem; font-weight: 800; color: var(--green); line-height: 1; letter-spacing: -0.03em;">${cierAgg.n}</div>
                 <div style="font-size: 0.78rem; color: var(--ink-mute); margin-top: 4px;">${cierAgg.lastTs ? `última ${timeAgo(cierAgg.lastTs)}` : "sin respuestas"}</div>
               </div>
             </div>
@@ -1688,20 +1906,33 @@
     const ROUTES = {
       landing(params) {
         app().innerHTML = `
-          <div class="masthead">
-            <span class="eyebrow">Universidad Adventista Dominicana</span>
-            <h1>Encuesta diagnóstica<br/><em style="font-style: italic; color: var(--oxblood); font-weight: 500;">sobre IA en la educación</em></h1>
-            <div class="meta">Capacitación docente · Abril 2026</div>
-          </div>
-          <div class="container stagger">
-            <p class="landing-lead">Antes de empezar, queremos saber dónde está el grupo. Una encuesta breve, anónima, y cuyos resultados se proyectan en pantalla durante la sesión.</p>
-            <div class="landing-cta">
-              <a class="btn" href="#apertura">Responder apertura</a>
-              <a class="btn btn-ghost" href="#cierre">Responder cierre</a>
-              <a class="btn btn-secondary" href="#dashboard">Ver dashboard</a>
+          <section class="hero">
+            <div class="hero-grid stagger">
+              <div>
+                <p class="kicker">Capacitación docente · Sesión 1</p>
+                <h1>Encuesta diagnóstica sobre <span style="color: var(--green);">Inteligencia Artificial</span> en la educación</h1>
+                <p class="lead">Antes de empezar, queremos saber dónde está el grupo. Una encuesta breve, anónima, cuyos resultados se proyectan en pantalla durante la sesión.</p>
+                <div class="landing-cta">
+                  <a class="btn" href="#apertura">Responder apertura</a>
+                  <a class="btn btn-ghost" href="#dashboard">Ver dashboard</a>
+                </div>
+                <p class="landing-foot">Prof. Misael Michel · <a href="#admin">Acceso facilitador</a></p>
+              </div>
+              <div class="hero-visual" aria-hidden="true">
+                <div class="hero-blob"></div>
+                <div class="hero-card hero-card-1">
+                  <div class="num">82.7%</div>
+                  <div class="lab">GPT-5.5 en Terminal-Bench 2.0 — uso agentic</div>
+                  <div class="bar"><span class="fill"></span><span class="fill"></span><span class="fill"></span><span class="fill"></span><span></span></div>
+                </div>
+                <div class="hero-card hero-card-2">
+                  <div class="num">95%</div>
+                  <div class="lab">Estudiantes UK que usan IA en evaluaciones</div>
+                  <div class="bar"><span class="fill"></span><span class="fill"></span><span class="fill"></span><span class="fill"></span><span class="fill"></span></div>
+                </div>
+              </div>
             </div>
-            <p class="landing-foot">Prof. Misael Michel · Facultad de Ingeniería y Tecnología · <a href="#admin">Acceso facilitador</a></p>
-          </div>
+          </section>
         `;
       },
       apertura(params) {
@@ -1709,7 +1940,7 @@
         const existing = localStorage.getItem("encuesta_ia_resp_apertura");
         if (existing && !params.force) {
           app().innerHTML = `
-            <div class="masthead masthead-narrow"><span class="eyebrow">Apertura</span><h1>Ya respondiste</h1></div>
+            <div class="hero hero-narrow"><span class="eyebrow">Apertura</span><h1>Ya respondiste</h1></div>
             <div class="container">
               <div class="card">
                 <p>Detectamos que ya respondiste la encuesta de apertura desde este dispositivo. Si necesitas corregir, contacta al facilitador.</p>
@@ -1726,7 +1957,7 @@
         api("/api/phase").then(({ data }) => {
           if (data.phase === "cerrada") {
             app().innerHTML = `
-              <div class="masthead masthead-narrow"><span class="eyebrow">Apertura</span><h1>Encuesta cerrada</h1></div>
+              <div class="hero hero-narrow"><span class="eyebrow">Apertura</span><h1>Encuesta cerrada</h1></div>
               <div class="container">
                 <div class="card"><p>Gracias por participar.</p></div>
               </div>`;
@@ -1744,7 +1975,7 @@
         const existing = localStorage.getItem("encuesta_ia_resp_cierre");
         if (existing && !params.force) {
           app().innerHTML = `
-            <div class="masthead masthead-narrow"><span class="eyebrow">Cierre</span><h1>Ya respondiste</h1></div>
+            <div class="hero hero-narrow"><span class="eyebrow">Cierre</span><h1>Ya respondiste</h1></div>
             <div class="container">
               <div class="card">
                 <p>Detectamos que ya respondiste la encuesta de cierre desde este dispositivo.</p>
@@ -1760,7 +1991,7 @@
         api("/api/phase").then(({ data }) => {
           if (data.phase === "cerrada") {
             app().innerHTML = `
-              <div class="masthead masthead-narrow"><span class="eyebrow">Cierre</span><h1>Encuesta cerrada</h1></div>
+              <div class="hero hero-narrow"><span class="eyebrow">Cierre</span><h1>Encuesta cerrada</h1></div>
               <div class="container">
                 <div class="card"><p>Gracias por participar.</p></div>
               </div>`;
@@ -1777,15 +2008,15 @@
       gracias(params) {
         const isApertura = params.fase === "apertura";
         app().innerHTML = `
-          <div class="masthead">
+          <div class="hero">
             <span class="eyebrow">Recibido</span>
-            <h1><em style="font-style: italic; color: var(--oxblood);">Gracias</em></h1>
+            <h1>¡<span style="color: var(--green);">Gracias</span>!</h1>
             <div class="meta">Tu respuesta fue registrada</div>
           </div>
           <div class="container">
             <div class="card" style="text-align: center;">
               <div class="ornament"></div>
-              <p style="font-family: 'Fraunces', serif; font-style: italic; font-size: 1.1rem; color: var(--ink); max-width: 460px; margin: 0 auto 22px;">${isApertura
+              <p style="font-size: 1.05rem; color: var(--body); max-width: 460px; margin: 0 auto 22px;">${isApertura
                 ? "Espera la proyección del facilitador para ver los resultados del grupo."
                 : "Vamos a comparar estas respuestas con las del inicio."}</p>
               <a class="btn btn-ghost" href="#">Volver al inicio</a>
@@ -1802,7 +2033,7 @@
 
         const faseLabel = fase === "apertura" ? "Apertura" : fase === "cierre" ? "Cierre" : "Comparativo";
         app().innerHTML = `
-          <div class="masthead masthead-narrow">
+          <div class="hero hero-narrow">
             <span class="eyebrow">Dashboard en vivo</span>
             <h1>${escapeHtml(faseLabel)}</h1>
             <div class="meta" id="dashboard-meta">Cargando…</div>
@@ -1876,7 +2107,7 @@
         const token = sessionStorage.getItem("encuesta_ia_admin_token");
         if (!token) {
           app().innerHTML = `
-            <div class="masthead masthead-narrow">
+            <div class="hero hero-narrow">
               <span class="eyebrow">Restringido</span>
               <h1>Acceso facilitador</h1>
             </div>
