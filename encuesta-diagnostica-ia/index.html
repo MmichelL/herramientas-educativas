@@ -430,8 +430,24 @@
     .dash-toolbar .spacer { flex: 1; }
     .dash-toolbar .btn { min-height: 38px; padding: 8px 16px; font-size: 0.82rem; }
 
-    .dash-chart-wrap { margin: 14px 0 28px; }
-    .dash-chart-wrap > h3 { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; }
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px 32px;
+      margin-top: 8px;
+    }
+    @media (max-width: 720px) {
+      .dash-grid { grid-template-columns: 1fr; gap: 22px; }
+    }
+    .dash-chart-wrap { margin: 0; min-width: 0; }
+    .dash-chart-wrap.full { grid-column: 1 / -1; }
+    .dash-chart-wrap > h3 {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 500;
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
     .benchmark {
       margin-top: 8px;
       padding: 10px 14px;
@@ -511,12 +527,6 @@
       { id: "teologia", label: "Teología" },
       { id: "posgrado", label: "Posgrado" },
     ];
-    const COORDINACIONES_TBD = [
-      { id: "tbd-A", label: "Coordinación A (placeholder)" },
-      { id: "tbd-B", label: "Coordinación B (placeholder)" },
-      { id: "tbd-C", label: "Coordinación C (placeholder)" },
-      { id: "otra", label: "Otra / no aplica" },
-    ];
 
     // ══════════════════════════════════════════════════════════════════
     // Preguntas — apertura
@@ -524,8 +534,6 @@
     const PREGUNTAS_APERTURA = [
       { section: "Demográficas", code: "facultad", scope: "demograficas", type: "single", label: "Facultad vinculada a tu labor docente",
         options: FACULTADES.map(f => ({ id: f.id, label: f.label })) },
-      { section: "Demográficas", code: "coordinacion", scope: "demograficas", type: "single", label: "Coordinación a la que perteneces",
-        options: COORDINACIONES_TBD },
       { section: "Demográficas", code: "tiempo_docencia", scope: "demograficas", type: "single", label: "Tiempo total impartiendo docencia (en cualquier institución)",
         options: [
           { id: "<5", label: "Menos de 5 años" },
@@ -979,7 +987,7 @@
       if (q) return q.label;
       // demografica codes
       const dem = code.replace(/^dem_/, "");
-      const map = { facultad: "Facultad", coordinacion: "Coordinación", tiempo_docencia: "Tiempo docencia", sexo: "Sexo" };
+      const map = { facultad: "Facultad", tiempo_docencia: "Tiempo docencia", sexo: "Sexo" };
       return map[dem] || code;
     }
 
@@ -1066,7 +1074,26 @@
       return { annotations: {} };
     }
 
-    function renderDistributionChart(canvasId, code, byQuestion, type = "vertical") {
+    // Paleta secuencial para doughnuts (oxblood family + complementarios)
+    const DOUGHNUT_PALETTE = ["#7A2424", "#B6863E", "#5F6F4F", "#1F1A14", "#9B3B3B", "#8E6627", "#828B6E", "#3F4A36"];
+
+    function chartKindFor(q) {
+      // Categorical singles → doughnut. Ordinal singles + likerts → bar. Multi → horizontal bar.
+      if (q.type === "multi") return "hbar";
+      if (q.type === "likert5") return "bar";
+      const DOUGHNUT_CODES = new Set([
+        "postura",
+        "politica_institucional",
+        "d2_herramienta",
+        "d2_frecuencia",
+        "d3_porcentaje",
+        "c2_porcentaje",
+        "c5_tecnica",
+      ]);
+      return DOUGHNUT_CODES.has(q.code) ? "doughnut" : "bar";
+    }
+
+    function renderDistributionChart(canvasId, code, byQuestion, kind) {
       const data = byQuestion[code];
       if (!data) return;
       const ctx = document.getElementById(canvasId);
@@ -1074,6 +1101,7 @@
 
       const labels = Object.keys(data.values).map((k) => optionLabelFor(code, k));
       const values = Object.values(data.values);
+      const total = values.reduce((s, v) => s + v, 0) || 1;
 
       if (dashboardCharts[canvasId]) {
         dashboardCharts[canvasId].data.labels = labels;
@@ -1082,6 +1110,68 @@
         return;
       }
 
+      if (kind === "doughnut") {
+        dashboardCharts[canvasId] = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels,
+            datasets: [{
+              data: values,
+              backgroundColor: labels.map((_, i) => DOUGHNUT_PALETTE[i % DOUGHNUT_PALETTE.length]),
+              borderColor: "#FFFCF6",
+              borderWidth: 2,
+              hoverOffset: 6,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "62%",
+            plugins: {
+              legend: {
+                position: "right",
+                labels: {
+                  font: { family: "'Manrope', sans-serif", size: 11 },
+                  color: "#1F1A14",
+                  boxWidth: 10,
+                  boxHeight: 10,
+                  padding: 9,
+                  generateLabels(chart) {
+                    const d = chart.data;
+                    if (!d.labels || !d.datasets.length) return [];
+                    return d.labels.map((label, i) => {
+                      const v = d.datasets[0].data[i] || 0;
+                      const pct = total ? Math.round((v / total) * 100) : 0;
+                      return {
+                        text: `${label} · ${pct}%`,
+                        fillStyle: d.datasets[0].backgroundColor[i],
+                        strokeStyle: d.datasets[0].backgroundColor[i],
+                        lineWidth: 0,
+                        hidden: false,
+                        index: i,
+                      };
+                    });
+                  },
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label(ctx) {
+                    const v = ctx.parsed;
+                    const pct = total ? Math.round((v / total) * 100) : 0;
+                    return ` ${ctx.label}: ${v} (${pct}%)`;
+                  },
+                },
+              },
+            },
+            animation: { animateRotate: true, duration: 600 },
+          },
+        });
+        return;
+      }
+
+      // Default: bar (vertical or horizontal)
+      const horizontal = kind === "hbar";
       dashboardCharts[canvasId] = new Chart(ctx, {
         type: "bar",
         data: {
@@ -1089,8 +1179,8 @@
           datasets: [{
             label: "respuestas",
             data: values,
-            backgroundColor: "#5F6F4F",
-            hoverBackgroundColor: "#43523A",
+            backgroundColor: horizontal ? "#5F6F4F" : "#B6863E",
+            hoverBackgroundColor: horizontal ? "#43523A" : "#8E6627",
             borderRadius: 2,
             borderSkipped: false,
           }],
@@ -1098,7 +1188,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: type === "horizontal" ? "y" : "x",
+          indexAxis: horizontal ? "y" : "x",
           plugins: { legend: { display: false } },
           scales: {
             x: { beginAtZero: true, ticks: { color: "#867968", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { color: "#E8DDC5" } },
@@ -1194,6 +1284,8 @@
           secIdx += 1;
           const card = document.createElement("div");
           card.className = "card";
+          const grid = document.createElement("div");
+          grid.className = "dash-grid";
           card.innerHTML = `
             <div class="section-head">
               <span class="eyebrow">Sección ${String(secIdx).padStart(2, "0")}</span>
@@ -1203,17 +1295,20 @@
             <hr class="rule" />
           `;
           for (const q of qs) {
+            const kind = chartKindFor(q);
             const wrap = document.createElement("div");
-            wrap.className = "dash-chart-wrap";
+            wrap.className = "dash-chart-wrap" + (kind === "hbar" ? " full" : "");
+            const height = kind === "hbar" ? 260 : kind === "doughnut" ? 220 : 200;
             wrap.innerHTML = `
               <h3>${escapeHtml(q.label)}</h3>
-              <div style="height: ${q.type === "multi" ? 240 : 180}px;">
+              <div style="height: ${height}px;">
                 <canvas id="chart_${q.code}"></canvas>
               </div>
               <div id="benchmark_${q.code}" class="benchmark hidden"></div>
             `;
-            card.appendChild(wrap);
+            grid.appendChild(wrap);
           }
+          card.appendChild(grid);
           sections.appendChild(card);
         }
         sections.dataset.builtFor = builtFor;
@@ -1224,7 +1319,7 @@
         if (q.type === "likert5") {
           renderLikertChart(`chart_${q.code}`, q.code, data.byQuestion, showBenchmark);
         } else {
-          renderDistributionChart(`chart_${q.code}`, q.code, data.byQuestion, q.type === "multi" ? "horizontal" : "vertical");
+          renderDistributionChart(`chart_${q.code}`, q.code, data.byQuestion, chartKindFor(q));
         }
         const benchEl = document.getElementById(`benchmark_${q.code}`);
         if (benchEl) {
@@ -1701,7 +1796,7 @@
         const fase = params.fase || "apertura";
         const showBenchmark = params.benchmark === "1";
         const activeFilters = {};
-        for (const k of ["facultad", "coordinacion", "tiempo_docencia", "sexo", "postura"]) {
+        for (const k of ["facultad", "tiempo_docencia", "sexo", "postura"]) {
           if (params[k]) activeFilters[k] = params[k];
         }
 

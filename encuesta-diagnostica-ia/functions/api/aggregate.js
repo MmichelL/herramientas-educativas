@@ -10,7 +10,7 @@
 // ══════════════════════════════════════════════════════════════════
 
 const VALID_FASES = ["apertura", "cierre"];
-const FILTER_KEYS = ["facultad", "coordinacion", "tiempo_docencia", "sexo", "postura"];
+const FILTER_KEYS = ["facultad", "tiempo_docencia", "sexo", "postura"];
 
 function corsHeaders() {
   return {

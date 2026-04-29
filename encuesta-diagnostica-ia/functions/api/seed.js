@@ -65,7 +65,6 @@ function genApertura() {
         ["teologia", 6],
         ["posgrado", 5],
       ]),
-      coordinacion: pickWeighted([["tbd-A", 30], ["tbd-B", 25], ["tbd-C", 25], ["otra", 20]]),
       tiempo_docencia: pickWeighted([["<5", 18], ["5-14", 35], ["15-24", 32], ["25+", 15]]),
       sexo: pickWeighted([["F", 58], ["M", 40], ["prefiero-no-decir", 2]]),
     },

@@ -97,7 +97,7 @@ Generadores recomendados: `https://qrcode-monkey.com` o `https://api.qrserver.co
 ## Personalización
 
 - Editar `BENCHMARKS` en `index.html` para actualizar referencias académicas.
-- Editar `COORDINACIONES_TBD` cuando llegue el listado oficial de coordinaciones UNAD. Si nunca llega, eliminar la pregunta `dem_coordinacion` de `PREGUNTAS_APERTURA`.
+- Pregunta de coordinación eliminada (no se obtuvo listado oficial). Segmentación demográfica = facultad + tiempo de docencia + sexo.
 - Si quieres cambiar la matrícula del admin: editar `PROFESOR_MATRICULA` en `index.html` y `ADMIN_TOKEN` en cada `functions/api/*.js`.
 
 ---
