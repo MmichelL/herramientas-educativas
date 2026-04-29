@@ -1060,6 +1060,89 @@
       navigate("landing");
     }
 
+    async function seedDemo(fase) {
+      const n = parseInt($("#seed-n").value) || 80;
+      if (n < 1 || n > 200) { toast("n debe estar entre 1 y 200", "error"); return; }
+      if (!confirm(`¿Sembrar ${n} respuestas demo de ${fase}?`)) return;
+      const { status, data } = await api("/api/seed", {
+        method: "POST",
+        body: JSON.stringify({ fase, n }),
+        requireAdmin: true,
+      });
+      if (status === 200) {
+        toast(`✓ Sembradas ${data.created} respuestas`, "success");
+        renderAdminPanel();
+      } else {
+        toast(`Error: ${data.error || "intenta de nuevo"}`, "error");
+      }
+    }
+
+    async function wipeData(scope) {
+      const labels = { apertura: "respuestas de APERTURA", cierre: "respuestas de CIERRE", all: "TODAS las respuestas + reset fase a apertura" };
+      if (!confirm(`¿Borrar ${labels[scope]}? Esta acción es irreversible.`)) return;
+      const word = prompt(`Para confirmar, escribe BORRAR (en mayúsculas):`);
+      if (word !== "BORRAR") { toast("Cancelado", "info"); return; }
+      if (scope === "all" && !confirm("⚠ Última confirmación: vas a borrar TODO. ¿Continuar?")) return;
+      const { status, data } = await api(`/api/wipe?scope=${scope}`, {
+        method: "DELETE",
+        requireAdmin: true,
+      });
+      if (status === 200) {
+        toast(`✓ Borradas ${data.deleted} respuestas`, "success");
+        renderAdminPanel();
+      } else {
+        toast(`Error: ${data.error || "intenta de nuevo"}`, "error");
+      }
+    }
+
+    async function exportData(fase, format) {
+      const { status, data } = await api(`/api/responses?fase=${fase}`, { requireAdmin: true });
+      if (status !== 200) {
+        toast(`Error: ${data.error || "no se pudo exportar"}`, "error");
+        return;
+      }
+
+      let blob, filename;
+      if (format === "json") {
+        blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        filename = `encuesta_ia_${fase}_${new Date().toISOString().slice(0,10)}.json`;
+      } else {
+        // CSV: respId, ts, then demograficas keys, then respuestas keys (multi as ; joined)
+        const items = data.items || [];
+        if (items.length === 0) { toast("Sin respuestas para exportar", "info"); return; }
+        const demKeys = new Set();
+        const respKeys = new Set();
+        for (const it of items) {
+          for (const k of Object.keys(it.demograficas || {})) demKeys.add(k);
+          for (const k of Object.keys(it.respuestas || {})) respKeys.add(k);
+        }
+        const headers = ["respId", "ts", ...[...demKeys].map(k => `dem_${k}`), ...respKeys];
+        const rows = [headers.join(",")];
+        for (const it of items) {
+          const row = [it.respId, it.ts];
+          for (const k of demKeys) row.push(csvCell(it.demograficas?.[k]));
+          for (const k of respKeys) row.push(csvCell(it.respuestas?.[k]));
+          rows.push(row.join(","));
+        }
+        blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8" });
+        filename = `encuesta_ia_${fase}_${new Date().toISOString().slice(0,10)}.csv`;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvCell(v) {
+      if (v === null || v === undefined) return "";
+      const s = Array.isArray(v) ? v.join(";") : String(v);
+      if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    }
+
     // ══════════════════════════════════════════════════════════════════
     // Routes (filled in by subsequent tasks)
     // ══════════════════════════════════════════════════════════════════
