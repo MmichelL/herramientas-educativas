@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1A2456" />
+  <title>Encuesta diagnóstica IA — UNAD</title>
+  <style>
+    /* ── Paleta institucional (de herramientas-educativas-CLAUDE.md) ── */
+    :root {
+      --navy:  #1A2456;
+      --blue:  #2D5BE3;
+      --mint:  #00D4A0;
+      --amber: #F59E0B;
+      --coral: #FF5C6A;
+      --gray:  #F3F4F8;
+      --white: #FFFFFF;
+      --black: #1F2937;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--gray);
+      color: var(--black);
+      line-height: 1.5;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+    .container-wide { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+    h1 { font-size: 1.5rem; color: var(--navy); margin-bottom: 0.5em; }
+    h2 { font-size: 1.25rem; color: var(--navy); margin: 1em 0 0.5em; }
+    h3 { font-size: 1.05rem; color: var(--navy); margin: 0.75em 0 0.5em; }
+    p { margin-bottom: 0.75em; }
+
+    button, .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 44px;
+      background: var(--blue);
+      color: var(--white);
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    button:hover, .btn:hover { background: var(--navy); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: var(--gray); color: var(--navy); border: 2px solid var(--navy); }
+    .btn-secondary:hover { background: var(--navy); color: var(--white); }
+    .btn-danger { background: var(--coral); }
+    .btn-danger:hover { background: #d94552; }
+    .btn-success { background: var(--mint); color: var(--navy); }
+
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(26, 36, 86, 0.06);
+    }
+
+    .header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 16px;
+      text-align: center;
+    }
+    .header h1 { color: var(--white); margin: 0; }
+    .header .meta { font-size: 0.875rem; opacity: 0.85; margin-top: 4px; }
+
+    /* Form */
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--navy); }
+    .field .hint { font-size: 0.875rem; color: #6b7280; margin-bottom: 6px; }
+
+    .options { display: flex; flex-direction: column; gap: 8px; }
+    .option {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      background: var(--gray);
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 44px;
+      user-select: none;
+      transition: background 0.1s;
+    }
+    .option:hover { background: #e5e8f0; }
+    .option input { margin-right: 10px; transform: scale(1.2); }
+    .option.selected { background: var(--blue); color: var(--white); }
+
+    .likert-row { display: flex; gap: 6px; }
+    .likert-row .option {
+      flex: 1;
+      justify-content: center;
+      padding: 14px 6px;
+      text-align: center;
+    }
+    .likert-row .option .num { font-size: 1.25rem; font-weight: 700; }
+    .likert-row .option .label { font-size: 0.7rem; }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      background: var(--white);
+      min-height: 44px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      background: var(--navy);
+      color: var(--white);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1000;
+      max-width: 90vw;
+    }
+    .toast.success { background: var(--mint); color: var(--navy); }
+    .toast.error { background: var(--coral); }
+
+    .hidden { display: none !important; }
+
+    /* Landing */
+    .landing-cta {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .landing-cta .btn { padding: 24px; font-size: 1.1rem; text-align: center; }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container { padding: 16px 12px; }
+      h1 { font-size: 1.25rem; }
+      .likert-row .option { padding: 10px 2px; }
+      .likert-row .option .num { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <script>
+    // ══════════════════════════════════════════════════════════════════
+    // Constants
+    // ══════════════════════════════════════════════════════════════════
+    const PROFESOR_MATRICULA = "2008464";
+    const POLL_INTERVAL_MS = 3000;
+    const FACULTADES = [
+      { id: "ciencias-salud", label: "Ciencias de la Salud" },
+      { id: "humanidades", label: "Humanidades" },
+      { id: "ciencias-administrativas", label: "Ciencias Administrativas" },
+      { id: "ingenieria-tecnologia", label: "Ingeniería y Tecnología" },
+      { id: "teologia", label: "Teología" },
+      { id: "posgrado", label: "Posgrado" },
+    ];
+    const COORDINACIONES_TBD = [
+      { id: "tbd-A", label: "Coordinación A (placeholder)" },
+      { id: "tbd-B", label: "Coordinación B (placeholder)" },
+      { id: "tbd-C", label: "Coordinación C (placeholder)" },
+      { id: "otra", label: "Otra / no aplica" },
+    ];
+
+    // ══════════════════════════════════════════════════════════════════
+    // Utilities
+    // ══════════════════════════════════════════════════════════════════
+    const $ = (sel) => document.querySelector(sel);
+    const app = () => document.getElementById("app");
+
+    function uuid() {
+      if (crypto.randomUUID) return crypto.randomUUID();
+      // Fallback (modern browsers all support randomUUID, this is just defensive)
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    }
+
+    function toast(msg, type = "info", ms = 3500) {
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), ms);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    async function api(path, options = {}) {
+      const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+      const adminToken = sessionStorage.getItem("encuesta_ia_admin_token");
+      if (adminToken && options.requireAdmin) headers["X-Admin-Token"] = adminToken;
+      const res = await fetch(path, { ...options, headers });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { _raw: text }; }
+      return { status: res.status, data };
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // Router
+    // ══════════════════════════════════════════════════════════════════
+    function getRoute() {
+      const hash = window.location.hash.replace(/^#/, "");
+      const [name, query = ""] = hash.split("?");
+      const params = {};
+      for (const pair of query.split("&")) {
+        if (!pair) continue;
+        const [k, v] = pair.split("=");
+        params[decodeURIComponent(k)] = decodeURIComponent(v || "");
+      }
+      return { name: name || "landing", params };
+    }
+
+    function navigate(name, params = {}) {
+      const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
+      window.location.hash = qs ? `${name}?${qs}` : name;
+    }
+
+    function render() {
+      const { name, params } = getRoute();
+      const handler = ROUTES[name] || ROUTES.landing;
+      app().innerHTML = "";
+      handler(params);
+    }
+
+    window.addEventListener("hashchange", render);
+    window.addEventListener("DOMContentLoaded", render);
+
+    // ══════════════════════════════════════════════════════════════════
+    // Routes (filled in by subsequent tasks)
+    // ══════════════════════════════════════════════════════════════════
+    const ROUTES = {
+      landing(params) {
+        app().innerHTML = `
+          <div class="header">
+            <h1>Encuesta diagnóstica IA</h1>
+            <div class="meta">UNAD · Capacitación docente abril 2026</div>
+          </div>
+          <div class="container">
+            <p>Bienvenido/a. Esta es la app diagnóstica de la capacitación.</p>
+            <div class="landing-cta">
+              <a class="btn" href="#apertura">Responder apertura</a>
+              <a class="btn btn-secondary" href="#cierre">Responder cierre</a>
+              <a class="btn btn-secondary" href="#dashboard">Ver dashboard</a>
+            </div>
+            <p style="margin-top: 24px; font-size: 0.85rem; color: #6b7280; text-align: center;">
+              <a href="#admin" style="color: #6b7280;">Acceso facilitador</a>
+            </p>
+          </div>
+        `;
+      },
+      apertura() {
+        app().innerHTML = `<div class="container"><h1>Apertura</h1><p>Pendiente — Task 9.</p></div>`;
+      },
+      cierre() {
+        app().innerHTML = `<div class="container"><h1>Cierre</h1><p>Pendiente — Task 10.</p></div>`;
+      },
+      gracias() {
+        app().innerHTML = `<div class="container"><h1>¡Gracias!</h1><p>Tu respuesta fue registrada. Espera la proyección del facilitador.</p></div>`;
+      },
+      dashboard() {
+        app().innerHTML = `<div class="container-wide"><h1>Dashboard</h1><p>Pendiente — Task 11.</p></div>`;
+      },
+      admin() {
+        app().innerHTML = `<div class="container"><h1>Admin</h1><p>Pendiente — Task 14.</p></div>`;
+      },
+    };
+  </script>
+</body>
+</html>
