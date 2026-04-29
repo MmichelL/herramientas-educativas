@@ -1291,7 +1291,7 @@
                 <a class="btn ${fase === "cierre" ? "" : "btn-secondary"}" href="#dashboard?fase=cierre">Cierre</a>
                 <a class="btn ${fase === "comparativo" ? "" : "btn-secondary"}" href="#dashboard?fase=comparativo">Comparativo</a>
                 <span style="flex: 1"></span>
-                <button class="${showBenchmark ? "btn btn-success" : "btn-secondary"}" onclick="navigate('dashboard', Object.assign(${JSON.stringify({fase, ...activeFilters})}, {benchmark: '${showBenchmark ? "" : "1"}'}))">
+                <button id="toggle-benchmark-btn" class="${showBenchmark ? "btn btn-success" : "btn-secondary"}">
                   ${showBenchmark ? "✓ Mostrando evidencia" : "Mostrar evidencia"}
                 </button>
               </div>
@@ -1307,7 +1307,7 @@
                 ${fase === "apertura" ? renderFilterDropdown("postura", "Postura", [
                   {id:"entusiasmo",label:"Entusiasmo"},{id:"curiosidad-cautelosa",label:"Curiosidad"},{id:"neutral",label:"Neutral"},{id:"preocupacion",label:"Preocupación"},{id:"rechazo",label:"Rechazo"}
                 ], activeFilters) : ""}
-                ${Object.keys(activeFilters).length > 0 ? `<button class="btn-secondary" onclick="navigate('dashboard', {fase: '${fase}'${showBenchmark ? ", benchmark: '1'" : ""}})">Limpiar filtros</button>` : ""}
+                ${Object.keys(activeFilters).length > 0 ? `<button id="clear-filters-btn" class="btn-secondary">Limpiar filtros</button>` : ""}
               </div>
             </div>
 
@@ -1324,6 +1324,24 @@
             navigate("dashboard", { fase, ...newFilters, ...(showBenchmark ? { benchmark: "1" } : {}) });
           });
         });
+
+        // Bind toggle benchmark + clear filters
+        const _toggleBtn = document.getElementById("toggle-benchmark-btn");
+        if (_toggleBtn) {
+          _toggleBtn.addEventListener("click", () => {
+            const next = { fase, ...activeFilters };
+            if (!showBenchmark) next.benchmark = "1";
+            navigate("dashboard", next);
+          });
+        }
+        const _clearBtn = document.getElementById("clear-filters-btn");
+        if (_clearBtn) {
+          _clearBtn.addEventListener("click", () => {
+            const next = { fase };
+            if (showBenchmark) next.benchmark = "1";
+            navigate("dashboard", next);
+          });
+        }
 
         if (fase === "comparativo") {
           startComparativoPolling(showBenchmark);
