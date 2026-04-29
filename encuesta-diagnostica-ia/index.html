@@ -581,6 +581,248 @@
     }
 
     // ══════════════════════════════════════════════════════════════════
+    // Benchmarks académicos para overlay de evidencia
+    // ══════════════════════════════════════════════════════════════════
+    const BENCHMARKS = {
+      d1_ensayo: { value: 5, label: "Yeadon 2022: GPT-3 obtenía First Class en ensayos cortos" },
+      d1_calculo: { value: 4.5, label: "GPT-5.5: 51.7% FrontierMath (nivel 1-3)" },
+      d1_examen_disciplina: { value: 4.4, label: "ChatGPT-4: 88.7% NCLEX-RN" },
+      d1_codigo: { value: 4.5, label: "GPT-5.5: 82.7% Terminal-Bench 2.0; Claude Opus 4.7: 64.3% SWE-bench Pro" },
+      d1_literatura: { value: 4.0, label: "Deep Research Gemini 3.1 Pro · Perplexity Pro" },
+      d1_agentic: { value: 4.5, label: "GPT-5.5: 82.7% Terminal-Bench 2.0 (uso agentic)" },
+      d3_porcentaje: { value: ">75", label: "HEPI 2026: 95% de estudiantes UK usan IA, 94% en evaluaciones" },
+      d3_confianza_deteccion: { value: 1.5, label: "Coursera: solo 1 de 4 docentes confía en detectar trabajo IA" },
+      politica_institucional: { value: "no-estoy-seguro", label: "SEP México 2026: 71.8% de docentes no sabe si su institución tiene política IA" },
+      c1_agentic: { value: 4.5, label: "GPT-5.5: 82.7% Terminal-Bench 2.0" },
+      c2_porcentaje: { value: ">75", label: "HEPI 2026" },
+      c3_confianza_deteccion: { value: 1.5, label: "Coursera 1/4 docentes" },
+    };
+
+    // Map question codes to human labels for dashboard
+    function labelFor(code) {
+      const all = [...PREGUNTAS_APERTURA, ...PREGUNTAS_CIERRE];
+      const q = all.find((x) => x.code === code);
+      if (q) return q.label;
+      // demografica codes
+      const dem = code.replace(/^dem_/, "");
+      const map = { facultad: "Facultad", coordinacion: "Coordinación", tiempo_docencia: "Tiempo docencia", sexo: "Sexo" };
+      return map[dem] || code;
+    }
+
+    function optionLabelFor(code, optionId) {
+      const all = [...PREGUNTAS_APERTURA, ...PREGUNTAS_CIERRE];
+      const q = all.find((x) => x.code === code || x.code === code.replace(/^dem_/, ""));
+      if (q && q.options) {
+        const o = q.options.find((opt) => opt.id === optionId);
+        if (o) return o.label;
+      }
+      return optionId;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // Dashboard
+    // ══════════════════════════════════════════════════════════════════
+    let dashboardPollHandle = null;
+    const dashboardCharts = {};
+
+    function destroyAllCharts() {
+      for (const c of Object.values(dashboardCharts)) {
+        try { c.destroy(); } catch {}
+      }
+      for (const k of Object.keys(dashboardCharts)) delete dashboardCharts[k];
+    }
+
+    function renderLikertChart(canvasId, code, byQuestion, showBenchmark) {
+      const data = byQuestion[code];
+      if (!data) return;
+      const counts = [1,2,3,4,5].map((n) => data.values[n] || 0);
+      const ctx = document.getElementById(canvasId);
+      if (!ctx) return;
+
+      if (dashboardCharts[canvasId]) {
+        // Update existing
+        dashboardCharts[canvasId].data.datasets[0].data = counts;
+        if (showBenchmark && BENCHMARKS[code]) {
+          dashboardCharts[canvasId].options.plugins.annotation = annotationFor(BENCHMARKS[code].value);
+        } else {
+          dashboardCharts[canvasId].options.plugins.annotation = { annotations: {} };
+        }
+        dashboardCharts[canvasId].update();
+        return;
+      }
+
+      dashboardCharts[canvasId] = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["1 muy mal", "2", "3", "4", "5 excelente"],
+          datasets: [{
+            label: "respuestas",
+            data: counts,
+            backgroundColor: "#2D5BE3",
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: data.mean !== undefined ? `Promedio del grupo: ${data.mean.toFixed(2)} / 5` : "",
+              font: { size: 14, weight: "bold" },
+              color: "#1A2456",
+            },
+          },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+          animation: { duration: 400 },
+        },
+      });
+    }
+
+    function annotationFor(benchValue) {
+      // Custom plugin not used; we add a simple annotation via afterDraw in subsequent task if needed.
+      // For now, empty (the benchmark text is shown separately).
+      return { annotations: {} };
+    }
+
+    function renderDistributionChart(canvasId, code, byQuestion, type = "vertical") {
+      const data = byQuestion[code];
+      if (!data) return;
+      const ctx = document.getElementById(canvasId);
+      if (!ctx) return;
+
+      const labels = Object.keys(data.values).map((k) => optionLabelFor(code, k));
+      const values = Object.values(data.values);
+
+      if (dashboardCharts[canvasId]) {
+        dashboardCharts[canvasId].data.labels = labels;
+        dashboardCharts[canvasId].data.datasets[0].data = values;
+        dashboardCharts[canvasId].update();
+        return;
+      }
+
+      dashboardCharts[canvasId] = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: "respuestas",
+            data: values,
+            backgroundColor: "#00D4A0",
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: type === "horizontal" ? "y" : "x",
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true } },
+          animation: { duration: 400 },
+        },
+      });
+    }
+
+    function startDashboardPolling(fase, showBenchmark) {
+      stopDashboardPolling();
+      const tick = async () => {
+        const { status, data } = await api(`/api/aggregate?fase=${fase}`);
+        if (status !== 200) return;
+        renderDashboardData(fase, data, showBenchmark);
+      };
+      tick();
+      dashboardPollHandle = setInterval(tick, POLL_INTERVAL_MS);
+    }
+
+    function stopDashboardPolling() {
+      if (dashboardPollHandle) clearInterval(dashboardPollHandle);
+      dashboardPollHandle = null;
+      destroyAllCharts();
+    }
+
+    window.addEventListener("hashchange", () => {
+      const r = getRoute();
+      if (r.name !== "dashboard") stopDashboardPolling();
+    });
+
+    function timeAgo(iso) {
+      if (!iso) return "—";
+      const ms = Date.now() - new Date(iso).getTime();
+      if (ms < 1000) return "ahora";
+      const s = Math.floor(ms / 1000);
+      if (s < 60) return `hace ${s}s`;
+      const m = Math.floor(s / 60);
+      if (m < 60) return `hace ${m}m`;
+      return `hace ${Math.floor(m / 60)}h`;
+    }
+
+    function renderDashboardData(fase, data, showBenchmark) {
+      const meta = $("#dashboard-meta");
+      if (meta) {
+        meta.textContent = `n=${data.n} respuestas · última ${timeAgo(data.lastTs)}`;
+      }
+
+      const sections = $("#dashboard-sections");
+      if (!sections) return;
+
+      if (data.n === 0) {
+        sections.innerHTML = `<div class="card"><h2>Esperando respuestas…</h2><p>El dashboard se actualiza solo cuando lleguen respuestas.</p></div>`;
+        return;
+      }
+
+      const preguntas = fase === "apertura" ? PREGUNTAS_APERTURA : PREGUNTAS_CIERRE;
+      const grouped = {};
+      for (const q of preguntas) {
+        if (q.scope === "demograficas") continue;
+        grouped[q.section] = grouped[q.section] || [];
+        grouped[q.section].push(q);
+      }
+
+      // Build skeleton if not already present
+      if (!sections.dataset.builtFor || sections.dataset.builtFor !== fase) {
+        sections.innerHTML = "";
+        for (const [secName, qs] of Object.entries(grouped)) {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `<h2>${escapeHtml(secName)}</h2>`;
+          for (const q of qs) {
+            const wrap = document.createElement("div");
+            wrap.style.marginBottom = "16px";
+            wrap.innerHTML = `
+              <h3>${escapeHtml(q.label)}</h3>
+              <div style="height: ${q.type === "multi" ? 240 : 180}px;">
+                <canvas id="chart_${q.code}"></canvas>
+              </div>
+              <div id="benchmark_${q.code}" class="hint" style="margin-top:6px;"></div>
+            `;
+            card.appendChild(wrap);
+          }
+          sections.appendChild(card);
+        }
+        sections.dataset.builtFor = fase;
+      }
+
+      // Update charts
+      for (const q of preguntas) {
+        if (q.scope === "demograficas") continue;
+        if (q.type === "likert5") {
+          renderLikertChart(`chart_${q.code}`, q.code, data.byQuestion, showBenchmark);
+        } else {
+          renderDistributionChart(`chart_${q.code}`, q.code, data.byQuestion, q.type === "multi" ? "horizontal" : "vertical");
+        }
+        const benchEl = document.getElementById(`benchmark_${q.code}`);
+        if (benchEl) {
+          if (showBenchmark && BENCHMARKS[q.code]) {
+            benchEl.innerHTML = `<strong style="color: var(--coral);">Evidencia:</strong> ${escapeHtml(BENCHMARKS[q.code].label)}${BENCHMARKS[q.code].value !== undefined ? ` <em>(referencia: ${escapeHtml(String(BENCHMARKS[q.code].value))})</em>` : ""}`;
+          } else {
+            benchEl.innerHTML = "";
+          }
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     // Routes (filled in by subsequent tasks)
     // ══════════════════════════════════════════════════════════════════
     const ROUTES = {
@@ -685,8 +927,33 @@
             </div>
           </div>`;
       },
-      dashboard() {
-        app().innerHTML = `<div class="container-wide"><h1>Dashboard</h1><p>Pendiente — Task 11.</p></div>`;
+      dashboard(params) {
+        const fase = params.fase || "apertura";
+        const showBenchmark = params.benchmark === "1";
+
+        app().innerHTML = `
+          <div class="header">
+            <h1>Dashboard — Encuesta ${fase}</h1>
+            <div class="meta" id="dashboard-meta">Cargando…</div>
+          </div>
+          <div class="container-wide">
+            <div class="card">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <strong>Fase:</strong>
+                <a class="btn ${fase === "apertura" ? "" : "btn-secondary"}" href="#dashboard?fase=apertura">Apertura</a>
+                <a class="btn ${fase === "cierre" ? "" : "btn-secondary"}" href="#dashboard?fase=cierre">Cierre</a>
+                <span style="flex: 1"></span>
+                <button class="${showBenchmark ? "btn btn-success" : "btn-secondary"}" onclick="navigate('dashboard', {fase: '${fase}', benchmark: '${showBenchmark ? "" : "1"}'})">
+                  ${showBenchmark ? "✓ Mostrando evidencia" : "Mostrar evidencia"}
+                </button>
+              </div>
+            </div>
+
+            <div id="dashboard-sections"></div>
+          </div>
+        `;
+
+        startDashboardPolling(fase, showBenchmark);
       },
       admin() {
         app().innerHTML = `<div class="container"><h1>Admin</h1><p>Pendiente — Task 14.</p></div>`;
