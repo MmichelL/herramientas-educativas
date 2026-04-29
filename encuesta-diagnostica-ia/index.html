@@ -843,6 +843,133 @@
       }
     }
 
+    const COMPARATIVO_CODES = [
+      { aperturaCode: "d1_agentic", cierreCode: "c1_agentic", label: "Capacidad agentic de la IA", type: "likert5" },
+      { aperturaCode: "d3_porcentaje", cierreCode: "c2_porcentaje", label: "% de estudiantes que usan IA semanalmente", type: "single" },
+      { aperturaCode: "d3_confianza_deteccion", cierreCode: "c3_confianza_deteccion", label: "Confianza para detectar uso indebido", type: "likert5" },
+    ];
+
+    function startComparativoPolling(showBenchmark) {
+      stopDashboardPolling();
+      const tick = async () => {
+        const [aper, cier] = await Promise.all([
+          api("/api/aggregate?fase=apertura"),
+          api("/api/aggregate?fase=cierre"),
+        ]);
+        if (aper.status !== 200 || cier.status !== 200) return;
+        renderComparativo(aper.data, cier.data, showBenchmark);
+      };
+      tick();
+      dashboardPollHandle = setInterval(tick, POLL_INTERVAL_MS);
+    }
+
+    function renderComparativo(aperData, cierData, showBenchmark) {
+      const meta = $("#dashboard-meta");
+      if (meta) {
+        meta.textContent = `Apertura n=${aperData.n} · Cierre n=${cierData.n}`;
+      }
+
+      const sections = $("#dashboard-sections");
+      if (!sections) return;
+
+      if (cierData.n === 0) {
+        sections.innerHTML = `<div class="card"><h2>El comparativo aún no está disponible</h2><p>Necesitamos respuestas de cierre. Apertura: ${aperData.n} respuestas. Cierre: 0 respuestas.</p></div>`;
+        sections.dataset.builtFor = "";
+        destroyAllCharts();
+        return;
+      }
+
+      if (sections.dataset.builtFor !== "comparativo") {
+        destroyAllCharts();
+        sections.innerHTML = "";
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h2>Comparativo apertura ↔ cierre</h2><p class="hint">Comparación a nivel grupo (encuesta anónima — no se parean individuos).</p>`;
+        for (const c of COMPARATIVO_CODES) {
+          const wrap = document.createElement("div");
+          wrap.style.marginBottom = "20px";
+          wrap.innerHTML = `
+            <h3>${escapeHtml(c.label)}</h3>
+            <div style="height: 220px;">
+              <canvas id="cmp_${c.aperturaCode}"></canvas>
+            </div>
+            <div id="cmpbench_${c.aperturaCode}" class="hint" style="margin-top:6px;"></div>
+          `;
+          card.appendChild(wrap);
+        }
+        sections.appendChild(card);
+        sections.dataset.builtFor = "comparativo";
+      }
+
+      for (const c of COMPARATIVO_CODES) {
+        const canvasId = `cmp_${c.aperturaCode}`;
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) continue;
+
+        const aperVal = aperData.byQuestion[c.aperturaCode];
+        const cierVal = cierData.byQuestion[c.cierreCode];
+
+        let labels, aperData2, cierData2;
+
+        if (c.type === "likert5") {
+          labels = ["1", "2", "3", "4", "5"];
+          aperData2 = [1,2,3,4,5].map(n => aperVal?.values?.[n] || 0);
+          cierData2 = [1,2,3,4,5].map(n => cierVal?.values?.[n] || 0);
+        } else {
+          // single: union of keys
+          const keys = new Set([
+            ...Object.keys(aperVal?.values || {}),
+            ...Object.keys(cierVal?.values || {}),
+          ]);
+          labels = [...keys].map(k => optionLabelFor(c.aperturaCode, k));
+          const ksArr = [...keys];
+          aperData2 = ksArr.map(k => aperVal?.values?.[k] || 0);
+          cierData2 = ksArr.map(k => cierVal?.values?.[k] || 0);
+        }
+
+        if (dashboardCharts[canvasId]) {
+          dashboardCharts[canvasId].data.labels = labels;
+          dashboardCharts[canvasId].data.datasets[0].data = aperData2;
+          dashboardCharts[canvasId].data.datasets[1].data = cierData2;
+          dashboardCharts[canvasId].update();
+          continue;
+        }
+
+        dashboardCharts[canvasId] = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              { label: "Apertura", data: aperData2, backgroundColor: "#9CA3AF", borderRadius: 4 },
+              { label: "Cierre", data: cierData2, backgroundColor: "#2D5BE3", borderRadius: 4 },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: c.type === "likert5",
+                text: c.type === "likert5" ? `Promedio apertura ${aperVal?.mean?.toFixed(2) || "—"} → cierre ${cierVal?.mean?.toFixed(2) || "—"}` : "",
+                font: { size: 14, weight: "bold" },
+                color: "#1A2456",
+              },
+              legend: { position: "top" },
+            },
+            scales: { y: { beginAtZero: true } },
+            animation: { duration: 400 },
+          },
+        });
+
+        const benchEl = document.getElementById(`cmpbench_${c.aperturaCode}`);
+        if (benchEl && showBenchmark && BENCHMARKS[c.aperturaCode]) {
+          benchEl.innerHTML = `<strong style="color: var(--coral);">Evidencia:</strong> ${escapeHtml(BENCHMARKS[c.aperturaCode].label)}`;
+        } else if (benchEl) {
+          benchEl.innerHTML = "";
+        }
+      }
+    }
+
     // ══════════════════════════════════════════════════════════════════
     // Routes (filled in by subsequent tasks)
     // ══════════════════════════════════════════════════════════════════
@@ -967,6 +1094,7 @@
                 <strong>Fase:</strong>
                 <a class="btn ${fase === "apertura" ? "" : "btn-secondary"}" href="#dashboard?fase=apertura">Apertura</a>
                 <a class="btn ${fase === "cierre" ? "" : "btn-secondary"}" href="#dashboard?fase=cierre">Cierre</a>
+                <a class="btn ${fase === "comparativo" ? "" : "btn-secondary"}" href="#dashboard?fase=comparativo">Comparativo</a>
                 <span style="flex: 1"></span>
                 <button class="${showBenchmark ? "btn btn-success" : "btn-secondary"}" onclick="navigate('dashboard', Object.assign(${JSON.stringify({fase, ...activeFilters})}, {benchmark: '${showBenchmark ? "" : "1"}'}))">
                   ${showBenchmark ? "✓ Mostrando evidencia" : "Mostrar evidencia"}
@@ -1001,6 +1129,11 @@
             navigate("dashboard", { fase, ...newFilters, ...(showBenchmark ? { benchmark: "1" } : {}) });
           });
         });
+
+        if (fase === "comparativo") {
+          startComparativoPolling(showBenchmark);
+          return;
+        }
 
         startDashboardPolling(fase, showBenchmark, activeFilters);
       },
