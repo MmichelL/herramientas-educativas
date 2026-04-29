@@ -175,6 +175,172 @@
     ];
 
     // ══════════════════════════════════════════════════════════════════
+    // Preguntas — apertura
+    // ══════════════════════════════════════════════════════════════════
+    const PREGUNTAS_APERTURA = [
+      { section: "Demográficas", code: "facultad", scope: "demograficas", type: "single", label: "Facultad vinculada a tu labor docente",
+        options: FACULTADES.map(f => ({ id: f.id, label: f.label })) },
+      { section: "Demográficas", code: "coordinacion", scope: "demograficas", type: "single", label: "Coordinación a la que perteneces",
+        options: COORDINACIONES_TBD },
+      { section: "Demográficas", code: "tiempo_docencia", scope: "demograficas", type: "single", label: "Tiempo total impartiendo docencia (en cualquier institución)",
+        options: [
+          { id: "<5", label: "Menos de 5 años" },
+          { id: "5-14", label: "5 a 14 años" },
+          { id: "15-24", label: "15 a 24 años" },
+          { id: "25+", label: "25 años o más" },
+        ] },
+      { section: "Demográficas", code: "sexo", scope: "demograficas", type: "single", label: "Sexo",
+        options: [
+          { id: "F", label: "Femenino" },
+          { id: "M", label: "Masculino" },
+          { id: "prefiero-no-decir", label: "Prefiero no decir" },
+        ] },
+
+      { section: "Tu postura", code: "postura", scope: "respuestas", type: "single",
+        label: "¿Cuál es tu postura general hacia la IA en educación?",
+        options: [
+          { id: "entusiasmo", label: "Entusiasmo: la veo como aliada" },
+          { id: "curiosidad-cautelosa", label: "Curiosidad cautelosa: la exploro pero con dudas" },
+          { id: "neutral", label: "Neutral: ni la promuevo ni la rechazo" },
+          { id: "preocupacion", label: "Preocupación: me incomoda su crecimiento" },
+          { id: "rechazo", label: "Rechazo: prefiero que no entre al aula" },
+        ] },
+
+      { section: "Capacidad de la IA actual", code: "d1_ensayo", scope: "respuestas", type: "likert5",
+        label: "Generar un ensayo universitario aprobatorio de 300–1500 palabras sobre un tema general",
+        hint: "1 = muy mal · 5 = excelente" },
+      { section: "Capacidad de la IA actual", code: "d1_calculo", scope: "respuestas", type: "likert5",
+        label: "Resolver problemas de cálculo / matemática a nivel pregrado" },
+      { section: "Capacidad de la IA actual", code: "d1_examen_disciplina", scope: "respuestas", type: "likert5",
+        label: "Aprobar un examen estandarizado de tu disciplina (ej: NCLEX en enfermería, certificación CompTIA en sistemas, ECOE en medicina)" },
+      { section: "Capacidad de la IA actual", code: "d1_codigo", scope: "respuestas", type: "likert5",
+        label: "Escribir código funcional que pase tests automatizados" },
+      { section: "Capacidad de la IA actual", code: "d1_literatura", scope: "respuestas", type: "likert5",
+        label: "Sintetizar literatura académica reciente con citas verificables" },
+      { section: "Capacidad de la IA actual", code: "d1_agentic", scope: "respuestas", type: "likert5",
+        label: "Realizar tareas multi-paso en un computador sin supervisión humana (descargar archivos, llenar formularios, navegar la web — todo en una sola corrida)" },
+
+      { section: "Tu uso de la IA", code: "d2_frecuencia", scope: "respuestas", type: "single",
+        label: "¿Con qué frecuencia usas IA en tu labor docente?",
+        options: [
+          { id: "diaria", label: "Diaria" },
+          { id: "varias-semana", label: "Varias veces por semana" },
+          { id: "semanal", label: "Semanal" },
+          { id: "mensual", label: "Mensual" },
+          { id: "rara-vez", label: "Rara vez" },
+          { id: "nunca", label: "Nunca" },
+        ] },
+      { section: "Tu uso de la IA", code: "d2_usos", scope: "respuestas", type: "multi",
+        label: "¿Para qué la usas?",
+        hint: "Marca todas las que apliquen",
+        options: [
+          { id: "buscar-info", label: "Buscar información" },
+          { id: "generar-ideas", label: "Generar ideas para clase" },
+          { id: "redactar-correos", label: "Redactar correos" },
+          { id: "crear-ejercicios", label: "Crear ejercicios o casos" },
+          { id: "disenar-rubricas", label: "Diseñar rúbricas" },
+          { id: "generar-examenes", label: "Generar exámenes" },
+          { id: "calificar", label: "Calificar trabajos" },
+          { id: "resumir-lecturas", label: "Resumir lecturas" },
+          { id: "traducir", label: "Traducir textos" },
+          { id: "investigacion-citas", label: "Investigación profunda con citas" },
+          { id: "no-la-uso", label: "No la uso" },
+          { id: "otro", label: "Otro" },
+        ] },
+      { section: "Tu uso de la IA", code: "d2_herramienta", scope: "respuestas", type: "single",
+        label: "¿Cuál es tu herramienta principal de IA?",
+        options: [
+          { id: "chatgpt", label: "ChatGPT (OpenAI)" },
+          { id: "claude", label: "Claude (Anthropic)" },
+          { id: "gemini", label: "Gemini (Google)" },
+          { id: "copilot", label: "Microsoft Copilot" },
+          { id: "deepseek", label: "DeepSeek" },
+          { id: "otra", label: "Otra" },
+          { id: "ninguna", label: "Ninguna" },
+        ] },
+
+      { section: "Política institucional", code: "politica_institucional", scope: "respuestas", type: "single",
+        label: "¿Conoces la política institucional de UNAD sobre uso de IA?",
+        options: [
+          { id: "si-conozco", label: "Sí, conozco la política" },
+          { id: "existe-no-leida", label: "Sé que existe pero no la he leído" },
+          { id: "no-estoy-seguro", label: "No estoy seguro/a si UNAD tiene una política" },
+          { id: "seguro-no-existe", label: "Estoy seguro/a de que UNAD no tiene política aún" },
+        ] },
+
+      { section: "Tus estudiantes", code: "d3_porcentaje", scope: "respuestas", type: "single",
+        label: "¿Qué % de tus estudiantes crees que usa IA semanalmente para sus trabajos?",
+        options: [
+          { id: "<25", label: "Menos del 25%" },
+          { id: "25-50", label: "Entre 25 y 50%" },
+          { id: "50-75", label: "Entre 50 y 75%" },
+          { id: ">75", label: "Más del 75%" },
+          { id: "casi-todos", label: "Casi todos" },
+        ] },
+      { section: "Tus estudiantes", code: "d3_confianza_deteccion", scope: "respuestas", type: "likert5",
+        label: "¿Qué tan seguro/a te sientes de poder detectar uso indebido de IA por parte de un estudiante?",
+        hint: "1 = nada seguro · 5 = totalmente seguro" },
+      { section: "Tus estudiantes", code: "d3_como_detecta", scope: "respuestas", type: "multi",
+        label: "Cuando sospechas uso indebido, ¿cómo lo evalúas?",
+        hint: "Marca todas las que apliquen",
+        options: [
+          { id: "software-detector", label: "Software detector (Turnitin AI, GPTZero, Copyleaks, otro)" },
+          { id: "cambios-estilo", label: "Cambios de estilo / 'voz' en el texto" },
+          { id: "defensa-oral", label: "Defensa oral / preguntas de seguimiento" },
+          { id: "analisis-citas", label: "Análisis manual de citas y fuentes" },
+          { id: "comparacion-trabajos-previos", label: "Comparación con trabajos previos del estudiante" },
+          { id: "sin-metodo", label: "No tengo método sistemático" },
+          { id: "otro", label: "Otro" },
+        ] },
+    ];
+
+    // ══════════════════════════════════════════════════════════════════
+    // Preguntas — cierre
+    // ══════════════════════════════════════════════════════════════════
+    const PREGUNTAS_CIERRE = [
+      { section: "Demográficas", code: "facultad", scope: "demograficas", type: "single",
+        label: "Facultad",
+        options: FACULTADES.map(f => ({ id: f.id, label: f.label })) },
+      { section: "Demográficas", code: "tiempo_docencia", scope: "demograficas", type: "single",
+        label: "Tiempo total impartiendo docencia",
+        options: [
+          { id: "<5", label: "Menos de 5 años" },
+          { id: "5-14", label: "5 a 14 años" },
+          { id: "15-24", label: "15 a 24 años" },
+          { id: "25+", label: "25 años o más" },
+        ] },
+
+      { section: "Después de la capacitación", code: "c1_agentic", scope: "respuestas", type: "likert5",
+        label: "¿Qué tan capaz crees ahora que es la IA actual de hacer tareas multi-paso en un computador sin supervisión?",
+        hint: "1 = muy mal · 5 = excelente" },
+      { section: "Después de la capacitación", code: "c2_porcentaje", scope: "respuestas", type: "single",
+        label: "¿Qué % de tus estudiantes crees que usa IA semanalmente?",
+        options: [
+          { id: "<25", label: "Menos del 25%" },
+          { id: "25-50", label: "Entre 25 y 50%" },
+          { id: "50-75", label: "Entre 50 y 75%" },
+          { id: ">75", label: "Más del 75%" },
+          { id: "casi-todos", label: "Casi todos" },
+        ] },
+      { section: "Después de la capacitación", code: "c3_confianza_deteccion", scope: "respuestas", type: "likert5",
+        label: "Confianza para detectar uso indebido de IA",
+        hint: "1 = nada seguro · 5 = totalmente seguro" },
+      { section: "Después de la capacitación", code: "c4_confianza_redisenar", scope: "respuestas", type: "likert5",
+        label: "¿Qué tan seguro/a te sientes ahora de poder rediseñar tus evaluaciones contra simulación de IA?",
+        hint: "1 = nada seguro · 5 = totalmente seguro" },
+      { section: "Tu compromiso", code: "c5_tecnica", scope: "respuestas", type: "single",
+        label: "¿Cuál es la primera técnica que vas a aplicar?",
+        options: [
+          { id: "portafolio-procesual", label: "Portafolio procesual de competencia" },
+          { id: "defensa-oral", label: "Defensa oral como cierre obligatorio" },
+          { id: "demostracion-presencial", label: "Demostración presencial / OSCE" },
+          { id: "proyecto-datos-locales", label: "Proyecto integrador con datos locales" },
+          { id: "evaluacion-inversa", label: "Evaluación inversa: criticar texto de IA" },
+          { id: "aun-no-decido", label: "Aún no decido" },
+        ] },
+    ];
+
+    // ══════════════════════════════════════════════════════════════════
     // Utilities
     // ══════════════════════════════════════════════════════════════════
     const $ = (sel) => document.querySelector(sel);
