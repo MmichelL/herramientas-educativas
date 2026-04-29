@@ -3,148 +3,492 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1A2456" />
+  <meta name="theme-color" content="#1F1A14" />
   <title>Encuesta diagnóstica IA — UNAD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ── Paleta institucional (de herramientas-educativas-CLAUDE.md) ── */
+    /* ══════════════════════════════════════════════════════════════════
+       Encuesta diagnóstica IA — UNAD
+       Aesthetic: editorial académico cálido. Paleta papel/tinta/oxblood.
+       ══════════════════════════════════════════════════════════════════ */
     :root {
-      --navy:  #1A2456;
-      --blue:  #2D5BE3;
-      --mint:  #00D4A0;
-      --amber: #F59E0B;
-      --coral: #FF5C6A;
-      --gray:  #F3F4F8;
-      --white: #FFFFFF;
-      --black: #1F2937;
+      --cream:   #FAF6EE;   /* fondo página */
+      --paper:   #FFFCF6;   /* fondo card */
+      --bone:    #EFE7D5;   /* fondo opción */
+      --blush:   #E6D9BD;   /* hover opción */
+      --rule:    #D9CDB4;   /* hairline */
+      --rule-soft:#E8DDC5;  /* subdivisión */
+      --ink:     #1F1A14;   /* texto cuerpo */
+      --ink-soft:#564B3D;   /* texto secundario */
+      --ink-mute:#867968;   /* hint */
+      --oxblood: #7A2424;   /* primario / acento */
+      --oxblood-deep:#5A1717;
+      --gold:    #B6863E;   /* highlights */
+      --sage:    #5F6F4F;   /* éxito / secundario */
+      --sage-deep:#43523A;
+      --crimson: #9B3B3B;   /* peligro */
+      --crimson-deep:#732424;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
+    html, body { min-height: 100%; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--gray);
-      color: var(--black);
-      line-height: 1.5;
+      font-family: 'Manrope', system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.55;
+      font-size: 16px;
+      font-feature-settings: "ss01", "cv11";
+      /* sutil grano de papel */
+      background-image:
+        radial-gradient(rgba(122,36,36,0.012) 1px, transparent 1px),
+        radial-gradient(rgba(31,26,20,0.010) 1px, transparent 1px);
+      background-size: 23px 23px, 41px 41px;
+      background-position: 0 0, 12px 19px;
     }
-    .container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
-    .container-wide { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
 
-    h1 { font-size: 1.5rem; color: var(--navy); margin-bottom: 0.5em; }
-    h2 { font-size: 1.25rem; color: var(--navy); margin: 1em 0 0.5em; }
-    h3 { font-size: 1.05rem; color: var(--navy); margin: 0.75em 0 0.5em; }
-    p { margin-bottom: 0.75em; }
+    /* Layout */
+    .container       { max-width: 680px;  margin: 0 auto; padding: 32px 20px 60px; }
+    .container-wide  { max-width: 1080px; margin: 0 auto; padding: 32px 20px 60px; }
 
-    button, .btn {
+    /* Tipografía editorial */
+    h1, h2, h3 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+    }
+    h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 600; font-variation-settings: "opsz" 96, "SOFT" 50; }
+    h2 { font-size: 1.35rem; font-weight: 600; margin: 0.2em 0 0.6em; font-variation-settings: "opsz" 36; }
+    h3 { font-size: 1.02rem; font-weight: 600; color: var(--ink); margin: 0.4em 0 0.5em; font-variation-settings: "opsz" 24; }
+    p  { margin-bottom: 0.75em; color: var(--ink-soft); }
+    a  { color: var(--oxblood); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+    a:hover { color: var(--oxblood-deep); }
+
+    .eyebrow {
       display: inline-block;
-      padding: 12px 20px;
-      font-size: 1rem;
+      font-family: 'Manrope', sans-serif;
+      font-size: 0.72rem;
       font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      min-height: 44px;
-      background: var(--blue);
-      color: var(--white);
-      text-decoration: none;
-      transition: background 0.15s;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--oxblood);
     }
-    button:hover, .btn:hover { background: var(--navy); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary { background: var(--gray); color: var(--navy); border: 2px solid var(--navy); }
-    .btn-secondary:hover { background: var(--navy); color: var(--white); }
-    .btn-danger { background: var(--coral); }
-    .btn-danger:hover { background: #d94552; }
-    .btn-success { background: var(--mint); color: var(--navy); }
+    .eyebrow.muted { color: var(--ink-mute); }
 
-    .card {
-      background: var(--white);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(26, 36, 86, 0.06);
+    .rule { height: 1px; background: var(--rule); margin: 18px 0; border: 0; }
+    .rule-double {
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+      height: 4px;
+      margin: 14px 0;
     }
-
-    .header {
-      background: var(--navy);
-      color: var(--white);
-      padding: 16px;
+    .ornament {
       text-align: center;
+      color: var(--gold);
+      font-family: 'Fraunces', serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.6em;
+      margin: 8px 0 18px;
+      user-select: none;
     }
-    .header h1 { color: var(--white); margin: 0; }
-    .header .meta { font-size: 0.875rem; opacity: 0.85; margin-top: 4px; }
+    .ornament::before { content: "✦   ✦   ✦"; }
+
+    /* Header editorial */
+    .masthead {
+      text-align: center;
+      padding: 36px 20px 12px;
+      border-bottom: 1px solid var(--rule);
+      background: transparent;
+    }
+    .masthead .eyebrow { display: block; margin-bottom: 16px; }
+    .masthead h1       { margin: 0 auto 6px; max-width: 720px; }
+    .masthead .meta {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+      margin-top: 8px;
+    }
+    .masthead-narrow .eyebrow { font-size: 0.65rem; }
+    .masthead-narrow h1 { font-size: clamp(1.5rem, 3.2vw, 2rem); }
+
+    /* Cards — papel */
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      padding: 28px 26px;
+      margin-bottom: 18px;
+      box-shadow:
+        0 1px 0 0 rgba(31,26,20,0.04),
+        0 14px 30px -22px rgba(31,26,20,0.18);
+      position: relative;
+    }
+    .card > h2 + .rule,
+    .card .section-head + .rule { margin: 12px 0 22px; }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+    .section-head .eyebrow { color: var(--oxblood); }
+
+    /* Botones — diseño editorial */
+    button, .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 22px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--oxblood);
+      border-radius: 1px;
+      cursor: pointer;
+      min-height: 46px;
+      background: var(--oxblood);
+      color: var(--paper);
+      text-decoration: none;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
+      box-shadow: inset 0 0 0 1px rgba(255,252,246,0.06);
+    }
+    button:hover, .btn:hover {
+      background: var(--oxblood-deep);
+      border-color: var(--oxblood-deep);
+      color: var(--paper);
+    }
+    button:active, .btn:active { transform: translateY(1px); }
+    button:disabled, .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--ink);
+      box-shadow: none;
+    }
+    .btn-secondary:hover {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+    .btn-danger {
+      background: var(--crimson);
+      border-color: var(--crimson);
+    }
+    .btn-danger:hover { background: var(--crimson-deep); border-color: var(--crimson-deep); }
+    .btn-success {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: var(--paper);
+    }
+    .btn-success:hover { background: var(--sage-deep); border-color: var(--sage-deep); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--oxblood);
+      border: 1px solid var(--rule);
+    }
+    .btn-ghost:hover { background: var(--bone); color: var(--oxblood-deep); border-color: var(--oxblood); }
 
     /* Form */
-    .field { margin-bottom: 18px; }
-    .field label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--navy); }
-    .field .hint { font-size: 0.875rem; color: #6b7280; margin-bottom: 6px; }
+    .field { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px dashed var(--rule-soft); }
+    .field:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+    .field > label {
+      display: block;
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: 1.04rem;
+      margin-bottom: 12px;
+      color: var(--ink);
+      line-height: 1.35;
+      font-variation-settings: "opsz" 24;
+    }
+    .field .hint {
+      font-family: 'Manrope', sans-serif;
+      font-size: 0.78rem;
+      color: var(--ink-mute);
+      margin-bottom: 10px;
+      letter-spacing: 0.02em;
+    }
 
-    .options { display: flex; flex-direction: column; gap: 8px; }
+    /* Opciones */
+    .options { display: flex; flex-direction: column; gap: 6px; }
     .option {
       display: flex;
       align-items: center;
-      padding: 10px 12px;
-      background: var(--gray);
-      border-radius: 8px;
+      padding: 12px 14px;
+      background: transparent;
+      border: 1px solid var(--rule);
+      border-radius: 1px;
       cursor: pointer;
-      min-height: 44px;
+      min-height: 46px;
       user-select: none;
-      transition: background 0.1s;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      font-size: 0.95rem;
+      color: var(--ink);
+      gap: 10px;
     }
-    .option:hover { background: #e5e8f0; }
-    .option input { margin-right: 10px; transform: scale(1.2); }
-    .option.selected { background: var(--blue); color: var(--white); }
+    .option:hover { background: var(--bone); border-color: var(--ink-soft); }
+    .option input {
+      appearance: none;
+      width: 16px; height: 16px;
+      border: 1px solid var(--ink-soft);
+      background: var(--paper);
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .option input[type="radio"] { border-radius: 50%; }
+    .option input[type="checkbox"] { border-radius: 1px; }
+    .option input:checked {
+      background: var(--oxblood);
+      border-color: var(--oxblood);
+    }
+    .option input[type="radio"]:checked::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      background: var(--paper);
+      border-radius: 50%;
+    }
+    .option input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      left: 4px; top: 1px;
+      width: 5px; height: 9px;
+      border: solid var(--paper);
+      border-width: 0 1.5px 1.5px 0;
+      transform: rotate(45deg);
+    }
+    .option.selected {
+      background: var(--bone);
+      border-color: var(--oxblood);
+      color: var(--ink);
+    }
 
-    .likert-row { display: flex; gap: 6px; }
+    /* Likert — fila editorial */
+    .likert-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+    }
     .likert-row .option {
-      flex: 1;
+      flex-direction: column;
       justify-content: center;
-      padding: 14px 6px;
+      padding: 14px 4px 12px;
       text-align: center;
+      gap: 2px;
+      position: relative;
     }
-    .likert-row .option .num { font-size: 1.25rem; font-weight: 700; }
-    .likert-row .option .label { font-size: 0.7rem; }
+    .likert-row .option input { display: none; }
+    .likert-row .option .num {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--ink);
+      font-variation-settings: "opsz" 36;
+      line-height: 1;
+    }
+    .likert-row .option .label {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-top: 4px;
+    }
+    .likert-row .option.selected {
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+    .likert-row .option.selected .num,
+    .likert-row .option.selected .label {
+      color: var(--paper);
+    }
 
+    /* Inputs */
+    input[type="password"],
+    input[type="text"],
+    input[type="number"],
     select {
       width: 100%;
       padding: 10px 12px;
-      font-size: 1rem;
-      border: 2px solid #d1d5db;
-      border-radius: 8px;
-      background: var(--white);
+      font-family: 'Manrope', sans-serif;
+      font-size: 0.95rem;
+      border: 1px solid var(--rule);
+      border-radius: 1px;
+      background: var(--paper);
       min-height: 44px;
+      color: var(--ink);
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--oxblood);
+    }
+    .filter-dd {
+      min-height: 38px;
+      padding: 6px 10px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      background: var(--paper);
+      width: auto;
+      min-width: 180px;
     }
 
+    /* Toast */
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 28px;
       left: 50%;
       transform: translateX(-50%);
       padding: 12px 20px;
-      background: var(--navy);
-      color: var(--white);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 1px;
+      box-shadow: 0 14px 40px -10px rgba(31,26,20,0.4);
       z-index: 1000;
-      max-width: 90vw;
+      max-width: 92vw;
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+      animation: toast-in 0.25s ease-out;
     }
-    .toast.success { background: var(--mint); color: var(--navy); }
-    .toast.error { background: var(--coral); }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translate(-50%, 12px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .toast.success { background: var(--sage); }
+    .toast.error   { background: var(--crimson); }
 
     .hidden { display: none !important; }
 
     /* Landing */
+    .landing-lead {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 1.15rem;
+      color: var(--ink-soft);
+      margin: 28px 0 36px;
+      text-align: center;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
     .landing-cta {
       display: grid;
-      gap: 12px;
-      margin-top: 24px;
+      gap: 10px;
+      margin-top: 22px;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .landing-cta .btn { padding: 24px; font-size: 1.1rem; text-align: center; }
+    .landing-cta .btn {
+      padding: 22px 24px;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      justify-content: space-between;
+    }
+    .landing-cta .btn::after {
+      content: "→";
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+    }
+    .landing-foot {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--ink-mute);
+      letter-spacing: 0.05em;
+    }
+    .landing-foot a { color: var(--ink-mute); text-decoration: none; border-bottom: 1px solid var(--rule); }
+    .landing-foot a:hover { color: var(--oxblood); border-color: var(--oxblood); }
+
+    /* Dashboard chrome */
+    .dash-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+    .dash-toolbar > .eyebrow { color: var(--ink-mute); margin-right: 4px; }
+    .dash-toolbar .spacer { flex: 1; }
+    .dash-toolbar .btn { min-height: 38px; padding: 8px 16px; font-size: 0.82rem; }
+
+    .dash-chart-wrap { margin: 14px 0 28px; }
+    .dash-chart-wrap > h3 { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; }
+    .benchmark {
+      margin-top: 8px;
+      padding: 10px 14px;
+      background: rgba(122,36,36,0.04);
+      border-left: 2px solid var(--oxblood);
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      font-style: italic;
+      line-height: 1.5;
+    }
+    .benchmark strong {
+      font-style: normal;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      color: var(--oxblood);
+      margin-right: 6px;
+    }
+
+    /* Stagger reveal */
+    .stagger > * {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: rise 0.45s ease-out forwards;
+    }
+    .stagger > *:nth-child(1) { animation-delay: 0.05s; }
+    .stagger > *:nth-child(2) { animation-delay: 0.12s; }
+    .stagger > *:nth-child(3) { animation-delay: 0.19s; }
+    .stagger > *:nth-child(4) { animation-delay: 0.26s; }
+    .stagger > *:nth-child(5) { animation-delay: 0.33s; }
+    .stagger > *:nth-child(6) { animation-delay: 0.40s; }
+    .stagger > *:nth-child(7) { animation-delay: 0.47s; }
+    .stagger > *:nth-child(8) { animation-delay: 0.54s; }
+    @keyframes rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* Responsive */
-    @media (max-width: 480px) {
-      .container { padding: 16px 12px; }
-      h1 { font-size: 1.25rem; }
-      .likert-row .option { padding: 10px 2px; }
-      .likert-row .option .num { font-size: 1.1rem; }
+    @media (max-width: 540px) {
+      .container, .container-wide { padding: 22px 16px 48px; }
+      .masthead { padding: 24px 16px 10px; }
+      .card { padding: 22px 18px; }
+      .likert-row { gap: 5px; }
+      .likert-row .option { padding: 12px 2px 10px; }
+      .likert-row .option .num { font-size: 1.15rem; }
+      .likert-row .option .label { font-size: 0.55rem; }
+      .dash-toolbar { padding: 14px 14px; }
+      .dash-toolbar .btn { width: 100%; }
+      .dash-toolbar .spacer { display: none; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .stagger > * { animation: none; opacity: 1; transform: none; }
+      .toast { animation: none; }
     }
   </style>
 </head>
@@ -535,20 +879,28 @@
       }
 
       const html = `
-        <div class="header">
+        <div class="masthead masthead-narrow">
+          <span class="eyebrow">Universidad Adventista Dominicana · Abril 2026</span>
           <h1>${escapeHtml(title)}</h1>
           <div class="meta">${escapeHtml(subtitle)}</div>
         </div>
         <div class="container">
-          <p>Tus respuestas son <strong>anónimas</strong>. Tiempo estimado: ${fase === "apertura" ? "4–5" : "1–2"} minutos.</p>
-          <form id="survey-form" novalidate>
-            ${Object.entries(sections).map(([sec, qs]) => `
+          <p class="landing-lead" style="margin: 24px auto 28px; font-size: 1rem;">Tus respuestas son <em>anónimas</em>. Tiempo estimado: ${fase === "apertura" ? "4–5" : "1–2"} minutos.</p>
+          <form id="survey-form" class="stagger" novalidate>
+            ${Object.entries(sections).map(([sec, qs], i) => `
               <div class="card">
+                <div class="section-head">
+                  <span class="eyebrow">Sección ${String(i + 1).padStart(2, "0")}</span>
+                  <span class="eyebrow muted">${qs.length} ${qs.length === 1 ? "pregunta" : "preguntas"}</span>
+                </div>
                 <h2>${escapeHtml(sec)}</h2>
+                <hr class="rule" />
                 ${qs.map(q => renderField(q)).join("")}
               </div>
             `).join("")}
-            <button type="submit" id="submit-btn">Enviar respuesta</button>
+            <div style="text-align: center; margin-top: 24px;">
+              <button type="submit" id="submit-btn">Enviar respuesta</button>
+            </div>
           </form>
         </div>
       `;
@@ -680,8 +1032,10 @@
           datasets: [{
             label: "respuestas",
             data: counts,
-            backgroundColor: "#2D5BE3",
-            borderRadius: 6,
+            backgroundColor: "#7A2424",
+            hoverBackgroundColor: "#5A1717",
+            borderRadius: 2,
+            borderSkipped: false,
           }],
         },
         options: {
@@ -692,11 +1046,15 @@
             title: {
               display: true,
               text: data.mean !== undefined ? `Promedio del grupo: ${data.mean.toFixed(2)} / 5` : "",
-              font: { size: 14, weight: "bold" },
-              color: "#1A2456",
+              font: { size: 14, family: "'Fraunces', serif", style: "italic", weight: "500" },
+              color: "#1F1A14",
+              padding: { top: 4, bottom: 12 },
             },
           },
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1, color: "#867968", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { color: "#E8DDC5" } },
+            x: { ticks: { color: "#564B3D", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { display: false } },
+          },
           animation: { duration: 400 },
         },
       });
@@ -731,8 +1089,10 @@
           datasets: [{
             label: "respuestas",
             data: values,
-            backgroundColor: "#00D4A0",
-            borderRadius: 6,
+            backgroundColor: "#5F6F4F",
+            hoverBackgroundColor: "#43523A",
+            borderRadius: 2,
+            borderSkipped: false,
           }],
         },
         options: {
@@ -740,7 +1100,10 @@
           maintainAspectRatio: false,
           indexAxis: type === "horizontal" ? "y" : "x",
           plugins: { legend: { display: false } },
-          scales: { x: { beginAtZero: true } },
+          scales: {
+            x: { beginAtZero: true, ticks: { color: "#867968", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { color: "#E8DDC5" } },
+            y: { ticks: { color: "#564B3D", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { display: false } },
+          },
           animation: { duration: 400 },
         },
       });
@@ -826,19 +1189,28 @@
       if (sections.dataset.builtFor !== builtFor) {
         destroyAllCharts();
         sections.innerHTML = "";
+        let secIdx = 0;
         for (const [secName, qs] of Object.entries(grouped)) {
+          secIdx += 1;
           const card = document.createElement("div");
           card.className = "card";
-          card.innerHTML = `<h2>${escapeHtml(secName)}</h2>`;
+          card.innerHTML = `
+            <div class="section-head">
+              <span class="eyebrow">Sección ${String(secIdx).padStart(2, "0")}</span>
+              <span class="eyebrow muted">${qs.length} ${qs.length === 1 ? "pregunta" : "preguntas"}</span>
+            </div>
+            <h2>${escapeHtml(secName)}</h2>
+            <hr class="rule" />
+          `;
           for (const q of qs) {
             const wrap = document.createElement("div");
-            wrap.style.marginBottom = "16px";
+            wrap.className = "dash-chart-wrap";
             wrap.innerHTML = `
               <h3>${escapeHtml(q.label)}</h3>
               <div style="height: ${q.type === "multi" ? 240 : 180}px;">
                 <canvas id="chart_${q.code}"></canvas>
               </div>
-              <div id="benchmark_${q.code}" class="hint" style="margin-top:6px;"></div>
+              <div id="benchmark_${q.code}" class="benchmark hidden"></div>
             `;
             card.appendChild(wrap);
           }
@@ -857,8 +1229,10 @@
         const benchEl = document.getElementById(`benchmark_${q.code}`);
         if (benchEl) {
           if (showBenchmark && BENCHMARKS[q.code]) {
-            benchEl.innerHTML = `<strong style="color: var(--coral);">Evidencia:</strong> ${escapeHtml(BENCHMARKS[q.code].label)}${BENCHMARKS[q.code].value !== undefined ? ` <em>(referencia: ${escapeHtml(String(BENCHMARKS[q.code].value))})</em>` : ""}`;
+            benchEl.className = "benchmark";
+            benchEl.innerHTML = `<strong>Evidencia</strong> ${escapeHtml(BENCHMARKS[q.code].label)}${BENCHMARKS[q.code].value !== undefined ? ` <em>(referencia: ${escapeHtml(String(BENCHMARKS[q.code].value))})</em>` : ""}`;
           } else {
+            benchEl.className = "benchmark hidden";
             benchEl.innerHTML = "";
           }
         }
@@ -895,7 +1269,13 @@
       if (!sections) return;
 
       if (cierData.n === 0) {
-        sections.innerHTML = `<div class="card"><h2>El comparativo aún no está disponible</h2><p>Necesitamos respuestas de cierre. Apertura: ${aperData.n} respuestas. Cierre: 0 respuestas.</p></div>`;
+        sections.innerHTML = `
+          <div class="card" style="text-align: center;">
+            <div class="ornament"></div>
+            <h2>Comparativo aún no disponible</h2>
+            <hr class="rule" />
+            <p>Necesitamos respuestas de cierre.<br/>Apertura: <strong>${aperData.n}</strong> respuestas · Cierre: <strong>0</strong> respuestas.</p>
+          </div>`;
         sections.dataset.builtFor = "";
         destroyAllCharts();
         return;
@@ -906,16 +1286,24 @@
         sections.innerHTML = "";
         const card = document.createElement("div");
         card.className = "card";
-        card.innerHTML = `<h2>Comparativo apertura ↔ cierre</h2><p class="hint">Comparación a nivel grupo (encuesta anónima — no se parean individuos).</p>`;
+        card.innerHTML = `
+          <div class="section-head">
+            <span class="eyebrow">Antes ↔ Después</span>
+            <span class="eyebrow muted">Nivel grupo</span>
+          </div>
+          <h2>Comparativo apertura ↔ cierre</h2>
+          <hr class="rule" />
+          <p style="font-size: 0.9rem;">Comparación a nivel grupo (encuesta anónima — no se parean individuos).</p>
+        `;
         for (const c of COMPARATIVO_CODES) {
           const wrap = document.createElement("div");
-          wrap.style.marginBottom = "20px";
+          wrap.className = "dash-chart-wrap";
           wrap.innerHTML = `
             <h3>${escapeHtml(c.label)}</h3>
-            <div style="height: 220px;">
+            <div style="height: 240px;">
               <canvas id="cmp_${c.aperturaCode}"></canvas>
             </div>
-            <div id="cmpbench_${c.aperturaCode}" class="hint" style="margin-top:6px;"></div>
+            <div id="cmpbench_${c.aperturaCode}" class="benchmark hidden"></div>
           `;
           card.appendChild(wrap);
         }
@@ -962,8 +1350,8 @@
           data: {
             labels,
             datasets: [
-              { label: "Apertura", data: aperData2, backgroundColor: "#9CA3AF", borderRadius: 4 },
-              { label: "Cierre", data: cierData2, backgroundColor: "#2D5BE3", borderRadius: 4 },
+              { label: "Apertura", data: aperData2, backgroundColor: "#B6863E", hoverBackgroundColor: "#8E6627", borderRadius: 2, borderSkipped: false },
+              { label: "Cierre",   data: cierData2, backgroundColor: "#7A2424", hoverBackgroundColor: "#5A1717", borderRadius: 2, borderSkipped: false },
             ],
           },
           options: {
@@ -972,22 +1360,37 @@
             plugins: {
               title: {
                 display: c.type === "likert5",
-                text: c.type === "likert5" ? `Promedio apertura ${aperVal?.mean?.toFixed(2) || "—"} → cierre ${cierVal?.mean?.toFixed(2) || "—"}` : "",
-                font: { size: 14, weight: "bold" },
-                color: "#1A2456",
+                text: c.type === "likert5" ? `Promedio apertura ${aperVal?.mean?.toFixed(2) || "—"}  →  cierre ${cierVal?.mean?.toFixed(2) || "—"}` : "",
+                font: { size: 14, family: "'Fraunces', serif", style: "italic", weight: "500" },
+                color: "#1F1A14",
+                padding: { top: 4, bottom: 12 },
               },
-              legend: { position: "top" },
+              legend: {
+                position: "top",
+                labels: {
+                  font: { family: "'Manrope', sans-serif", size: 11 },
+                  color: "#564B3D",
+                  boxWidth: 12,
+                  boxHeight: 12,
+                  padding: 12,
+                },
+              },
             },
-            scales: { y: { beginAtZero: true } },
+            scales: {
+              y: { beginAtZero: true, ticks: { color: "#867968", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { color: "#E8DDC5" } },
+              x: { ticks: { color: "#564B3D", font: { family: "'Manrope', sans-serif", size: 11 } }, grid: { display: false } },
+            },
             animation: { duration: 400 },
           },
         });
 
         const benchEl = document.getElementById(`cmpbench_${c.aperturaCode}`);
         if (benchEl && showBenchmark && BENCHMARKS[c.aperturaCode]) {
-          benchEl.innerHTML = `<strong style="color: var(--coral);">Evidencia:</strong> ${escapeHtml(BENCHMARKS[c.aperturaCode].label)}`;
+          benchEl.className = "benchmark";
+          benchEl.innerHTML = `<strong>Evidencia</strong> ${escapeHtml(BENCHMARKS[c.aperturaCode].label)}`;
         } else if (benchEl) {
           benchEl.innerHTML = "";
+          benchEl.className = "benchmark hidden";
         }
       }
     }
@@ -1002,14 +1405,17 @@
       ]);
 
       app().innerHTML = `
-        <div class="header">
-          <h1>Panel facilitador</h1>
-          <div class="meta">Encuesta diagnóstica IA · UNAD</div>
+        <div class="masthead masthead-narrow">
+          <span class="eyebrow">Panel del facilitador</span>
+          <h1>Encuesta diagnóstica IA</h1>
+          <div class="meta">Universidad Adventista Dominicana · Abril 2026</div>
         </div>
-        <div class="container">
+        <div class="container stagger">
           <div class="card">
-            <h2>Fase activa</h2>
-            <p>Estado actual: <strong>${currentPhase.toUpperCase()}</strong></p>
+            <div class="section-head"><span class="eyebrow">Estado</span><span class="eyebrow muted">Fase activa</span></div>
+            <h2>${currentPhase === "cerrada" ? "Encuesta cerrada" : currentPhase === "apertura" ? "Sesión 1 — Apertura" : "Sesión 2 — Cierre"}</h2>
+            <hr class="rule" />
+            <p>Estado actual: <strong style="font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; color: var(--oxblood);">${currentPhase.toUpperCase()}</strong></p>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button onclick="changePhase('apertura')" ${currentPhase === "apertura" ? "disabled" : ""}>Apertura</button>
               <button onclick="changePhase('cierre')" ${currentPhase === "cierre" ? "disabled" : ""}>Cierre</button>
@@ -1018,27 +1424,41 @@
           </div>
 
           <div class="card">
+            <div class="section-head"><span class="eyebrow">Cifras</span><span class="eyebrow muted">Tiempo real</span></div>
             <h2>Datos actuales</h2>
-            <ul>
-              <li>Apertura: <strong>${aperAgg.n}</strong> respuestas${aperAgg.lastTs ? ` · última ${timeAgo(aperAgg.lastTs)}` : ""}</li>
-              <li>Cierre: <strong>${cierAgg.n}</strong> respuestas${cierAgg.lastTs ? ` · última ${timeAgo(cierAgg.lastTs)}` : ""}</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h2>🧪 Sembrar respuestas demo</h2>
-            <p class="hint">Genera respuestas aleatorias con distribuciones realistas. Útil para verificar el dashboard antes del taller. Recuerda hacer wipe antes del taller real.</p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-              <label>Cantidad: <input type="number" id="seed-n" value="80" min="1" max="200" style="width:80px; padding:6px;"></label>
-              <button onclick="seedDemo('apertura')">Sembrar apertura</button>
-              <button onclick="seedDemo('cierre')">Sembrar cierre</button>
+            <hr class="rule" />
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+              <div>
+                <div class="eyebrow muted" style="margin-bottom: 6px;">Apertura</div>
+                <div style="font-family: 'Fraunces', serif; font-style: italic; font-size: 2.4rem; font-weight: 600; color: var(--ink); line-height: 1;">${aperAgg.n}</div>
+                <div style="font-size: 0.78rem; color: var(--ink-mute); margin-top: 4px;">${aperAgg.lastTs ? `última ${timeAgo(aperAgg.lastTs)}` : "sin respuestas"}</div>
+              </div>
+              <div>
+                <div class="eyebrow muted" style="margin-bottom: 6px;">Cierre</div>
+                <div style="font-family: 'Fraunces', serif; font-style: italic; font-size: 2.4rem; font-weight: 600; color: var(--ink); line-height: 1;">${cierAgg.n}</div>
+                <div style="font-size: 0.78rem; color: var(--ink-mute); margin-top: 4px;">${cierAgg.lastTs ? `última ${timeAgo(cierAgg.lastTs)}` : "sin respuestas"}</div>
+              </div>
             </div>
           </div>
 
           <div class="card">
-            <h2>🗑️ Wipe data</h2>
-            <p class="hint">Doble confirmación + escribir BORRAR. Sin recuperación.</p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <div class="section-head"><span class="eyebrow">Demo</span><span class="eyebrow muted">Pre-taller</span></div>
+            <h2>Sembrar respuestas</h2>
+            <hr class="rule" />
+            <p style="font-size: 0.92rem;">Genera respuestas aleatorias con distribuciones realistas para verificar el dashboard antes del taller. <em>Recuerda hacer wipe antes del taller real.</em></p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top: 12px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--ink-soft);">Cantidad <input type="number" id="seed-n" value="80" min="1" max="200" style="width:90px; padding:6px 10px;"></label>
+              <button onclick="seedDemo('apertura')">Sembrar apertura</button>
+              <button class="btn-ghost" onclick="seedDemo('cierre')">Sembrar cierre</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-head"><span class="eyebrow">Limpieza</span><span class="eyebrow muted">Irreversible</span></div>
+            <h2>Wipe</h2>
+            <hr class="rule" />
+            <p style="font-size: 0.92rem;">Doble confirmación + escribir <strong style="font-family: 'Manrope', sans-serif; letter-spacing: 0.2em; color: var(--crimson);">BORRAR</strong>. Sin recuperación.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
               <button class="btn-danger" onclick="wipeData('apertura')">Wipe apertura</button>
               <button class="btn-danger" onclick="wipeData('cierre')">Wipe cierre</button>
               <button class="btn-danger" onclick="wipeData('all')">⚠ Wipe TODO + reset fase</button>
@@ -1046,8 +1466,10 @@
           </div>
 
           <div class="card">
-            <h2>⬇ Export</h2>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <div class="section-head"><span class="eyebrow">Export</span><span class="eyebrow muted">JSON · CSV</span></div>
+            <h2>Descargar respuestas</h2>
+            <hr class="rule" />
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;">
               <button class="btn-secondary" onclick="exportData('apertura', 'json')">JSON apertura</button>
               <button class="btn-secondary" onclick="exportData('cierre', 'json')">JSON cierre</button>
               <button class="btn-secondary" onclick="exportData('apertura', 'csv')">CSV apertura</button>
@@ -1055,8 +1477,8 @@
             </div>
           </div>
 
-          <div class="card">
-            <button class="btn-secondary" onclick="logoutAdmin()">Cerrar sesión admin</button>
+          <div style="text-align: center; margin-top: 32px;">
+            <button class="btn-ghost" onclick="logoutAdmin()">Cerrar sesión</button>
           </div>
         </div>
       `;
@@ -1171,20 +1593,19 @@
     const ROUTES = {
       landing(params) {
         app().innerHTML = `
-          <div class="header">
-            <h1>Encuesta diagnóstica IA</h1>
-            <div class="meta">UNAD · Capacitación docente abril 2026</div>
+          <div class="masthead">
+            <span class="eyebrow">Universidad Adventista Dominicana</span>
+            <h1>Encuesta diagnóstica<br/><em style="font-style: italic; color: var(--oxblood); font-weight: 500;">sobre IA en la educación</em></h1>
+            <div class="meta">Capacitación docente · Abril 2026</div>
           </div>
-          <div class="container">
-            <p>Bienvenido/a. Esta es la app diagnóstica de la capacitación.</p>
+          <div class="container stagger">
+            <p class="landing-lead">Antes de empezar, queremos saber dónde está el grupo. Una encuesta breve, anónima, y cuyos resultados se proyectan en pantalla durante la sesión.</p>
             <div class="landing-cta">
               <a class="btn" href="#apertura">Responder apertura</a>
-              <a class="btn btn-secondary" href="#cierre">Responder cierre</a>
+              <a class="btn btn-ghost" href="#cierre">Responder cierre</a>
               <a class="btn btn-secondary" href="#dashboard">Ver dashboard</a>
             </div>
-            <p style="margin-top: 24px; font-size: 0.85rem; color: #6b7280; text-align: center;">
-              <a href="#admin" style="color: #6b7280;">Acceso facilitador</a>
-            </p>
+            <p class="landing-foot">Prof. Misael Michel · Facultad de Ingeniería y Tecnología · <a href="#admin">Acceso facilitador</a></p>
           </div>
         `;
       },
@@ -1193,13 +1614,14 @@
         const existing = localStorage.getItem("encuesta_ia_resp_apertura");
         if (existing && !params.force) {
           app().innerHTML = `
-            <div class="header"><h1>Apertura</h1></div>
+            <div class="masthead masthead-narrow"><span class="eyebrow">Apertura</span><h1>Ya respondiste</h1></div>
             <div class="container">
               <div class="card">
-                <h2>Ya enviaste tu respuesta</h2>
                 <p>Detectamos que ya respondiste la encuesta de apertura desde este dispositivo. Si necesitas corregir, contacta al facilitador.</p>
-                <a class="btn" href="#dashboard">Ver dashboard</a>
-                <button class="btn-secondary" style="margin-left: 8px;" onclick="navigate('apertura', {force: '1'})">Re-enviar de todos modos</button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 18px;">
+                  <a class="btn" href="#dashboard">Ver dashboard</a>
+                  <button class="btn-ghost" onclick="navigate('apertura', {force: '1'})">Re-enviar de todos modos</button>
+                </div>
               </div>
             </div>`;
           return;
@@ -1209,15 +1631,15 @@
         api("/api/phase").then(({ data }) => {
           if (data.phase === "cerrada") {
             app().innerHTML = `
-              <div class="header"><h1>Apertura</h1></div>
+              <div class="masthead masthead-narrow"><span class="eyebrow">Apertura</span><h1>Encuesta cerrada</h1></div>
               <div class="container">
-                <div class="card"><h2>La encuesta está cerrada</h2><p>Gracias por participar.</p></div>
+                <div class="card"><p>Gracias por participar.</p></div>
               </div>`;
             return;
           }
           renderFormPage({
-            title: "Encuesta apertura",
-            subtitle: "Capacitación IA · UNAD · sesión 1",
+            title: "Apertura",
+            subtitle: "Sesión 1 — Estado del arte y diagnóstico inicial",
             preguntas: PREGUNTAS_APERTURA,
             fase: "apertura",
           });
@@ -1227,13 +1649,14 @@
         const existing = localStorage.getItem("encuesta_ia_resp_cierre");
         if (existing && !params.force) {
           app().innerHTML = `
-            <div class="header"><h1>Cierre</h1></div>
+            <div class="masthead masthead-narrow"><span class="eyebrow">Cierre</span><h1>Ya respondiste</h1></div>
             <div class="container">
               <div class="card">
-                <h2>Ya enviaste tu respuesta</h2>
                 <p>Detectamos que ya respondiste la encuesta de cierre desde este dispositivo.</p>
-                <a class="btn" href="#dashboard">Ver dashboard</a>
-                <button class="btn-secondary" style="margin-left: 8px;" onclick="navigate('cierre', {force: '1'})">Re-enviar de todos modos</button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 18px;">
+                  <a class="btn" href="#dashboard">Ver dashboard</a>
+                  <button class="btn-ghost" onclick="navigate('cierre', {force: '1'})">Re-enviar de todos modos</button>
+                </div>
               </div>
             </div>`;
           return;
@@ -1242,15 +1665,15 @@
         api("/api/phase").then(({ data }) => {
           if (data.phase === "cerrada") {
             app().innerHTML = `
-              <div class="header"><h1>Cierre</h1></div>
+              <div class="masthead masthead-narrow"><span class="eyebrow">Cierre</span><h1>Encuesta cerrada</h1></div>
               <div class="container">
-                <div class="card"><h2>La encuesta está cerrada</h2><p>Gracias por participar.</p></div>
+                <div class="card"><p>Gracias por participar.</p></div>
               </div>`;
             return;
           }
           renderFormPage({
-            title: "Encuesta cierre",
-            subtitle: "Capacitación IA · UNAD · sesión 2",
+            title: "Cierre",
+            subtitle: "Sesión 2 — Reflexión final y compromiso",
             preguntas: PREGUNTAS_CIERRE,
             fase: "cierre",
           });
@@ -1259,14 +1682,18 @@
       gracias(params) {
         const isApertura = params.fase === "apertura";
         app().innerHTML = `
-          <div class="header"><h1>¡Gracias!</h1></div>
+          <div class="masthead">
+            <span class="eyebrow">Recibido</span>
+            <h1><em style="font-style: italic; color: var(--oxblood);">Gracias</em></h1>
+            <div class="meta">Tu respuesta fue registrada</div>
+          </div>
           <div class="container">
-            <div class="card">
-              <h2>Tu respuesta fue registrada</h2>
-              <p>${isApertura
+            <div class="card" style="text-align: center;">
+              <div class="ornament"></div>
+              <p style="font-family: 'Fraunces', serif; font-style: italic; font-size: 1.1rem; color: var(--ink); max-width: 460px; margin: 0 auto 22px;">${isApertura
                 ? "Espera la proyección del facilitador para ver los resultados del grupo."
                 : "Vamos a comparar estas respuestas con las del inicio."}</p>
-              <a class="btn btn-secondary" href="#">Volver al inicio</a>
+              <a class="btn btn-ghost" href="#">Volver al inicio</a>
             </div>
           </div>`;
       },
@@ -1278,37 +1705,37 @@
           if (params[k]) activeFilters[k] = params[k];
         }
 
+        const faseLabel = fase === "apertura" ? "Apertura" : fase === "cierre" ? "Cierre" : "Comparativo";
         app().innerHTML = `
-          <div class="header">
-            <h1>Dashboard — Encuesta ${fase}</h1>
+          <div class="masthead masthead-narrow">
+            <span class="eyebrow">Dashboard en vivo</span>
+            <h1>${escapeHtml(faseLabel)}</h1>
             <div class="meta" id="dashboard-meta">Cargando…</div>
           </div>
           <div class="container-wide">
-            <div class="card">
-              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;">
-                <strong>Fase:</strong>
-                <a class="btn ${fase === "apertura" ? "" : "btn-secondary"}" href="#dashboard?fase=apertura">Apertura</a>
-                <a class="btn ${fase === "cierre" ? "" : "btn-secondary"}" href="#dashboard?fase=cierre">Cierre</a>
-                <a class="btn ${fase === "comparativo" ? "" : "btn-secondary"}" href="#dashboard?fase=comparativo">Comparativo</a>
-                <span style="flex: 1"></span>
-                <button id="toggle-benchmark-btn" class="${showBenchmark ? "btn btn-success" : "btn-secondary"}">
-                  ${showBenchmark ? "✓ Mostrando evidencia" : "Mostrar evidencia"}
-                </button>
-              </div>
-              <div id="filter-bar" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                <strong>Filtros:</strong>
-                ${renderFilterDropdown("facultad", "Facultad", FACULTADES, activeFilters)}
-                ${renderFilterDropdown("tiempo_docencia", "Tiempo docencia", [
-                  {id:"<5",label:"<5"},{id:"5-14",label:"5-14"},{id:"15-24",label:"15-24"},{id:"25+",label:"25+"}
-                ], activeFilters)}
-                ${renderFilterDropdown("sexo", "Sexo", [
-                  {id:"F",label:"Femenino"},{id:"M",label:"Masculino"},{id:"prefiero-no-decir",label:"PND"}
-                ], activeFilters)}
-                ${fase === "apertura" ? renderFilterDropdown("postura", "Postura", [
-                  {id:"entusiasmo",label:"Entusiasmo"},{id:"curiosidad-cautelosa",label:"Curiosidad"},{id:"neutral",label:"Neutral"},{id:"preocupacion",label:"Preocupación"},{id:"rechazo",label:"Rechazo"}
-                ], activeFilters) : ""}
-                ${Object.keys(activeFilters).length > 0 ? `<button id="clear-filters-btn" class="btn-secondary">Limpiar filtros</button>` : ""}
-              </div>
+            <div class="dash-toolbar">
+              <span class="eyebrow">Fase</span>
+              <a class="btn ${fase === "apertura" ? "" : "btn-ghost"}" href="#dashboard?fase=apertura">Apertura</a>
+              <a class="btn ${fase === "cierre" ? "" : "btn-ghost"}" href="#dashboard?fase=cierre">Cierre</a>
+              <a class="btn ${fase === "comparativo" ? "" : "btn-ghost"}" href="#dashboard?fase=comparativo">Comparativo</a>
+              <span class="spacer"></span>
+              <button id="toggle-benchmark-btn" class="${showBenchmark ? "btn-success" : "btn-secondary"}">
+                ${showBenchmark ? "✓ Mostrando evidencia" : "Mostrar evidencia"}
+              </button>
+            </div>
+            <div class="dash-toolbar" id="filter-bar">
+              <span class="eyebrow">Filtros</span>
+              ${renderFilterDropdown("facultad", "Facultad", FACULTADES, activeFilters)}
+              ${renderFilterDropdown("tiempo_docencia", "Tiempo docencia", [
+                {id:"<5",label:"<5 años"},{id:"5-14",label:"5–14 años"},{id:"15-24",label:"15–24 años"},{id:"25+",label:"25+ años"}
+              ], activeFilters)}
+              ${renderFilterDropdown("sexo", "Sexo", [
+                {id:"F",label:"Femenino"},{id:"M",label:"Masculino"},{id:"prefiero-no-decir",label:"PND"}
+              ], activeFilters)}
+              ${fase === "apertura" ? renderFilterDropdown("postura", "Postura", [
+                {id:"entusiasmo",label:"Entusiasmo"},{id:"curiosidad-cautelosa",label:"Curiosidad"},{id:"neutral",label:"Neutral"},{id:"preocupacion",label:"Preocupación"},{id:"rechazo",label:"Rechazo"}
+              ], activeFilters) : ""}
+              ${Object.keys(activeFilters).length > 0 ? `<button id="clear-filters-btn" class="btn-ghost">Limpiar filtros</button>` : ""}
             </div>
 
             <div id="dashboard-sections"></div>
@@ -1354,15 +1781,20 @@
         const token = sessionStorage.getItem("encuesta_ia_admin_token");
         if (!token) {
           app().innerHTML = `
-            <div class="header"><h1>Acceso facilitador</h1></div>
+            <div class="masthead masthead-narrow">
+              <span class="eyebrow">Restringido</span>
+              <h1>Acceso facilitador</h1>
+            </div>
             <div class="container">
-              <div class="card">
-                <h2>Ingresa la matrícula del facilitador</h2>
+              <div class="card" style="max-width: 420px; margin: 24px auto;">
+                <div class="ornament"></div>
+                <h2 style="text-align: center;">Ingresa tu matrícula</h2>
+                <hr class="rule" />
                 <form id="auth-form">
-                  <div class="field">
-                    <input type="password" id="auth-token" placeholder="Matrícula" style="width:100%; padding:12px; font-size:1rem; border:2px solid #d1d5db; border-radius:8px;" autocomplete="off" />
+                  <div class="field" style="border: none; padding-bottom: 0;">
+                    <input type="password" id="auth-token" placeholder="Matrícula" autocomplete="off" autofocus />
                   </div>
-                  <button type="submit">Ingresar</button>
+                  <button type="submit" style="width: 100%;">Ingresar</button>
                 </form>
               </div>
             </div>`;
