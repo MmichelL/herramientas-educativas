@@ -23,7 +23,13 @@ Comercial, Social, Estilo de vida, Intraemprendedor, Serial, Digital. Puntaje po
 
 ## Despliegue
 
-Cloudflare Pages, proyecto independiente conectado a este repo:
-- Root directory: `tecn1411-test-tipologia`
-- Framework preset: None · Build command: vacío · Output: `.`
-- Push a `main` → redeploy automático (~60s).
+Cloudflare Pages, proyecto `tecn1411-test-tipologia` por **direct upload** (igual que el resto del monorepo: ningún proyecto está git-connected; el push a GitHub es solo respaldo de código).
+
+- URL producción: https://tecn1411-test-tipologia.pages.dev
+- Para publicar cambios (desde una carpeta que contenga SOLO `index.html`, para no subir CLAUDE.md/wrangler.toml):
+
+```bash
+npx wrangler pages deploy . --project-name=tecn1411-test-tipologia --branch=main
+```
+
+Requiere `wrangler login` o `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`.
