@@ -17,8 +17,12 @@ Comercial, Social, Estilo de vida, Intraemprendedor, Serial, Digital. Puntaje po
 
 ## Características técnicas
 
-- 100% frontend, un solo `index.html` autocontenido (sin backend, sin KV, sin build).
-- No persiste datos: el resultado vive en la pantalla; el estudiante toma captura.
+- 100% frontend, un solo `index.html` autocontenido (sin backend, sin KV, sin build, sin librerías externas).
+- Pide **nombre y matrícula** antes de comenzar (validación de no-vacío).
+- Registra las 10 respuestas elegidas y las muestra en el resultado.
+- Descarga del resultado completo: **PNG** (render manual en canvas, sin html2canvas) y **PDF** (window.print con `@media print` que oculta todo menos el resultado).
+- Archivo PNG: `Test_Tipologia_{matricula}_{nombre}.png`.
+- No persiste datos en servidor.
 - Paleta propia (verde/dorado) acorde a la identidad de la asignatura.
 
 ## Despliegue

@@ -30,11 +30,19 @@
   .btn-outline { background: white; color: var(--verde); border: 2px solid var(--verde); }
   .center { text-align: center; }
   .hidden { display: none; }
+  /* Datos del estudiante */
+  .field { text-align: left; margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--verde-osc); margin-bottom: 4px; letter-spacing: .5px; }
+  .field input { width: 100%; padding: 12px 14px; border: 2px solid var(--gris-claro); border-radius: 10px; font-size: 15px; font-family: inherit; color: var(--gris-osc); background: var(--gris-claro); }
+  .field input:focus { outline: none; border-color: var(--verde); background: white; }
+  .inp-error { color: #B3261E; font-size: 13px; margin-bottom: 12px; font-weight: 600; }
   /* Resultado */
   .result-type { background: var(--verde); color: white; border-radius: 14px; padding: 26px; text-align: center; margin-bottom: 16px; }
   .result-type .label { font-size: 13px; letter-spacing: 2px; color: var(--verde-claro); margin-bottom: 6px; }
   .result-type h2 { font-size: 30px; margin-bottom: 8px; }
   .result-type .motor { display: inline-block; background: var(--dorado); color: var(--verde-osc); font-weight: bold; font-size: 13px; padding: 5px 14px; border-radius: 20px; margin-top: 8px; }
+  .alumno-line { background: white; border-radius: 14px; padding: 14px 20px; margin-bottom: 16px; font-size: 14.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  .alumno-line strong { color: var(--verde-osc); }
   .desc-block h3 { color: var(--verde); font-size: 15px; margin: 14px 0 4px; }
   .desc-block p { font-size: 14.5px; }
   .bar-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
@@ -42,9 +50,21 @@
   .bar-track { flex: 1; background: var(--gris-claro); border-radius: 4px; height: 14px; overflow: hidden; }
   .bar-fill { background: var(--verde); height: 100%; border-radius: 4px; }
   .bar-pct { width: 38px; text-align: right; flex-shrink: 0; color: var(--gris-med); }
+  .resp-item { font-size: 13.5px; margin-bottom: 10px; }
+  .resp-item .rq { font-weight: 600; }
+  .resp-item .ra { color: var(--verde-osc); }
   .nota { background: var(--dorado-pale); border-radius: 10px; padding: 16px; font-size: 14px; margin-top: 14px; }
   .nota strong { color: var(--verde-osc); }
+  .dl-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   .footer { text-align: center; font-size: 12px; color: var(--gris-med); padding: 10px 0 30px; }
+  /* Impresión: solo el resultado, sin botones */
+  @media print {
+    body { background: white; }
+    .container { max-width: 100%; padding: 0; }
+    .card, .alumno-line { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    .result-type, .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #pantalla-inicio, #pantalla-pregunta, .no-print { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -59,7 +79,16 @@
   <!-- PANTALLA INICIO -->
   <div class="card center" id="pantalla-inicio">
     <p style="margin-bottom:16px; font-size:15px;">Este test te orienta sobre tu <strong>tipología emprendedora</strong>. Al final verás tu perfil dominante, tu perfil secundario y tu motor para emprender.</p>
-    <p style="margin-bottom:20px; font-size:14px; color:var(--gris-med);">El resultado lo usarás en tu <strong>Perfil Emprendedor</strong> (entrega del martes 16 de junio).</p>
+    <p style="margin-bottom:20px; font-size:14px; color:var(--gris-med);">El resultado lo usarás en tu <strong>Perfil Emprendedor</strong> (entrega del martes 16 de junio). Al terminar podrás <strong>descargarlo como imagen o PDF</strong>.</p>
+    <div class="field">
+      <label for="inp-nombre">NOMBRE COMPLETO</label>
+      <input id="inp-nombre" type="text" placeholder="Ej.: María Pérez Rodríguez" autocomplete="name" maxlength="60">
+    </div>
+    <div class="field">
+      <label for="inp-matricula">MATRÍCULA</label>
+      <input id="inp-matricula" type="text" inputmode="numeric" placeholder="Ej.: 2024123" maxlength="15">
+    </div>
+    <div class="inp-error hidden" id="inp-error">Escribe tu nombre y tu matrícula para comenzar.</div>
     <button class="btn" onclick="iniciar()">Comenzar el test</button>
   </div>
 
@@ -73,6 +102,7 @@
 
   <!-- PANTALLA RESULTADO -->
   <div class="hidden" id="pantalla-resultado">
+    <div class="alumno-line" id="res-alumno"></div>
     <div class="result-type">
       <div class="label">TU TIPOLOGÍA DOMINANTE</div>
       <h2 id="res-tipo"></h2>
@@ -92,12 +122,20 @@
     <div class="card">
       <h3 style="color:var(--verde); font-size:15px; margin-bottom:10px;">Tus puntajes completos</h3>
       <div id="barras"></div>
-      <div class="nota">
-        <strong>Para tu Perfil Emprendedor (martes 16):</strong> toma captura de esta pantalla, inclúyela en tu documento y responde: ¿estás de acuerdo con este resultado? ¿Por qué sí o por qué no? El test orienta; el análisis lo haces tú.
-      </div>
     </div>
-    <div class="card center">
-      <button class="btn btn-outline" onclick="reiniciar()">Hacer el test de nuevo</button>
+    <div class="card">
+      <h3 style="color:var(--verde); font-size:15px; margin-bottom:10px;">Tus respuestas</h3>
+      <div id="lista-respuestas"></div>
+    </div>
+    <div class="card center no-print">
+      <div class="dl-btns">
+        <button class="btn" onclick="descargarImagen()">⬇ Descargar imagen (PNG)</button>
+        <button class="btn" onclick="window.print()">🖨 Guardar como PDF</button>
+      </div>
+      <div class="nota" style="text-align:left;">
+        <strong>Para tu Perfil Emprendedor (martes 16):</strong> descarga tu resultado con cualquiera de los dos botones y añádelo a tu documento. (En el diálogo de impresión elige <em>"Guardar como PDF"</em>.) Luego responde: ¿estás de acuerdo con este resultado? ¿Por qué sí o por qué no? El test orienta; el análisis lo haces tú.
+      </div>
+      <button class="btn btn-outline" style="margin-top:14px;" onclick="reiniciar()">Hacer el test de nuevo</button>
     </div>
   </div>
 
@@ -216,14 +254,26 @@ const PREGUNTAS = [
     ]}
 ];
 
+const NOMBRES_TIPO = { comercial: 'Comercial', social: 'Social', lifestyle: 'Estilo de vida', intra: 'Intraemprendedor', serial: 'Serial', digital: 'Digital' };
+
 let idx = 0;
 let scores = { comercial: 0, social: 0, lifestyle: 0, intra: 0, serial: 0, digital: 0 };
 let motorN = 0, motorO = 0;
+let alumno = { nombre: '', matricula: '' };
+let respuestas = [];
+let ultimoResultado = null;
 
 function iniciar() {
+  const n = document.getElementById('inp-nombre').value.trim();
+  const m = document.getElementById('inp-matricula').value.trim();
+  const err = document.getElementById('inp-error');
+  if (!n || !m) { err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  alumno = { nombre: n, matricula: m };
   idx = 0;
   scores = { comercial: 0, social: 0, lifestyle: 0, intra: 0, serial: 0, digital: 0 };
   motorN = 0; motorO = 0;
+  respuestas = [];
   document.getElementById('pantalla-inicio').classList.add('hidden');
   document.getElementById('pantalla-resultado').classList.add('hidden');
   document.getElementById('pantalla-pregunta').classList.remove('hidden');
@@ -250,9 +300,18 @@ function responder(op) {
   for (const [k, v] of Object.entries(op.pts || {})) scores[k] += v;
   if (op.motor === 'necesidad') motorN++;
   if (op.motor === 'oportunidad') motorO++;
+  respuestas.push({ q: PREGUNTAS[idx].q, t: op.t });
   idx++;
   if (idx < PREGUNTAS.length) render();
   else resultado();
+}
+
+function fechaHoy() {
+  return new Date().toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 function resultado() {
@@ -260,28 +319,206 @@ function resultado() {
   const orden = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   const dom = orden[0][0], sec = orden[1][0];
   const t = TIPOS[dom];
+  const motorTxt = motorO >= motorN ? 'Motor: emprendes POR OPORTUNIDAD' : 'Motor: emprendes POR NECESIDAD (y eso también es válido)';
+  ultimoResultado = { orden, dom, sec, motorTxt };
+
+  document.getElementById('res-alumno').innerHTML =
+    '<strong>' + escapeHtml(alumno.nombre) + '</strong> · Matrícula: ' + escapeHtml(alumno.matricula) + ' · ' + fechaHoy();
   document.getElementById('res-tipo').textContent = t.nombre;
   document.getElementById('res-secundario').textContent = 'Perfil secundario: ' + TIPOS[sec].nombre;
-  document.getElementById('res-motor').textContent = motorO >= motorN ? 'Motor: emprendes POR OPORTUNIDAD' : 'Motor: emprendes POR NECESIDAD (y eso también es válido)';
+  document.getElementById('res-motor').textContent = motorTxt;
   document.getElementById('res-desc').textContent = t.desc;
   document.getElementById('res-fort').textContent = t.fort;
   document.getElementById('res-riesgo').textContent = t.riesgo;
   document.getElementById('res-valor').textContent = t.valor;
 
   const max = Math.max(...Object.values(scores), 1);
-  const nombres = { comercial: 'Comercial', social: 'Social', lifestyle: 'Estilo de vida', intra: 'Intraemprendedor', serial: 'Serial', digital: 'Digital' };
   const barras = document.getElementById('barras');
   barras.innerHTML = '';
   orden.forEach(([k, v]) => {
     const pct = Math.round(v / max * 100);
-    barras.innerHTML += '<div class="bar-row"><div class="bar-label">' + nombres[k] + '</div><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div><div class="bar-pct">' + v + '</div></div>';
+    barras.innerHTML += '<div class="bar-row"><div class="bar-label">' + NOMBRES_TIPO[k] + '</div><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div><div class="bar-pct">' + v + '</div></div>';
+  });
+
+  const lista = document.getElementById('lista-respuestas');
+  lista.innerHTML = '';
+  respuestas.forEach((r, i) => {
+    lista.innerHTML += '<div class="resp-item"><div class="rq">' + (i + 1) + '. ' + escapeHtml(r.q) + '</div><div class="ra">→ ' + escapeHtml(r.t) + '</div></div>';
   });
 
   document.getElementById('pantalla-resultado').classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function reiniciar() { iniciar(); }
+function reiniciar() {
+  document.getElementById('pantalla-resultado').classList.add('hidden');
+  document.getElementById('pantalla-inicio').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== Descarga como imagen (canvas nativo, sin librerías) ===== */
+
+function descargarImagen() {
+  const dataUrl = generarImagen();
+  if (!dataUrl) return;
+  const a = document.createElement('a');
+  const safe = (alumno.matricula + '_' + alumno.nombre).replace(/[^\wáéíóúñÁÉÍÓÚÑ-]+/g, '_').slice(0, 50);
+  a.download = 'Test_Tipologia_' + safe + '.png';
+  a.href = dataUrl;
+  a.click();
+}
+
+function generarImagen() {
+  if (!ultimoResultado) return null;
+  const W = 1000, P = 56, CW = W - P * 2;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = 4800;
+  const x = c.getContext('2d');
+  const F = "'Segoe UI', Calibri, Arial, sans-serif";
+  const V = '#0B6E3F', VO = '#08502E', VC = '#DDEFD8', D = '#C9A227', GO = '#1E2A30', GM = '#5C6770', GC = '#F2F4F3';
+
+  function wrap(text, font, maxW) {
+    x.font = font;
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (x.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  function drawWrap(text, font, color, xx, yy, maxW, lh) {
+    x.font = font; x.fillStyle = color;
+    const lines = wrap(text, font, maxW);
+    lines.forEach((l, i) => x.fillText(l, xx, yy + i * lh));
+    return yy + lines.length * lh;
+  }
+  function roundRect(xx, yy, w, h, r, fill) {
+    x.beginPath();
+    x.moveTo(xx + r, yy);
+    x.arcTo(xx + w, yy, xx + w, yy + h, r);
+    x.arcTo(xx + w, yy + h, xx, yy + h, r);
+    x.arcTo(xx, yy + h, xx, yy, r);
+    x.arcTo(xx, yy, xx + w, yy, r);
+    x.closePath();
+    x.fillStyle = fill; x.fill();
+  }
+
+  // Fondo
+  x.fillStyle = GC; x.fillRect(0, 0, W, c.height);
+
+  // Encabezado
+  roundRect(P - 16, 40, W - (P - 16) * 2, 150, 16, VO);
+  x.textAlign = 'center';
+  x.fillStyle = D; x.font = 'bold 16px ' + F;
+  x.fillText('EMPRENDURISMO · TECN-1411 · UNAD', W / 2, 82);
+  x.fillStyle = 'white'; x.font = 'bold 32px ' + F;
+  x.fillText('¿Qué tipo de emprendedor eres?', W / 2, 126);
+  x.fillStyle = VC; x.font = '16px ' + F;
+  x.fillText('Resultado del test de tipología emprendedora', W / 2, 158);
+  x.textAlign = 'left';
+
+  let y = 230;
+
+  // Datos del estudiante
+  roundRect(P - 16, y - 28, W - (P - 16) * 2, 76, 14, 'white');
+  x.fillStyle = GO; x.font = 'bold 20px ' + F;
+  x.fillText(alumno.nombre, P, y + 2);
+  x.fillStyle = GM; x.font = '16px ' + F;
+  x.fillText('Matrícula: ' + alumno.matricula + '   ·   ' + fechaHoy(), P, y + 28);
+  y += 90;
+
+  // Bloque resultado
+  const { orden, dom, sec, motorTxt } = ultimoResultado;
+  const t = TIPOS[dom];
+  roundRect(P - 16, y - 10, W - (P - 16) * 2, 170, 16, V);
+  x.textAlign = 'center';
+  x.fillStyle = VC; x.font = 'bold 14px ' + F;
+  x.fillText('TU TIPOLOGÍA DOMINANTE', W / 2, y + 24);
+  x.fillStyle = 'white'; x.font = 'bold 34px ' + F;
+  x.fillText(t.nombre, W / 2, y + 66);
+  x.fillStyle = VC; x.font = '16px ' + F;
+  x.fillText('Perfil secundario: ' + TIPOS[sec].nombre, W / 2, y + 96);
+  x.font = 'bold 15px ' + F;
+  const mw = x.measureText(motorTxt).width + 36;
+  roundRect(W / 2 - mw / 2, y + 112, mw, 32, 16, D);
+  x.fillStyle = VO;
+  x.fillText(motorTxt, W / 2, y + 134);
+  x.textAlign = 'left';
+  y += 200;
+
+  // Secciones descriptivas
+  const secciones = [
+    ['Quién eres', t.desc], ['Tu fortaleza', t.fort],
+    ['Lo que debes cuidar', t.riesgo], ['Valentía y Esfuerzo en tu perfil', t.valor]
+  ];
+  const cardTop = y - 14;
+  let yMeasure = y + 16;
+  for (const [, body] of secciones) {
+    yMeasure += 30;
+    yMeasure += wrap(body, '17px ' + F, CW).length * 26 + 14;
+  }
+  roundRect(P - 16, cardTop, W - (P - 16) * 2, yMeasure - cardTop + 4, 14, 'white');
+  let yy = y + 16;
+  for (const [h, body] of secciones) {
+    x.fillStyle = V; x.font = 'bold 17px ' + F;
+    x.fillText(h, P, yy); yy += 30;
+    yy = drawWrap(body, '17px ' + F, GO, P, yy, CW, 26) + 14;
+  }
+  y = yMeasure + 30;
+
+  // Puntajes
+  const max = Math.max(...orden.map(o => o[1]), 1);
+  const barH = orden.length * 38 + 70;
+  roundRect(P - 16, y - 14, W - (P - 16) * 2, barH, 14, 'white');
+  x.fillStyle = V; x.font = 'bold 17px ' + F;
+  x.fillText('Puntajes completos', P, y + 14);
+  let by = y + 48;
+  for (const [k, v] of orden) {
+    x.fillStyle = GO; x.font = 'bold 15px ' + F;
+    x.fillText(NOMBRES_TIPO[k], P, by + 13);
+    const bx = P + 180, bw = CW - 180 - 40;
+    roundRect(bx, by, bw, 18, 9, GC);
+    if (v > 0) roundRect(bx, by, Math.max(18, bw * v / max), 18, 9, V);
+    x.fillStyle = GM; x.font = '15px ' + F;
+    x.fillText(String(v), bx + bw + 14, by + 14);
+    by += 38;
+  }
+  y += barH + 24;
+
+  // Respuestas
+  const rTop = y - 14;
+  let ryMeasure = y + 16 + 30;
+  for (let i = 0; i < respuestas.length; i++) {
+    ryMeasure += wrap((i + 1) + '. ' + respuestas[i].q, 'bold 15px ' + F, CW).length * 22;
+    ryMeasure += wrap('→ ' + respuestas[i].t, '15px ' + F, CW - 20).length * 22 + 12;
+  }
+  roundRect(P - 16, rTop, W - (P - 16) * 2, ryMeasure - rTop + 10, 14, 'white');
+  let ry = y + 16;
+  x.fillStyle = V; x.font = 'bold 17px ' + F;
+  x.fillText('Respuestas seleccionadas', P, ry); ry += 30;
+  for (let i = 0; i < respuestas.length; i++) {
+    ry = drawWrap((i + 1) + '. ' + respuestas[i].q, 'bold 15px ' + F, GO, P, ry, CW, 22);
+    ry = drawWrap('→ ' + respuestas[i].t, '15px ' + F, VO, P + 20, ry, CW - 20, 22) + 12;
+  }
+  y = ryMeasure + 36;
+
+  // Pie
+  x.fillStyle = GM; x.font = '14px ' + F; x.textAlign = 'center';
+  x.fillText('Emprendurismo (Vida Práctica) — TECN-1411 · Misael Michel · UNAD · 2026', W / 2, y);
+  x.textAlign = 'left';
+  y += 30;
+
+  // Recortar al alto real
+  const out = document.createElement('canvas');
+  out.width = W; out.height = Math.ceil(y);
+  const ox = out.getContext('2d');
+  ox.drawImage(c, 0, 0);
+  return out.toDataURL('image/png');
+}
 </script>
 </body>
 </html>
