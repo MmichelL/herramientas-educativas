@@ -115,6 +115,7 @@ Cuando Claude Code cree o modifique una herramienta, debe verificar que incluya:
 |---|---|---|---|
 | `prog2111-sorteo` | PROG-2111 | Ruleta de asignación de proyectos finales | ✅ En desarrollo |
 | `agenda-evaluaciones` | genérico | Reserva horarios + evaluación docente con ruleta 2-niveles | ✅ En desarrollo |
+| `tecn1411-test-tipologia` | TECN-1411 | Test de tipología emprendedora (10 preguntas, perfil + motor) | ✅ Publicada |
 
 ---
 

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Qué tipo de emprendedor eres? — TECN-1411</title>
+<style>
+  :root {
+    --verde: #0B6E3F; --verde-osc: #08502E; --verde-claro: #DDEFD8;
+    --dorado: #C9A227; --dorado-pale: #FFF4D6;
+    --gris-osc: #1E2A30; --gris-med: #5C6770; --gris-claro: #F2F4F3;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; background: var(--gris-claro); color: var(--gris-osc); line-height: 1.5; }
+  .container { max-width: 640px; margin: 0 auto; padding: 16px; }
+  .card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 16px; }
+  .header { background: var(--verde-osc); color: white; border-radius: 14px; padding: 24px; margin-bottom: 16px; text-align: center; }
+  .header .badge { display: inline-block; background: var(--dorado); color: var(--verde-osc); font-weight: bold; font-size: 12px; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; margin-bottom: 10px; }
+  .header h1 { font-size: 26px; margin-bottom: 6px; }
+  .header p { color: var(--verde-claro); font-size: 14px; }
+  .progress-track { background: var(--gris-claro); height: 8px; border-radius: 4px; margin-bottom: 18px; overflow: hidden; }
+  .progress-fill { background: var(--verde); height: 100%; width: 0%; transition: width .3s; border-radius: 4px; }
+  .qnum { color: var(--verde); font-weight: bold; font-size: 13px; letter-spacing: 2px; margin-bottom: 6px; }
+  .qtext { font-size: 19px; font-weight: 600; margin-bottom: 18px; }
+  .opt { display: block; width: 100%; text-align: left; background: var(--gris-claro); border: 2px solid transparent; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; font-size: 15px; cursor: pointer; transition: all .15s; color: var(--gris-osc); font-family: inherit; }
+  .opt:hover { border-color: var(--verde); background: var(--verde-claro); }
+  .opt:active { transform: scale(0.99); }
+  .btn { display: inline-block; background: var(--verde); color: white; border: none; border-radius: 10px; padding: 14px 28px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; }
+  .btn:hover { background: var(--verde-osc); }
+  .btn-outline { background: white; color: var(--verde); border: 2px solid var(--verde); }
+  .center { text-align: center; }
+  .hidden { display: none; }
+  /* Resultado */
+  .result-type { background: var(--verde); color: white; border-radius: 14px; padding: 26px; text-align: center; margin-bottom: 16px; }
+  .result-type .label { font-size: 13px; letter-spacing: 2px; color: var(--verde-claro); margin-bottom: 6px; }
+  .result-type h2 { font-size: 30px; margin-bottom: 8px; }
+  .result-type .motor { display: inline-block; background: var(--dorado); color: var(--verde-osc); font-weight: bold; font-size: 13px; padding: 5px 14px; border-radius: 20px; margin-top: 8px; }
+  .desc-block h3 { color: var(--verde); font-size: 15px; margin: 14px 0 4px; }
+  .desc-block p { font-size: 14.5px; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
+  .bar-label { width: 130px; flex-shrink: 0; font-weight: 600; }
+  .bar-track { flex: 1; background: var(--gris-claro); border-radius: 4px; height: 14px; overflow: hidden; }
+  .bar-fill { background: var(--verde); height: 100%; border-radius: 4px; }
+  .bar-pct { width: 38px; text-align: right; flex-shrink: 0; color: var(--gris-med); }
+  .nota { background: var(--dorado-pale); border-radius: 10px; padding: 16px; font-size: 14px; margin-top: 14px; }
+  .nota strong { color: var(--verde-osc); }
+  .footer { text-align: center; font-size: 12px; color: var(--gris-med); padding: 10px 0 30px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="badge">EMPRENDURISMO · TECN-1411 · UNAD</div>
+    <h1>¿Qué tipo de emprendedor eres?</h1>
+    <p>10 preguntas · 5 minutos · Responde con honestidad, no hay respuestas correctas</p>
+  </div>
+
+  <!-- PANTALLA INICIO -->
+  <div class="card center" id="pantalla-inicio">
+    <p style="margin-bottom:16px; font-size:15px;">Este test te orienta sobre tu <strong>tipología emprendedora</strong>. Al final verás tu perfil dominante, tu perfil secundario y tu motor para emprender.</p>
+    <p style="margin-bottom:20px; font-size:14px; color:var(--gris-med);">El resultado lo usarás en tu <strong>Perfil Emprendedor</strong> (entrega del martes 16 de junio).</p>
+    <button class="btn" onclick="iniciar()">Comenzar el test</button>
+  </div>
+
+  <!-- PANTALLA PREGUNTA -->
+  <div class="card hidden" id="pantalla-pregunta">
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+    <div class="qnum" id="qnum"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="opciones"></div>
+  </div>
+
+  <!-- PANTALLA RESULTADO -->
+  <div class="hidden" id="pantalla-resultado">
+    <div class="result-type">
+      <div class="label">TU TIPOLOGÍA DOMINANTE</div>
+      <h2 id="res-tipo"></h2>
+      <div id="res-secundario" style="font-size:14px; color:var(--verde-claro);"></div>
+      <div class="motor" id="res-motor"></div>
+    </div>
+    <div class="card desc-block">
+      <h3>Quién eres</h3>
+      <p id="res-desc"></p>
+      <h3>Tu fortaleza</h3>
+      <p id="res-fort"></p>
+      <h3>Lo que debes cuidar</h3>
+      <p id="res-riesgo"></p>
+      <h3>Valentía y Esfuerzo en tu perfil</h3>
+      <p id="res-valor"></p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--verde); font-size:15px; margin-bottom:10px;">Tus puntajes completos</h3>
+      <div id="barras"></div>
+      <div class="nota">
+        <strong>Para tu Perfil Emprendedor (martes 16):</strong> toma captura de esta pantalla, inclúyela en tu documento y responde: ¿estás de acuerdo con este resultado? ¿Por qué sí o por qué no? El test orienta; el análisis lo haces tú.
+      </div>
+    </div>
+    <div class="card center">
+      <button class="btn btn-outline" onclick="reiniciar()">Hacer el test de nuevo</button>
+    </div>
+  </div>
+
+  <div class="footer">Emprendurismo (Vida Práctica) — TECN-1411 · Misael Michel · UNAD · 2026</div>
+</div>
+
+<script>
+const TIPOS = {
+  comercial: {
+    nombre: "Emprendedor Comercial",
+    desc: "Tu motor es construir un negocio que genere ingreso y crezca. Piensas en clientes, ventas y expansión. Es el perfil clásico del emprendedor: ves el negocio como una empresa que puede ser cada vez más grande.",
+    fort: "Orientación a resultados. Sabes que un negocio vive de vender, y eso te hace práctico y enfocado.",
+    riesgo: "No descuides la validación: el entusiasmo por crecer puede hacerte saltar etapas. Tus entrevistas de esta semana son justo el freno sabio antes de acelerar.",
+    valor: "Tu valentía se ve en arriesgar recursos y tiempo. Tu esfuerzo, en la constancia comercial: tocar puertas aunque digan que no."
+  },
+  social: {
+    nombre: "Emprendedor Social",
+    desc: "Tu motor es resolver un problema de tu comunidad. El dinero es un medio para sostener la solución, no el fin. Te mueve ver a tu gente mejor: niños cuidados, familias servidas, necesidades atendidas.",
+    fort: "Conexión genuina con el problema. Conoces a tu gente y eso te da una ventaja que ningún competidor de afuera tiene.",
+    riesgo: "Cuida la sostenibilidad: un proyecto social que no genera ingreso suficiente muere y deja de servir. Servir también requiere números sanos.",
+    valor: "Tu valentía se ve en comprometerte con los demás. Tu esfuerzo, en sostener el servicio cuando nadie aplaude."
+  },
+  lifestyle: {
+    nombre: "Emprendedor por Estilo de Vida",
+    desc: "Emprendes para vivir de lo que amas y tener control de tu tiempo. No buscas un imperio: buscas libertad, equilibrio y hacer bien algo que disfrutas. Tu negocio está al servicio de tu vida, no al revés.",
+    fort: "Claridad de propósito. Sabes lo que quieres y eso te protege de perseguir crecimientos que no te harían feliz.",
+    riesgo: "Cuida no confundir comodidad con estancamiento: aun el negocio de estilo de vida necesita clientes nuevos y mejora continua.",
+    valor: "Tu valentía se ve en elegir tu propio camino aunque otros esperen algo distinto. Tu esfuerzo, en la disciplina diaria de la calidad."
+  },
+  intra: {
+    nombre: "Intraemprendedor",
+    desc: "Tu terreno natural es innovar DENTRO de una organización: un hospital, una clínica, una empresa, una iglesia. Ves procesos que se pueden mejorar y tienes la iniciativa para proponerlos y liderarlos sin necesidad de fundar algo propio.",
+    fort: "Combinas seguridad con innovación. En carreras como enfermería este perfil es oro: los mejores cambios de los sistemas de salud los impulsan intraemprendedores.",
+    riesgo: "Cuida que la estructura no apague tu iniciativa: documenta tus propuestas y busca aliados internos que las respalden.",
+    valor: "Tu valentía se ve en alzar la voz dentro de la institución. Tu esfuerzo, en empujar mejoras aunque el sistema sea lento."
+  },
+  serial: {
+    nombre: "Emprendedor Serial",
+    desc: "Te apasiona ARRANCAR cosas. Fundas un proyecto, lo estabilizas (o lo vendes) y ya estás pensando en el siguiente. La rutina te aburre; el lienzo en blanco te enciende.",
+    fort: "Tolerancia al riesgo y velocidad de arranque. Aprendes de cada proyecto y cada intento te hace más hábil que el anterior.",
+    riesgo: "Cuida terminar lo que empiezas: la tentación de saltar al próximo proyecto puede dejar el actual a medias. Este cuatrimestre, tu reto es profundidad, no cantidad.",
+    valor: "Tu valentía se ve en empezar de cero una y otra vez. Tu esfuerzo, en quedarte hasta consolidar antes de saltar."
+  },
+  digital: {
+    nombre: "Emprendedor Digital",
+    desc: "Tu negocio nace y vive en internet: redes sociales, ventas en línea, contenido, servicios digitales. Entiendes que el celular es una vitrina abierta 24 horas y que el alcance ya no depende de un local físico.",
+    fort: "Bajo costo de arranque y alcance amplio. Puedes probar, medir y ajustar más rápido que cualquier negocio físico.",
+    riesgo: "Cuida validar con personas reales y no solo con likes: la métrica que importa es quién paga, no quién aplaude.",
+    valor: "Tu valentía se ve en exponerte públicamente en línea. Tu esfuerzo, en la constancia de publicar y atender aunque el algoritmo no ayude."
+  }
+};
+
+const PREGUNTAS = [
+  { q: "¿Por qué quieres emprender, principalmente?",
+    ops: [
+      { t: "Necesito generar ingreso; ahora mismo no veo mejor opción", pts: {}, motor: "necesidad" },
+      { t: "Detecté un problema o espacio que nadie está atendiendo bien", pts: { comercial: 1 }, motor: "oportunidad" },
+      { t: "Quiero vivir de lo que me gusta y manejar mi propio tiempo", pts: { lifestyle: 2 }, motor: "oportunidad" }
+    ]},
+  { q: "Si tu negocio funciona bien y se estabiliza, ¿qué harías?",
+    ops: [
+      { t: "Lo hago crecer: más clientes, más servicios, quizás sucursales", pts: { comercial: 2 } },
+      { t: "Lo mantengo del tamaño que me permita vivir tranquilo", pts: { lifestyle: 2 } },
+      { t: "Me empiezo a aburrir… y arranco otro proyecto nuevo", pts: { serial: 2 } }
+    ]},
+  { q: "¿Qué te daría más satisfacción?",
+    ops: [
+      { t: "Ver mis ingresos creciendo mes tras mes", pts: { comercial: 2 } },
+      { t: "Ver a mi comunidad mejorar gracias a lo que construí", pts: { social: 2 } },
+      { t: "Que mi negocio funcione bien incluso sin mí presente", pts: { serial: 1, comercial: 1 } }
+    ]},
+  { q: "¿Dónde te imaginas operando tu emprendimiento?",
+    ops: [
+      { t: "Un espacio físico, con clientes cara a cara", pts: { comercial: 1, lifestyle: 1 } },
+      { t: "Desde mi celular o laptop: todo en línea", pts: { digital: 2 } },
+      { t: "Dentro de la institución donde trabajo, mejorando algo que existe", pts: { intra: 2 } }
+    ]},
+  { q: "Tienes empleo fijo y se te ocurre una mejora importante para tu lugar de trabajo. ¿Qué haces?",
+    ops: [
+      { t: "La propongo formalmente y me ofrezco a liderarla ahí dentro", pts: { intra: 2 } },
+      { t: "La desarrollo por fuera, como negocio propio", pts: { comercial: 1, serial: 1 } },
+      { t: "La comento, pero prefiero no complicarme la vida", pts: { lifestyle: 1 } }
+    ]},
+  { q: "¿Cuál herramienta sería más importante para tu negocio?",
+    ops: [
+      { t: "WhatsApp e Instagram para vender y atender en línea", pts: { digital: 2 } },
+      { t: "El boca a boca y la confianza de mi comunidad", pts: { social: 1, comercial: 1 } },
+      { t: "Mis manos y mi presencia: mi servicio es presencial", pts: { lifestyle: 1, comercial: 1 } }
+    ]},
+  { q: "¿Cuál frase te describe mejor?",
+    ops: [
+      { t: "“Quiero resolver un problema que me duele ver en mi gente”", pts: { social: 2 } },
+      { t: "“Quiero libertad financiera”", pts: { comercial: 2 } },
+      { t: "“Quiero ser mi propio jefe y vivir a mi ritmo”", pts: { lifestyle: 2 } },
+      { t: "“Me encanta arrancar cosas nuevas”", pts: { serial: 2 } }
+    ]},
+  { q: "Mucha gente de tu barrio comparte un mismo problema. ¿Qué piensas primero?",
+    ops: [
+      { t: "“Aquí hay un negocio”", pts: { comercial: 2 } },
+      { t: "“Aquí hay una forma de servir a mi gente”", pts: { social: 2 } },
+      { t: "“Puedo crear algo en internet que lo resuelva a gran escala”", pts: { digital: 2 } }
+    ]},
+  { q: "¿Cómo te llevas con el riesgo?",
+    ops: [
+      { t: "Prefiero algo estable que complemente mi empleo o estudio", pts: { intra: 1, lifestyle: 1 }, motor: "necesidad" },
+      { t: "Acepto riesgo si la oportunidad lo vale", pts: { comercial: 1 }, motor: "oportunidad" },
+      { t: "El riesgo me emociona: es parte del juego", pts: { serial: 2 }, motor: "oportunidad" }
+    ]},
+  { q: "En 10 años te ves…",
+    ops: [
+      { t: "Con una empresa consolidada y un equipo trabajando", pts: { comercial: 2 } },
+      { t: "Con varios proyectos fundados; algunos vendidos o entregados", pts: { serial: 2 } },
+      { t: "Viviendo bien de algo que amo, sin esclavizarme", pts: { lifestyle: 2 } },
+      { t: "Liderando innovación dentro de una gran institución", pts: { intra: 2 } },
+      { t: "Con un proyecto que transformó mi comunidad", pts: { social: 2 } }
+    ]}
+];
+
+let idx = 0;
+let scores = { comercial: 0, social: 0, lifestyle: 0, intra: 0, serial: 0, digital: 0 };
+let motorN = 0, motorO = 0;
+
+function iniciar() {
+  idx = 0;
+  scores = { comercial: 0, social: 0, lifestyle: 0, intra: 0, serial: 0, digital: 0 };
+  motorN = 0; motorO = 0;
+  document.getElementById('pantalla-inicio').classList.add('hidden');
+  document.getElementById('pantalla-resultado').classList.add('hidden');
+  document.getElementById('pantalla-pregunta').classList.remove('hidden');
+  render();
+}
+
+function render() {
+  const p = PREGUNTAS[idx];
+  document.getElementById('progress').style.width = ((idx) / PREGUNTAS.length * 100) + '%';
+  document.getElementById('qnum').textContent = 'PREGUNTA ' + (idx + 1) + ' DE ' + PREGUNTAS.length;
+  document.getElementById('qtext').textContent = p.q;
+  const cont = document.getElementById('opciones');
+  cont.innerHTML = '';
+  p.ops.forEach(op => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = op.t;
+    b.onclick = () => responder(op);
+    cont.appendChild(b);
+  });
+}
+
+function responder(op) {
+  for (const [k, v] of Object.entries(op.pts || {})) scores[k] += v;
+  if (op.motor === 'necesidad') motorN++;
+  if (op.motor === 'oportunidad') motorO++;
+  idx++;
+  if (idx < PREGUNTAS.length) render();
+  else resultado();
+}
+
+function resultado() {
+  document.getElementById('pantalla-pregunta').classList.add('hidden');
+  const orden = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const dom = orden[0][0], sec = orden[1][0];
+  const t = TIPOS[dom];
+  document.getElementById('res-tipo').textContent = t.nombre;
+  document.getElementById('res-secundario').textContent = 'Perfil secundario: ' + TIPOS[sec].nombre;
+  document.getElementById('res-motor').textContent = motorO >= motorN ? 'Motor: emprendes POR OPORTUNIDAD' : 'Motor: emprendes POR NECESIDAD (y eso también es válido)';
+  document.getElementById('res-desc').textContent = t.desc;
+  document.getElementById('res-fort').textContent = t.fort;
+  document.getElementById('res-riesgo').textContent = t.riesgo;
+  document.getElementById('res-valor').textContent = t.valor;
+
+  const max = Math.max(...Object.values(scores), 1);
+  const nombres = { comercial: 'Comercial', social: 'Social', lifestyle: 'Estilo de vida', intra: 'Intraemprendedor', serial: 'Serial', digital: 'Digital' };
+  const barras = document.getElementById('barras');
+  barras.innerHTML = '';
+  orden.forEach(([k, v]) => {
+    const pct = Math.round(v / max * 100);
+    barras.innerHTML += '<div class="bar-row"><div class="bar-label">' + nombres[k] + '</div><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div><div class="bar-pct">' + v + '</div></div>';
+  });
+
+  document.getElementById('pantalla-resultado').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function reiniciar() { iniciar(); }
+</script>
+</body>
+</html>
